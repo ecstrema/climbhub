@@ -2,6 +2,7 @@ import { error } from "@sveltejs/kit"
 import { allRoutes, areaIndex } from "$lib/data.js"
 
 import { getRouteFromPath } from "$lib/data.js"
+import { base } from "$app/paths"
 
 /** @type {import('./$types').PageLoad} */
 export async function load({ params }) {

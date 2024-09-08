@@ -5,6 +5,7 @@ import remarkParse from "remark-parse"
 import remarkRehype from "remark-rehype"
 import { unified } from "unified"
 import { matter } from "vfile-matter"
+import { base } from "$app/paths"
 
 export type TreeItemKind = "area" | "route"
 
@@ -79,7 +80,7 @@ async function generateOvervierw(routeRoot: AreaNode) {
 
     // Process the path until the filename
     let current = routeRoot
-    let path = "/routes"
+    let path = base + "/routes"
     for (const segment of segments.slice(0, -1)) {
       path += `/${segment}`
       // First, assert that this is a
@@ -143,7 +144,7 @@ export async function getRouteRoot() {
   if (routeRoot === null) {
     routeRoot = {
       kind: "area",
-      link: "/routes",
+      link: base + "/routes",
       name: "Routes",
       children: {},
     }

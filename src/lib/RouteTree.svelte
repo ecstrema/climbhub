@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { base } from "$app/paths"
-
   import type { TreeNode } from "./data"
   import { isAreaNode } from "./data"
 
@@ -8,7 +6,7 @@
 </script>
 
 {#if isAreaNode(root)}
-  <a href={base + root.link}>{root.name}</a>
+  <a href={root.link}>{root.name}</a>
   {#if root.children}
     <ul>
       {#each Object.values(root.children) as child}
@@ -19,7 +17,7 @@
     </ul>
   {/if}
 {:else}
-  <a href={base + root.link}>{root.name} {root.grade}</a>
+  <a href={root.link}>{root.name} {root.grade}</a>
 {/if}
 
 <style>
