@@ -1,10 +1,14 @@
 <script lang="ts">
-  import { routeRoot } from "$lib/data"
+  import { getRouteRoot } from "$lib/data"
   import RouteTree from "$lib/RouteTree.svelte"
 
-  console.log(routeRoot)
+  const routeRoot = getRouteRoot()
 </script>
 
-<RouteTree root={routeRoot} />
+{#await routeRoot}
+  <p>Loading...</p>
+{:then tree}
+  <RouteTree root={tree} />
+{/await}
 
 <slot></slot>

@@ -54,16 +54,9 @@ export function sanitizeFilename(filename: string): string {
 
 export const allRoutes = import.meta.glob("/src/data/routes/**/*.md", { query: "raw" })
 
-// I love pronouncing this out loud
-export const routeRoot: AreaNode = {
-  kind: "area",
-  link: "/routes",
-  name: "Routes",
-  children: {},
-}
+export const areaIndex = "+index.md"
 
-
-async function generateOvervierw() {
+async function generateOvervierw(routeRoot: AreaNode) {
   const processor = unified()
     .use(remarkParse)
     .use(remarkRehype)
@@ -75,7 +68,6 @@ async function generateOvervierw() {
       }
     })
   for (const key in allRoutes) {
-    console.log(key)
     // ignore the first 4 segments, which are [empty]/src/data/routes/
     const segments = key.split("/").slice(4)
 
@@ -106,6 +98,7 @@ async function generateOvervierw() {
       }
     }
 
+    const isArea = lastSegment.endsWith(areaIndex)
     // Process the filename
     const filename = lastSegment.slice(0, -3)
 
@@ -116,17 +109,16 @@ async function generateOvervierw() {
 
     const html = String(file)
     const errors = reporter(file)
-    const isArea = filename === "+index"
 
     if (isArea) {
       const frontmatter = file.data.matter as AreaFrontmatter | null
-      current = {
-        ...current,
+      // TODO: Object.assign is not type safe
+      Object.assign(current, {
         ...frontmatter,
         errors,
         description: html,
-        name: frontmatter && Object.prototype.hasOwnProperty.call(frontmatter, "name") ? frontmatter.name : sanitizeFilename(filename),
-      }
+        name: frontmatter && Object.prototype.hasOwnProperty.call(frontmatter, "name") ? frontmatter.name : sanitizeFilename(segments[segments.length - 2]),
+      })
       continue
     }
 
@@ -145,16 +137,28 @@ async function generateOvervierw() {
   }
 }
 
-generateOvervierw()
-
+// I love pronouncing this out loud
+let routeRoot: AreaNode | null = null
+export async function getRouteRoot() {
+  if (routeRoot === null) {
+    routeRoot = {
+      kind: "area",
+      link: "/routes",
+      name: "Routes",
+      children: {},
+    }
+    await generateOvervierw(routeRoot as AreaNode)
+  }
+  return routeRoot
+}
 
 export function isAreaNode(node: TreeNode): node is AreaNode {
   return node.kind === "area"
 }
 
-export function getRouteFromPath(path: string) {
+export async function getRouteFromPath(path: string) {
   const segments = path.split("/")
-  let current: TreeNode = routeRoot
+  let current: TreeNode = await getRouteRoot()
   for (const segment of segments) {
     if (!isAreaNode(current)) {
       return null
