@@ -2,14 +2,16 @@ import { error } from "@sveltejs/kit"
 import { allRoutes, areaIndex } from "$lib/data.js"
 
 import { getRouteFromPath } from "$lib/data.js"
-import { base } from "$app/paths"
 
 /** @type {import('./$types').PageLoad} */
 export async function load({ params }) {
   const routeData = await getRouteFromPath(params.route)
   if (routeData) {
+    console.log("found", params.route)
     return routeData
   }
+
+  console.log("no match for", params.route)
 
   return error(404, `Not found`)
 }
@@ -21,6 +23,7 @@ export async function entries() {
     }
     return { route: route.replace("/src/data/routes/", "").slice(0, -3) }
   })
+  console.log("🚀 ~ result:", result)
 
   return result
 }

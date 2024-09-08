@@ -13,7 +13,7 @@ const config = {
 	kit: {
 		adapter: adapter(),
 		paths: {
-			base: "/climbhub"
+			base: process.argv.includes('dev') ? '' : process.env.BASE_PATH
 		}
 	}
 };

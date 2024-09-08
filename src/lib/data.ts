@@ -113,12 +113,14 @@ async function generateOvervierw(routeRoot: AreaNode) {
 
     if (isArea) {
       const frontmatter = file.data.matter as AreaFrontmatter | null
+      const name = frontmatter && Object.prototype.hasOwnProperty.call(frontmatter, "name") ? frontmatter.name : sanitizeFilename(segments[segments.length - 2])
+      console.log("Adding area", name)
       // TODO: Object.assign is not type safe
       Object.assign(current, {
         ...frontmatter,
         errors,
         description: html,
-        name: frontmatter && Object.prototype.hasOwnProperty.call(frontmatter, "name") ? frontmatter.name : sanitizeFilename(segments[segments.length - 2]),
+        name,
       })
       continue
     }
@@ -162,8 +164,15 @@ export async function getRouteFromPath(path: string) {
   let current: TreeNode = await getRouteRoot()
   for (const segment of segments) {
     if (!isAreaNode(current)) {
-      return null
+      return current
     }
+
+    console.log(
+      "looking for segment",
+      segment,
+      "in",
+      Object.values(current.children as Record<string, TreeNode>).map((x) => x.name),
+    )
 
     if (!Object.prototype.hasOwnProperty.call(current.children, segment)) {
       return null
