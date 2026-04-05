@@ -1,6 +1,0 @@
-{
-	"printWidth": 1000,
-	"semi": false,
-	"plugins": ["prettier-plugin-svelte"],
-	"overrides": [{ "files": "*.svelte", "options": { "parser": "svelte" } }]
-}

@@ -1,1 +1,3 @@
-<h1>All routes</h1>
+<h1>Climbhub</h1>
+
+<a href="/routes">See all routes</a>
