@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { resolve } from "$app/paths";
+
   import Self from "./RouteTree.svelte";
 
   const { root } = $props();
@@ -6,7 +8,7 @@
 
 <nav>
   {#if root.kind  === "area"}
-    <a href={root.link}>{root.name}</a>
+    <a href={resolve(root.link)}>{root.name}</a>
     {#if root.children}
       <ul>
         {#each Object.values(root.children) as child}
@@ -17,7 +19,7 @@
       </ul>
     {/if}
   {:else}
-    <a href={root.link}>{root.name} {root.grade}</a>
+    <a href={resolve(root.link)}>{root.name} {root.grade}</a>
   {/if}
 </nav>
 
