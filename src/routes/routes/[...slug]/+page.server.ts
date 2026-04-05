@@ -24,7 +24,19 @@ export const load: PageServerLoad = async ({ params }) => {
       kind = "area"
       await access(path)
     } catch (err) {
-      throw error(404, "Route or Area not found")
+      try {
+        await access(`src/data/routes/${params.slug}`)
+
+        return {
+          kind: "area",
+          treeNode: {
+            kind: "area",
+            name: params.slug.split("/").pop()?.replaceAll("_", " ") || "",
+          } satisfies AreaNode
+        }
+      } catch (err) {
+        throw error(404, `Route or Area ${params.slug} not found`)
+      }
     }
   }
 
