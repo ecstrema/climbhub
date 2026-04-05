@@ -1,68 +1,69 @@
 import { error } from "@sveltejs/kit"
-import { access } from "fs/promises"
 import { type } from "arktype"
-
-import rehypeStringify from 'rehype-stringify'
-import remarkParse from 'remark-parse'
-import remarkFrontmatter from 'remark-frontmatter'
-import remarkRehype from 'remark-rehype'
-import { read } from 'to-vfile'
-import { unified } from 'unified'
-
+import { AreaFrontmatter, RouteFrontmatter, type AreaNode, type RouteNode } from "$lib/types"
 import type { PageServerLoad } from './$types';
-import { getFrontmatter } from "../frontmatter"
-import { AreaFrontmatter, RouteFrontmatter, type AreaNode, type RouteNode, type TreeNode } from "$lib/types"
 
 export const load: PageServerLoad = async ({ params }) => {
-  let kind = "route" as "route" | "area"
-  let path = `src/data/routes/${params.slug}.md`
-  try {
-    await access(path)
-  } catch (err) {
-    try {
-      path = `src/data/routes/${params.slug}/index.md`
-      kind = "area"
-      await access(path)
-    } catch (err) {
-      try {
-        await access(`src/data/routes/${params.slug}`)
+    // 1. Grab the processed modules
+    // Note: No need for ?raw or manual parsing; the plugin handles it.
+    const modules = import.meta.glob('/src/data/routes/**/*.md', {
+        eager: true
+    }) as Record<string, { html: string; frontmatter: Record<string, unknown> }>;
 
-        return {
-          kind: "area",
-          treeNode: {
-            kind: "area",
-            name: params.slug.split("/").pop()?.replaceAll("_", " ") || "",
-          } satisfies AreaNode
+    const routePath = `/src/data/routes/${params.slug}.md`;
+    const indexPath = `/src/data/routes/${params.slug}/index.md`;
+
+    let module = modules[routePath];
+    let kind: "route" | "area" = "route";
+
+    // 2. Determine if it's a Route, an Area (index.md), or just a Folder
+    if (!module) {
+        if (modules[indexPath]) {
+            module = modules[indexPath];
+            kind = "area";
+        } else {
+            // Check if it's a folder that exists but has no index.md
+            // We verify if any known markdown file exists inside this path
+            const folderExists = Object.keys(modules).some(key =>
+                key.startsWith(`/src/data/routes/${params.slug}/`)
+            );
+
+            if (folderExists) {
+                return {
+                    content: "", // No content because there's no index.md
+                    treeNode: {
+                        kind: "area",
+                        name: params.slug.split("/").pop()?.replaceAll("_", " ") || "",
+                        link: `/routes/${params.slug}`
+                    } as AreaNode
+                };
+            }
+
+            throw error(404, `Route or Area ${params.slug} not found`);
         }
-      } catch (err) {
-        throw error(404, `Route or Area ${params.slug} not found`)
-      }
     }
-  }
 
-  const file = await unified()
-    .use(remarkParse)
-    .use(remarkFrontmatter)
-    .use(getFrontmatter)
-    .use(remarkRehype)
-    .use(rehypeStringify)
-    .process(await read(path))
+    // 3. Validate with Arktype
+    const { html, frontmatter } = module;
+    const frontmatterData = kind === "area"
+        ? AreaFrontmatter(frontmatter)
+        : RouteFrontmatter(frontmatter);
 
+    // 4. Construct the node
+    const treeNode: any = {
+        kind,
+        name: params.slug.split("/").pop()?.replaceAll("_", " ") || "",
+        link: `/routes/${params.slug}`,
+    };
 
-  const data: TreeNode = {
-    kind,
-    name: params.slug.split("/").pop()?.replaceAll("_", " ") || "",
-  }
-  const matter = kind === "area" ? AreaFrontmatter(file.data.matter) : RouteFrontmatter(file.data.matter)
+    if (frontmatterData instanceof type.errors) {
+        treeNode.errors = frontmatterData;
+    } else {
+        Object.assign(treeNode, frontmatterData);
+    }
 
-  if (matter instanceof type.errors) {
-    data.errors = matter
-  } else {
-    Object.assign(data, matter)
-  }
-
-  return {
-    content: String(file),
-    treeNode: data
-  }
-}
+    return {
+        content: html,
+        treeNode
+    };
+};
