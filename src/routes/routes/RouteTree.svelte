@@ -6,22 +6,20 @@
   const { root } = $props();
 </script>
 
-<nav>
-  {#if root.kind  === "area"}
-    <a href={resolve(root.link)}>{root.name}</a>
-    {#if root.children}
-      <ul>
-        {#each Object.values(root.children) as child}
-          <li>
-            <Self root={child} />
-          </li>
-        {/each}
-      </ul>
-    {/if}
-  {:else}
-    <a href={resolve(root.link)}>{root.name} {root.grade}</a>
+{#if root.kind === "area"}
+  <a href={resolve(root.link)}>{root.name}</a>
+  {#if root.children}
+    <ul>
+      {#each Object.values(root.children) as child}
+        <li>
+          <Self root={child} />
+        </li>
+      {/each}
+    </ul>
   {/if}
-</nav>
+{:else}
+  <a href={resolve(root.link)}>{root.name} {root.grade}</a>
+{/if}
 
 <style>
   ul {

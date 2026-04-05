@@ -1,10 +1,10 @@
+import { ArkErrors, type } from "arktype";
 
+export const Coordinates = type(["number", "number"]);
 
-import { ArkErrors, type } from "arktype"
-
-export const Coordinates = type(["number", "number"])
-
-export const RouteKind = type("'Trad' | 'Sport' | 'Boulder' | 'Ice' | 'Mixed' | 'Aid' | 'Alpine' | 'Toprope'")
+export const RouteKind = type(
+  "'Trad' | 'Sport' | 'Boulder' | 'Ice' | 'Mixed' | 'Aid' | 'Alpine' | 'Toprope'",
+);
 
 export const RouteFrontmatter = type({
   "routeKind?": RouteKind,
@@ -13,38 +13,38 @@ export const RouteFrontmatter = type({
   "height?": "string",
   "description?": "string",
   "protection?": "string",
-  "coordinates?": Coordinates
-})
+  "coordinates?": Coordinates,
+});
 
 export interface RouteNode {
-  kind: "route"
-  name: string
-  link?: string
+  kind: "route";
+  name: string;
+  link?: string;
 
-  errors?: ArkErrors
+  errors?: ArkErrors;
 
-  routeKind?: string
-  grade?: string
-  height?: string
-  description?: string
-  protection?: string
-  coordinates?: [number, number]
+  routeKind?: string;
+  grade?: string;
+  height?: string;
+  description?: string;
+  protection?: string;
+  coordinates?: [number, number];
 }
 
 export const AreaFrontmatter = type({
   "name?": "string",
-  "coordinates?": Coordinates
-})
+  "coordinates?": Coordinates,
+});
 
 export interface AreaNode {
-  kind: "area"
-  name: string
-  link?: string
-  children?: Record<string, AreaNode | RouteNode>
+  kind: "area";
+  name: string;
+  link?: string;
+  children?: Record<string, AreaNode | RouteNode>;
 
-  errors?: ArkErrors
+  errors?: ArkErrors;
 
-  coordinates?: [number, number]
+  coordinates?: [number, number];
 }
 
-export type TreeNode = RouteNode | AreaNode
+export type TreeNode = RouteNode | AreaNode;

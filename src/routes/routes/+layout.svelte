@@ -3,8 +3,14 @@
   const { data, children } = $props();
 </script>
 
-<RouteTree root={data.routeTree} />
+<nav>
+  <RouteTree root={data.routeTree} />
+</nav>
 
 <main>
   {@render children()}
 </main>
+
+<footer>
+
+</footer>

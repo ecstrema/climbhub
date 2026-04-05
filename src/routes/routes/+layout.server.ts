@@ -1,10 +1,10 @@
-import { AreaFrontmatter, RouteFrontmatter, type AreaNode, type RouteNode } from "$lib/types"
-import { type } from "arktype"
-import type { LayoutServerLoad } from "./$types"
+import { AreaFrontmatter, RouteFrontmatter, type AreaNode } from "$lib/types";
+import { type } from "arktype";
+import type { LayoutServerLoad } from "./$types";
 
 export const load: LayoutServerLoad = async () => {
   // 1. Grab all files as a flat object: { "/src/data/...": "content" }
-  const modules = import.meta.glob('/src/data/routes/**/*.md', {
+  const modules = import.meta.glob("/src/data/routes/**/*.md", {
     eager: true,
   }) as Record<string, { html: string; frontmatter: Record<string, unknown> }>;
 
@@ -12,23 +12,21 @@ export const load: LayoutServerLoad = async () => {
     kind: "area",
     name: "World",
     children: {},
-    link: "/routes/"
+    link: "/routes/",
   };
 
   // 2. Iterate through the flat list of paths and build the tree
-  for (const [path, { html, frontmatter }] of Object.entries(modules)) {
+  for (const [path, { frontmatter }] of Object.entries(modules)) {
     // Clean the path to get segments (e.g., ["America", "Quebec", "Weir"])
-    const cleanPath = path.replace('/src/data/routes/', '').replace('.md', '');
-    const segments = cleanPath.split('/');
+    const cleanPath = path.replace("/src/data/routes/", "").replace(".md", "");
+    const segments = cleanPath.split("/");
     const fileName = segments[segments.length - 1];
 
     let currentNode = routeTree;
 
     const isIndex = fileName === "index";
 
-    const frontmatterData = isIndex
-      ? AreaFrontmatter(frontmatter)
-      : RouteFrontmatter(frontmatter);
+    const frontmatterData = isIndex ? AreaFrontmatter(frontmatter) : RouteFrontmatter(frontmatter);
 
     if (frontmatterData instanceof type.errors) {
       currentNode.errors = frontmatterData;
@@ -47,8 +45,8 @@ export const load: LayoutServerLoad = async () => {
         currentNode.children[segment] = {
           kind: "area",
           name: frontmatterData.name || segment.replaceAll("_", " "),
-          link: `/routes/${segments.slice(0, i + 1).join('/')}`,
-          children: {}
+          link: `/routes/${segments.slice(0, i + 1).join("/")}`,
+          children: {},
         };
       }
       currentNode = currentNode.children[segment] as AreaNode;
@@ -63,7 +61,7 @@ export const load: LayoutServerLoad = async () => {
         kind: "route",
         name: fileName.replaceAll("_", " "),
         link: `/routes/${cleanPath}`,
-        ...frontmatterData
+        ...frontmatterData,
       };
     }
   }
