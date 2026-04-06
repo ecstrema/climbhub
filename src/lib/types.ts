@@ -19,7 +19,10 @@ export const RouteFrontmatter = type({
 export interface RouteNode {
   type: "route";
   name: string;
+
   link?: string;
+  html?: string;
+  parent: AreaNode;
 
   errors?: ArkErrors;
 
@@ -40,7 +43,9 @@ export interface AreaNode {
   type: "area";
   name: string;
   link?: string;
+  html?: string;
   children?: Record<string, AreaNode | RouteNode>;
+  parent: AreaNode | null;
 
   errors?: ArkErrors;
 

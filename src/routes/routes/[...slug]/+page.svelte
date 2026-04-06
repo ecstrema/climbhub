@@ -6,8 +6,19 @@
 
     import type { PageProps } from "./$types";
     import { Separator } from "@/ui/separator";
+    import type { RouteNode } from "$lib/types";
+    import { getNodeSegments } from "$lib/data";
 
     const { data }: PageProps = $props();
+
+    const routesInArea = $derived.by(() => {
+        if (data.currentNode.type === "area" && data.currentNode.children) {
+            return Object.values(data.currentNode.children).filter(
+                (child): child is RouteNode => child.type === "route",
+            );
+        }
+        return [];
+    });
 </script>
 
 <header class="flex h-16 shrink-0 items-center gap-2 border-b px-4">
@@ -18,7 +29,7 @@
     />
     <Breadcrumb.Root>
         <Breadcrumb.List>
-            {@const breadcrumbs = data.breadcrumbs}
+            {@const breadcrumbs = getNodeSegments(data.currentNode)}
             {@const lastElementIndex = breadcrumbs.length - 1}
             {#each breadcrumbs as breadcrumb, index}
                 <Breadcrumb.Item>
@@ -40,17 +51,17 @@
 
 <div class="flex flex-1 flex-col gap-4 p-4">
     <div class="prose">
-        {#if data.treeNode.type === "area"}
-            <h1>{data.treeNode.name}</h1>
+        {#if data.currentNode.type === "area"}
+            <h1>{data.currentNode.name}</h1>
         {:else}
-            <h1>{data.treeNode.name} {data.treeNode.grade}</h1>
+            <h1>{data.currentNode.name} {data.currentNode.grade}</h1>
         {/if}
 
-        <p>{data.treeNode.coordinates}</p>
-        {@html data.html}
+        <p>{data.currentNode.coordinates}</p>
+        {@html data.currentNode.html}
 
-        {#if data.treeNode.type === "area"}
-            <h2>In this sector</h2>
+        {#if data.currentNode.type === "area" && routesInArea.length > 0}
+            <h2>Routes</h2>
             <Table.Root>
                 <Table.Header>
                     <Table.Row>
@@ -61,7 +72,7 @@
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
-                    {#each data.routesInArea as route}
+                    {#each routesInArea as route}
                         <Table.Row>
                             <Table.Cell class="font-medium">
                                 <a href={route.link}>{route.name}</a>

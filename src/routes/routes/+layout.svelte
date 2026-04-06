@@ -8,7 +8,7 @@
 </script>
 
 <Sidebar.Provider>
-  <AppSidebar dataTree={data.routeTree} breadcrumbs={page.data.breadcrumbs} />
+  <AppSidebar dataTree={data.dataTree} breadcrumbs={page.data.breadcrumbs} />
   <Sidebar.Inset>
     {@render children()}
   </Sidebar.Inset>
