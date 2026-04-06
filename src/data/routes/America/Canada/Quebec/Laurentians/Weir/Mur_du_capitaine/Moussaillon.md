@@ -7,4 +7,4 @@ kind: Sport # The type of climbing. Trad, Sport, Boulder, Ice, Mixed, Aid, Alpin
 protection: 15 Bolts # The type of protection. Bolts, Gear, Ice, etc.
 ---
 
-Rightmost route on the wall. Two disting cruxes, with the second higher up.
+Rightmost route on the wall. Two distinct cruxes, with the second higher up.
