@@ -1,17 +1,18 @@
 import { error } from "@sveltejs/kit";
 import { type as arktype } from "arktype";
-import { AreaFrontmatter, RouteFrontmatter, type AreaNode } from "$lib/types";
+import { AreaFrontmatter, RouteFrontmatter, type RouteNode, type TreeNode } from "$lib/types";
 import type { PageServerLoad } from "./$types";
 
 type RoutePageProps = {
   html: string;
   treeNode: any; // This will be either a RouteNode or an AreaNode, but we can determine that in the component based on the "type" property.
   breadcrumbs: { name: string; link: string }[];
+  routesInArea: RouteNode[]; // Only populated if this page is an Area
 }
 
 export const load: PageServerLoad = async ({ params }): Promise<RoutePageProps> => {
-  // 1. Grab the processed modules
-  // Note: No need for ?raw or manual parsing; the plugin handles it.
+  // Grab the processed modules
+  // Note: No need for manual parsing; the plugin handles it.
   const modules = import.meta.glob("/src/data/routes/**/*.md", {
     eager: true,
   }) as Record<string, { html: string; frontmatter: Record<string, unknown> }>;
@@ -46,18 +47,13 @@ export const load: PageServerLoad = async ({ params }): Promise<RoutePageProps> 
       );
 
       if (folderExists) {
-        return {
-          html: "", // No content because there's no index.md
-          treeNode: {
-            type: "area",
-            name: params.slug.split("/").pop()?.replaceAll("_", " ") || "",
-            link: `/routes/${params.slug}`,
-          } satisfies AreaNode,
-          breadcrumbs,
-        };
+        module = {
+          html: "",
+          frontmatter: {},
+        }
+      } else {
+        throw error(404, `Route or Area ${params.slug} not found`);
       }
-
-      throw error(404, `Route or Area ${params.slug} not found`);
     }
   }
 
@@ -67,7 +63,7 @@ export const load: PageServerLoad = async ({ params }): Promise<RoutePageProps> 
     type === "area" ? AreaFrontmatter(frontmatter) : RouteFrontmatter(frontmatter);
 
   // Construct the node
-  const treeNode: any = {
+  const treeNode: TreeNode = {
     type,
     name: params.slug.split("/").pop()?.replaceAll("_", " ") || "",
     link: `/routes/${params.slug}`,
@@ -79,10 +75,41 @@ export const load: PageServerLoad = async ({ params }): Promise<RoutePageProps> 
     Object.assign(treeNode, frontmatterData);
   }
 
+  // get the routes in this area if it's an area.
+  let routesInArea: RouteNode[] = [];
+  if (type === "area") {
+    const areaPath = `/src/data/routes/${params.slug}/`;
+    routesInArea = Object.entries(modules)
+      .filter(([key]) => key.startsWith(areaPath) && key !== indexPath)
+      .map(([key, value]) => {
+        const relativePath = key.replace(areaPath, "").replace(".md", "");
+        if (relativePath.includes("/")) {
+          // This is a nested route, we only want direct children
+          return null;
+        }
+
+        const childFrontmatterData = RouteFrontmatter(value.frontmatter);
+        const childNode: TreeNode = {
+          type: "route",
+          name: relativePath.replaceAll("_", " "),
+          link: `/routes/${params.slug}/${relativePath}`,
+        };
+
+        if (childFrontmatterData instanceof arktype.errors) {
+          childNode.errors = childFrontmatterData;
+        } else {
+          Object.assign(childNode, childFrontmatterData);
+        }
+
+        return childNode;
+      })
+      .filter((node): node is RouteNode => node !== null);
+  }
 
   return {
     html,
     treeNode,
     breadcrumbs,
+    routesInArea,
   };
 };

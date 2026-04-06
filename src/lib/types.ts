@@ -11,9 +11,9 @@ export const RouteFrontmatter = type({
   "name?": "string",
   "grade?": "string",
   "height?": "string",
-  "description?": "string",
   "protection?": "string",
   "coordinates?": Coordinates,
+  "rating?": "0 <= number <= 5",
 });
 
 export interface RouteNode {
@@ -23,12 +23,12 @@ export interface RouteNode {
 
   errors?: ArkErrors;
 
-  kind?: string;
+  kind?: typeof RouteKind.infer;
   grade?: string;
   height?: string;
-  description?: string;
   protection?: string;
   coordinates?: [number, number];
+  rating?: number;
 }
 
 export const AreaFrontmatter = type({
