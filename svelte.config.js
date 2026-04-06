@@ -11,6 +11,9 @@ const config = {
     paths: {
       base: "/climbhub",
     },
+    alias: {
+      "@/*": "./src/lib/components/*",
+    },
   },
 };
 

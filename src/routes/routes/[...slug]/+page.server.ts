@@ -3,7 +3,13 @@ import { type } from "arktype";
 import { AreaFrontmatter, RouteFrontmatter, type AreaNode } from "$lib/types";
 import type { PageServerLoad } from "./$types";
 
-export const load: PageServerLoad = async ({ params }) => {
+type RoutePageProps = {
+  html: string;
+  treeNode: any; // This will be either a RouteNode or an AreaNode, but we can determine that in the component based on the "kind" property.
+  breadcrumbs: { name: string; link: string }[];
+}
+
+export const load: PageServerLoad = async ({ params }): Promise<RoutePageProps> => {
   // 1. Grab the processed modules
   // Note: No need for ?raw or manual parsing; the plugin handles it.
   const modules = import.meta.glob("/src/data/routes/**/*.md", {
@@ -16,7 +22,18 @@ export const load: PageServerLoad = async ({ params }) => {
   let module = modules[routePath];
   let kind: "route" | "area" = "route";
 
-  // 2. Determine if it's a Route, an Area (index.md), or just a Folder
+  // Construct the path for the breadcrumbs. Recursively go through the parent areas until we reach the root.
+  const slugParts = params.slug.split("/");
+  const breadcrumbs = [];
+  for (let i = 0; i < slugParts.length; i++) {
+    const breadcrumbSlug = slugParts.slice(0, i + 1).join("/");
+    breadcrumbs.push({
+      name: slugParts[i].replaceAll("_", " "),
+      link: `/routes/${breadcrumbSlug}`,
+    });
+  }
+
+  // Determine if it's a Route, an Area (index.md), or just a Folder
   if (!module) {
     if (modules[indexPath]) {
       module = modules[indexPath];
@@ -30,12 +47,13 @@ export const load: PageServerLoad = async ({ params }) => {
 
       if (folderExists) {
         return {
-          content: "", // No content because there's no index.md
+          html: "", // No content because there's no index.md
           treeNode: {
             kind: "area",
             name: params.slug.split("/").pop()?.replaceAll("_", " ") || "",
             link: `/routes/${params.slug}`,
-          } as AreaNode,
+          } satisfies AreaNode,
+          breadcrumbs,
         };
       }
 
@@ -43,12 +61,12 @@ export const load: PageServerLoad = async ({ params }) => {
     }
   }
 
-  // 3. Validate with Arktype
+  // Validate with Arktype
   const { html, frontmatter } = module;
   const frontmatterData =
     kind === "area" ? AreaFrontmatter(frontmatter) : RouteFrontmatter(frontmatter);
 
-  // 4. Construct the node
+  // Construct the node
   const treeNode: any = {
     kind,
     name: params.slug.split("/").pop()?.replaceAll("_", " ") || "",
@@ -61,8 +79,10 @@ export const load: PageServerLoad = async ({ params }) => {
     Object.assign(treeNode, frontmatterData);
   }
 
+
   return {
-    content: html,
+    html,
     treeNode,
+    breadcrumbs,
   };
 };

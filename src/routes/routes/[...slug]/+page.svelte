@@ -1,13 +1,34 @@
 <script lang="ts">
-    import type { PageData } from "./$types";
+    import { resolve } from "$app/paths";
+    import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
 
-    type Props = {
-        data: PageData;
-    };
-    const { data }: Props = $props();
+    import type { PageProps } from "./$types";
+
+    const { data }: PageProps = $props();
+
+    const breadcrumbs = $derived.by(() => data.breadcrumbs);
 </script>
 
-<div class="prose xl:prose-lg">
+<Breadcrumb.Root>
+    <Breadcrumb.List>
+        {#each breadcrumbs as breadcrumb, index}
+            <Breadcrumb.Item>
+                {#if index === breadcrumbs.length - 1}
+                    <Breadcrumb.Page>{breadcrumb.name}</Breadcrumb.Page>
+                {:else}
+                    <Breadcrumb.Link href={resolve(breadcrumb.link as any)}>
+                        {breadcrumb.name}
+                    </Breadcrumb.Link>
+                {/if}
+            </Breadcrumb.Item>
+            {#if index !== breadcrumbs.length - 1}
+                <Breadcrumb.Separator />
+            {/if}
+        {/each}
+    </Breadcrumb.List>
+</Breadcrumb.Root>
+
+<div class="prose">
     {#if data.treeNode.kind === "area"}
         <h1>{data.treeNode.name}</h1>
     {:else}
@@ -15,5 +36,5 @@
     {/if}
 
     <p>{data.treeNode.coordinates}</p>
-    {@html data.content}
+    {@html data.html}
 </div>
