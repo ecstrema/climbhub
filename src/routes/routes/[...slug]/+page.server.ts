@@ -1,11 +1,11 @@
 import { error } from "@sveltejs/kit";
-import { type } from "arktype";
+import { type as arktype } from "arktype";
 import { AreaFrontmatter, RouteFrontmatter, type AreaNode } from "$lib/types";
 import type { PageServerLoad } from "./$types";
 
 type RoutePageProps = {
   html: string;
-  treeNode: any; // This will be either a RouteNode or an AreaNode, but we can determine that in the component based on the "kind" property.
+  treeNode: any; // This will be either a RouteNode or an AreaNode, but we can determine that in the component based on the "type" property.
   breadcrumbs: { name: string; link: string }[];
 }
 
@@ -20,7 +20,7 @@ export const load: PageServerLoad = async ({ params }): Promise<RoutePageProps> 
   const indexPath = `/src/data/routes/${params.slug}/index.md`;
 
   let module = modules[routePath];
-  let kind: "route" | "area" = "route";
+  let type: "route" | "area" = "route";
 
   // Construct the path for the breadcrumbs. Recursively go through the parent areas until we reach the root.
   const slugParts = params.slug.split("/");
@@ -37,7 +37,7 @@ export const load: PageServerLoad = async ({ params }): Promise<RoutePageProps> 
   if (!module) {
     if (modules[indexPath]) {
       module = modules[indexPath];
-      kind = "area";
+      type = "area";
     } else {
       // Check if it's a folder that exists but has no index.md
       // We verify if any known markdown file exists inside this path
@@ -49,7 +49,7 @@ export const load: PageServerLoad = async ({ params }): Promise<RoutePageProps> 
         return {
           html: "", // No content because there's no index.md
           treeNode: {
-            kind: "area",
+            type: "area",
             name: params.slug.split("/").pop()?.replaceAll("_", " ") || "",
             link: `/routes/${params.slug}`,
           } satisfies AreaNode,
@@ -64,16 +64,16 @@ export const load: PageServerLoad = async ({ params }): Promise<RoutePageProps> 
   // Validate with Arktype
   const { html, frontmatter } = module;
   const frontmatterData =
-    kind === "area" ? AreaFrontmatter(frontmatter) : RouteFrontmatter(frontmatter);
+    type === "area" ? AreaFrontmatter(frontmatter) : RouteFrontmatter(frontmatter);
 
   // Construct the node
   const treeNode: any = {
-    kind,
+    type,
     name: params.slug.split("/").pop()?.replaceAll("_", " ") || "",
     link: `/routes/${params.slug}`,
   };
 
-  if (frontmatterData instanceof type.errors) {
+  if (frontmatterData instanceof arktype.errors) {
     treeNode.errors = frontmatterData;
   } else {
     Object.assign(treeNode, frontmatterData);

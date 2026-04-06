@@ -7,7 +7,7 @@ export const RouteKind = type(
 );
 
 export const RouteFrontmatter = type({
-  "routeKind?": RouteKind,
+  "kind?": RouteKind,
   "name?": "string",
   "grade?": "string",
   "height?": "string",
@@ -17,13 +17,13 @@ export const RouteFrontmatter = type({
 });
 
 export interface RouteNode {
-  kind: "route";
+  type: "route";
   name: string;
   link?: string;
 
   errors?: ArkErrors;
 
-  routeKind?: string;
+  kind?: string;
   grade?: string;
   height?: string;
   description?: string;
@@ -37,7 +37,7 @@ export const AreaFrontmatter = type({
 });
 
 export interface AreaNode {
-  kind: "area";
+  type: "area";
   name: string;
   link?: string;
   children?: Record<string, AreaNode | RouteNode>;

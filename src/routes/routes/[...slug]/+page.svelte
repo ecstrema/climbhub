@@ -39,7 +39,7 @@
 
 <div class="flex flex-1 flex-col gap-4 p-4">
     <div class="prose">
-        {#if data.treeNode.kind === "area"}
+        {#if data.treeNode.type === "area"}
             <h1>{data.treeNode.name}</h1>
         {:else}
             <h1>{data.treeNode.name} {data.treeNode.grade}</h1>

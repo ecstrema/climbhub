@@ -42,7 +42,7 @@
 
 {#snippet Tree(item: TreeNode)}
 	{@const name = item.name}
-	{#if item.kind === "route"}
+	{#if item.type === "route"}
 		<Sidebar.MenuButton
 			isActive={name === "button.svelte"}
 			class="data-[active=true]:bg-transparent"

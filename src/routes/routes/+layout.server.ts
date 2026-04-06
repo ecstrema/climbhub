@@ -9,7 +9,7 @@ export const load: LayoutServerLoad = async () => {
   }) as Record<string, { html: string; frontmatter: Record<string, unknown> }>;
 
   const routeTree: AreaNode = {
-    kind: "area",
+    type: "area",
     name: "World",
     children: {},
     link: "/routes/",
@@ -43,7 +43,7 @@ export const load: LayoutServerLoad = async () => {
 
       if (!currentNode.children[segment]) {
         currentNode.children[segment] = {
-          kind: "area",
+          type: "area",
           name: frontmatterData.name || segment.replaceAll("_", " "),
           link: `/routes/${segments.slice(0, i + 1).join("/")}`,
           children: {},
@@ -58,7 +58,7 @@ export const load: LayoutServerLoad = async () => {
     } else {
       if (!currentNode.children) currentNode.children = {};
       currentNode.children[fileName] = {
-        kind: "route",
+        type: "route",
         name: fileName.replaceAll("_", " "),
         link: `/routes/${cleanPath}`,
         ...frontmatterData,
