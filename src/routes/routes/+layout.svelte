@@ -1,21 +1,15 @@
 <script lang="ts">
-  import RouteTree from "./RouteTree.svelte";
+  import AppSidebar from "@/app-sidebar.svelte";
+  import * as Sidebar from "@/ui/sidebar";
+
+  import { page } from "$app/state";
+
   const { data, children } = $props();
 </script>
 
-<div class="flex flex-col min-h-screen p-4">
-  <div class="flex gap-4 justify-center">
-    <nav>
-      <RouteTree root={data.routeTree} />
-    </nav>
-
-    <main class="grow">
-      {@render children()}
-    </main>
-
-    <nav></nav>
-  </div>
-
-  <div class="grow"></div>
-  <footer class="flex justify-center">Footer text</footer>
-</div>
+<Sidebar.Provider>
+  <AppSidebar dataTree={data.routeTree} breadcrumbs={page.data.breadcrumbs} />
+  <Sidebar.Inset>
+    {@render children()}
+  </Sidebar.Inset>
+</Sidebar.Provider>
