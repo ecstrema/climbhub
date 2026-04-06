@@ -47,10 +47,8 @@
 			isActive={name === "button.svelte"}
 			class="data-[active=true]:bg-transparent"
 		>
-			<FileIcon />
+			<span class="min-w-7 text-muted-foreground">{item.grade}</span>
 			<a href={resolve(item.link as any)}>{name}</a>
-			<div class="grow"></div>
-			{item.grade}
 		</Sidebar.MenuButton>
 	{:else}
 		<Sidebar.MenuItem>
@@ -62,7 +60,6 @@
 					{#snippet child({ props })}
 						<Sidebar.MenuButton {...props}>
 							<ChevronRightIcon class="transition-transform" />
-							<FolderIcon />
 							<a href={resolve(item.link as any)}>{name}</a>
 						</Sidebar.MenuButton>
 					{/snippet}

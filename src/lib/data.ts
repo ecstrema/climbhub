@@ -4,7 +4,7 @@ import { type AreaNode, type RouteNode, type TreeNode, AreaFrontmatter, RouteFro
 
 export function parseDataTree() {
   // Grab all files as a flat object: { "/src/data/...": "content" }
-  const modules = import.meta.glob("/src/data/routes/**/*.md", {
+  const modules = import.meta.glob("/src/data/World/**/*.md", {
     eager: true,
   }) as Record<string, { html: string; frontmatter: Record<string, unknown> }>;
 
@@ -12,20 +12,21 @@ export function parseDataTree() {
     type: "area",
     name: "World",
     children: {},
-    link: "/routes/",
+    link: "/World/",
     parent: null,
   };
 
   // Iterate through the flat list of paths and build the tree
   for (const [path, { html, frontmatter }] of Object.entries(modules)) {
+    console.log(path)
     // Clean the path to get segments (e.g., ["America", "Quebec", "Weir"])
-    const cleanPath = path.replace("/src/data/routes/", "").replace(".md", "");
-    const segments = cleanPath.split("/");
+    const cleanPath = path.replace("/src/data/World/", "");
+    const segments = cleanPath.split("/").filter(Boolean)
     const fileName = segments[segments.length - 1];
+    const isIndex = fileName === "index.md";
+    segments[segments.length - 1] = segments[segments.length - 1].replace(".md", "")
 
     let currentNode = routeTree;
-
-    const isIndex = fileName === "index";
 
     const frontmatterData = isIndex ? AreaFrontmatter(frontmatter) : RouteFrontmatter(frontmatter);
 
@@ -45,8 +46,8 @@ export function parseDataTree() {
       if (!currentNode.children[segment]) {
         currentNode.children[segment] = {
           type: "area",
-          name: frontmatterData.name || segment.replaceAll("_", " "),
-          link: `/routes/${segments.slice(0, i + 1).join("/")}`,
+          name: segment.replaceAll("_", " "),
+          link: `/World/${segments.slice(0, i + 1).join("/")}`,
           children: {},
           parent: currentNode,
         };
@@ -56,13 +57,13 @@ export function parseDataTree() {
 
     // Assign frontmatterData to the node
     if (isIndex) {
-      Object.assign(currentNode, frontmatterData);
+      Object.assign(currentNode, frontmatterData, { html });
     } else {
       if (!currentNode.children) currentNode.children = {};
       currentNode.children[fileName] = {
         type: "route",
         name: fileName.replaceAll("_", " "),
-        link: `/routes/${cleanPath}`,
+        link: `/World/${cleanPath}`,
         html,
         parent: currentNode,
         ...frontmatterData,
@@ -108,5 +109,5 @@ export function getNodeSegments(node: TreeNode) {
     n = n.parent;
   } while (n)
 
-  return segments;
+  return segments.toReversed();
 }

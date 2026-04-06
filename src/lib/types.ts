@@ -20,7 +20,7 @@ export interface RouteNode {
   type: "route";
   name: string;
 
-  link?: string;
+  link: string;
   html?: string;
   parent: AreaNode;
 
@@ -42,7 +42,7 @@ export const AreaFrontmatter = type({
 export interface AreaNode {
   type: "area";
   name: string;
-  link?: string;
+  link: string;
   html?: string;
   children?: Record<string, AreaNode | RouteNode>;
   parent: AreaNode | null;

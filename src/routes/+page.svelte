@@ -4,4 +4,4 @@
 
 <h1>Climbhub</h1>
 
-<a href={resolve("/routes")}>See all routes</a>
+<a href={resolve("/World")}>See all routes</a>

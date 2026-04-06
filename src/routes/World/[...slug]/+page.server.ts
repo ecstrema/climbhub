@@ -1,7 +1,7 @@
 import { error } from "@sveltejs/kit";
 import type { TreeNode } from "$lib/types";
-import type { PageServerLoad } from "./$types";
 import { findNodeBySlug } from "$lib/data";
+import type { PageServerLoad } from "./$types";
 
 type RoutePageProps = {
   currentNode: TreeNode;
