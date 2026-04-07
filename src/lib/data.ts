@@ -3,8 +3,7 @@ import { type AreaNode, type RouteNode, type TreeNode, AreaFrontmatter, RouteFro
 
 
 export function parseDataTree() {
-  // Grab all files as a flat object: { "/src/data/...": "content" }
-  const modules = import.meta.glob("/src/data/World/**/*.md", {
+  const modules = import.meta.glob("/src/climbing_data/World/**/*.md", {
     eager: true,
   }) as Record<string, { html: string; frontmatter: Record<string, unknown> }>;
 
@@ -19,7 +18,7 @@ export function parseDataTree() {
   // Iterate through the flat list of paths and build the tree
   for (const [path, { html, frontmatter }] of Object.entries(modules)) {
     // Clean the path to get segments (e.g., ["America", "Quebec", "Weir"])
-    const cleanPath = path.replace("/src/data/World/", "");
+    const cleanPath = path.replace("/src/climbing_data/World/", "");
     const segments = cleanPath.split("/").filter(Boolean)
     const fileName = segments[segments.length - 1];
     const isIndex = fileName === "index.md";
