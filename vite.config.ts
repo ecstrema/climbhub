@@ -8,10 +8,10 @@ import rehypeStringify from "rehype-stringify";
 import remarkFrontmatter from "remark-frontmatter";
 import { matter } from "vfile-matter";
 import { defineConfig, type Plugin } from "vitest/config";
-import { DevTools } from "@vitejs/devtools";
 
 function getFrontmatter() {
-  return function (tree, file) {
+  // @ts-ignore
+  return function (_tree, file) {
     matter(file);
   };
 }
@@ -53,7 +53,6 @@ export const frontmatter = ${JSON.stringify(matter)};`,
 };
 
 export default defineConfig({
-  plugins: [tailwindcss(), sveltekit(), devtoolsJson(), markdownPlugin(), DevTools()],
-  test: { include: ["src/**/*.{test,spec}.{js,ts}"] },
-  devtools: true,
+  plugins: [tailwindcss(), sveltekit(), devtoolsJson(), markdownPlugin()],
+  test: { include: ["src/**/*.{test,spec}.{js,ts}"] }
 });
