@@ -1,1 +1,0 @@
-The sheer size of the United States forces its diversity of rocks, landscapes, climates, and cultures. From the deserts of the Southwest to the snow-capped peaks of the Rockies, the United States offers a lifetime of climbing exploration.
