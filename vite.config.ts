@@ -19,26 +19,33 @@ function getFrontmatter() {
 const markdownPlugin: () => Plugin = () => {
   return {
     name: "vite-plugin-markdown-data",
-    async transform(code, id) {
-      if (!id.endsWith(".md")) return null;
+    transform: {
+      filter: {
+        id: /\.md$/,
+      },
 
-      const parsedFile = await unified()
-        .use(remarkParse)
-        .use(remarkFrontmatter)
-        .use(getFrontmatter)
-        .use(remarkRehype)
-        .use(rehypeStringify)
-        .process(code);
+      async handler(code, id) {
+        if (!id.endsWith(".md")) return null;
 
-      const matter = parsedFile.data.matter || {};
-      const html = String(parsedFile);
+        const parsedFile = await unified()
+          .use(remarkParse)
+          .use(remarkFrontmatter)
+          .use(getFrontmatter)
+          .use(remarkRehype)
+          .use(rehypeStringify)
+          .process(code);
 
-      // 3. Export as a JS object
-      return {
-        code: `export const html = ${JSON.stringify(String(html))};
+        const matter = parsedFile.data.matter || {};
+        const html = String(parsedFile);
+
+        // 3. Export as a JS object
+        return {
+          code: `export const html = ${JSON.stringify(String(html))};
 export const frontmatter = ${JSON.stringify(matter)};`,
-        map: null,
-      };
+          map: null,
+        };
+      }
+
     },
 
     configureServer(server) {
