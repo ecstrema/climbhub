@@ -30,7 +30,7 @@
 </script>
 
 <script lang="ts">
-	import * as Tooltip from "$lib/components/ui/tooltip/index.js";
+	import * as Tooltip from "@/ui/tooltip/index.js";
 	import {
 		cn,
 		type WithElementRef,

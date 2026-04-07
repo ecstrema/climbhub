@@ -55,5 +55,5 @@ export const frontmatter = ${JSON.stringify(matter)};`,
 export default defineConfig({
   plugins: [tailwindcss(), sveltekit(), devtoolsJson(), markdownPlugin(), DevTools()],
   test: { include: ["src/**/*.{test,spec}.{js,ts}"] },
-  devtools: { enabled: true },
+  devtools: true,
 });

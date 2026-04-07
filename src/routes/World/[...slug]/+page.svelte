@@ -1,5 +1,6 @@
 <script lang="ts">
     import * as Table from "@/ui/table";
+    import { resolve } from "$app/paths";
 
     import type { PageProps } from "./$types";
     import type { RouteNode } from "$lib/types";
@@ -41,7 +42,7 @@
                 {#each routesInArea as route}
                     <Table.Row>
                         <Table.Cell class="font-medium">
-                            <a href={route.link}>{route.name}</a>
+                            <a href={resolve(route.link)}>{route.name}</a>
                         </Table.Cell>
                         <Table.Cell>{route.grade}</Table.Cell>
                         <Table.Cell>

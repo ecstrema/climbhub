@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { resolve } from "$app/paths";
 
-	import * as Collapsible from "$lib/components/ui/collapsible/index.js";
-	import * as Sidebar from "$lib/components/ui/sidebar/index.js";
+	import * as Collapsible from "@/ui/collapsible/index.js";
+	import * as Sidebar from "@/ui/sidebar/index.js";
 	import type { AreaNode, TreeNode } from "$lib/types";
 	import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
 	import FileIcon from "@lucide/svelte/icons/file";

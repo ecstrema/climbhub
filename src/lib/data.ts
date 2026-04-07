@@ -18,7 +18,6 @@ export function parseDataTree() {
 
   // Iterate through the flat list of paths and build the tree
   for (const [path, { html, frontmatter }] of Object.entries(modules)) {
-    console.log(path)
     // Clean the path to get segments (e.g., ["America", "Quebec", "Weir"])
     const cleanPath = path.replace("/src/data/World/", "");
     const segments = cleanPath.split("/").filter(Boolean)

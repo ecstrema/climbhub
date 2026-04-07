@@ -1,10 +1,9 @@
 <script lang="ts">
   import { resolve } from "$app/paths";
-  import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
+  import * as Breadcrumb from "@/ui/breadcrumb/index.js";
   import AppSidebar from "@/app-sidebar.svelte";
   import { Separator } from "@/ui/separator";
   import { getNodeSegments } from "$lib/data";
-
   import * as Sidebar from "@/ui/sidebar";
 
   import { page } from "$app/state";
