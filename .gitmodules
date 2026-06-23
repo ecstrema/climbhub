@@ -1,3 +1,0 @@
-[submodule "src/climbing_data"]
-	path = src/climbing_data
-	url = https://github.com/ecstrema/climbing_data.git
