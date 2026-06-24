@@ -1,111 +1,39 @@
-import { type as arktype } from "arktype";
-import { type AreaNode, type RouteNode, type TreeNode, AreaFrontmatter, RouteFrontmatter } from "./types";
+import type { TreeNode, BreadcrumbSegment } from "./types";
 
+/**
+ * Derives breadcrumb segments from a TreeNode's path.
+ * Example: "world/canada/quebec" ->
+ * [
+ *   { name: "World", link: "/World" },
+ *   { name: "Canada", link: "/World/canada" },
+ *   { name: "Quebec", link: "/World/canada/quebec" }
+ * ]
+ */
+export function getNodeSegments(node: TreeNode): BreadcrumbSegment[] {
+  if (!node || !node.path) return [];
 
-export function parseDataTree() {
-  const modules = import.meta.glob("/src/climbing_data/World/**/*.md", {
-    eager: true,
-  }) as Record<string, { html: string; frontmatter: Record<string, unknown> }>;
+  const segments = node.path.split("/");
+  const breadcrumbs: BreadcrumbSegment[] = [];
 
-  const routeTree: AreaNode = {
-    type: "area",
-    name: "World",
-    children: {},
-    link: "/World/",
-    parent: null,
-  };
-
-  // Iterate through the flat list of paths and build the tree
-  for (const [path, { html, frontmatter }] of Object.entries(modules)) {
-    // Clean the path to get segments (e.g., ["America", "Quebec", "Weir"])
-    const cleanPath = path.replace("/src/climbing_data/World/", "");
-    const segments = cleanPath.split("/").filter(Boolean)
-    const fileName = segments[segments.length - 1];
-    const isIndex = fileName === "index.md";
-    segments[segments.length - 1] = segments[segments.length - 1].replace(".md", "")
-
-    let currentNode = routeTree;
-
-    const frontmatterData = isIndex ? AreaFrontmatter(frontmatter) : RouteFrontmatter(frontmatter);
-
-    if (frontmatterData instanceof arktype.errors) {
-      currentNode.errors = frontmatterData;
-      continue;
-    }
-
-    // If segments are ["USA", "Colorado", "Rifle", "index"], we loop through ["USA", "Colorado", "Rifle"]
-    // If segments are ["USA", "Colorado", "Rifle", "Opie"], we loop through ["USA", "Colorado", "Rifle"]
-    const parentSegments = segments.slice(0, -1);
-
-    for (let i = 0; i < parentSegments.length; i++) {
-      const segment = segments[i];
-      if (!currentNode.children) currentNode.children = {};
-
-      if (!currentNode.children[segment]) {
-        currentNode.children[segment] = {
-          type: "area",
-          name: segment.replaceAll("_", " "),
-          link: `/World/${segments.slice(0, i + 1).join("/")}`,
-          children: {},
-          parent: currentNode,
-        };
-      }
-      currentNode = currentNode.children[segment] as AreaNode;
-    }
-
-    // Assign frontmatterData to the node
-    if (isIndex) {
-      Object.assign(currentNode, frontmatterData, { html });
-    } else {
-      if (!currentNode.children) currentNode.children = {};
-      currentNode.children[fileName] = {
-        type: "route",
-        name: fileName.replaceAll("_", " "),
-        link: `/World/${cleanPath}`,
-        html,
-        parent: currentNode,
-        ...frontmatterData,
-      };
-    }
-  }
-
-  return routeTree;
-}
-
-const dataTree = parseDataTree();
-
-export function getDataTree() {
-  return dataTree;
-}
-
-export function findNodeBySlug(slug: string): AreaNode | RouteNode | null {
-  const segments = slug.split("/").filter(Boolean); // Split and remove empty segments
-  let currentNode: AreaNode | RouteNode = dataTree;
-
+  let currentPath = "";
   for (let i = 0; i < segments.length; i++) {
-    const segment = segments[i]
+    const segment = segments[i];
+    currentPath = currentPath ? `${currentPath}/${segment}` : segment;
 
-    if (currentNode.type !== "area") {
-      return null; // Can't navigate into a route
+    // Capitalize first letter of segment for the name if it's "world" or similar
+    // Actually, we should probably follow a naming convention or use the node's name for the last segment.
+    let name = segment.charAt(0).toUpperCase() + segment.slice(1);
+
+    // For the last segment, use the actual node name if available
+    if (i === segments.length - 1 && node.name) {
+      name = node.name;
     }
-    if (!currentNode.children || !currentNode.children[segment]) {
-      return null; // Not found
-    }
-    currentNode = currentNode.children[segment] as AreaNode | RouteNode;
+
+    breadcrumbs.push({
+      name,
+      link: `/World/${currentPath.replace(/^world\/?/, "")}`.replace(/\/$/, "") || "/World",
+    });
   }
-  return currentNode;
-}
 
-export function getNodeSegments(node: TreeNode) {
-  const segments = [];
-  let n: TreeNode | null = node;
-  do {
-    segments.push({
-      link: n.link,
-      name: n.name,
-    })
-    n = n.parent;
-  } while (n)
-
-  return segments.toReversed();
+  return breadcrumbs;
 }
