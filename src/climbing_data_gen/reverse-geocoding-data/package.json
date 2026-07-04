@@ -2,14 +2,14 @@
   "name": "foto",
   "version": "1.0.0",
   "description": "Geographic pipeline tool",
-  "main": "index.js",
   "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "build": "bun run src/index.ts"
+  },
   "dependencies": {
     "js-yaml": "^4.2.0",
     "osmtogeojson": "^3.0.0-beta.5"
-  },
-  "scripts": {
-    "build": "bun run index.js"
   },
   "devDependencies": {
     "@types/bun": "^1.3.14",
