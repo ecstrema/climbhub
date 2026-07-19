@@ -4,15 +4,7 @@ import { existsSync, readFileSync, writeFileSync, readdirSync, mkdirSync } from 
 import { join, resolve, dirname, basename } from "path";
 import { BoundingBox, IndexNode, YamlConfig } from "./types";
 import { DATA_DIR, OUTPUT_INDEX, USER_AGENT } from "./config";
-
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[–—\s]+/g, "-")
-    .replace(/[^a-z0-9-]/g, "");
-}
+import { ensureDirExists, slugify } from "./utils";
 
 function mergeBbox(b1: BoundingBox, b2: BoundingBox): BoundingBox {
   if (!b1) return b2;
@@ -25,8 +17,12 @@ function mergeBbox(b1: BoundingBox, b2: BoundingBox): BoundingBox {
   };
 }
 
+function initBbox(): BoundingBox {
+  return { x0: Infinity, x1: -Infinity, y0: Infinity, y1: -Infinity };
+}
+
 function calculateGeoJsonBbox(geojson: any): BoundingBox {
-  let bbox: BoundingBox = { x0: Infinity, x1: -Infinity, y0: Infinity, y1: -Infinity };
+  let bbox = initBbox();
   function processCoordinates(coords: any) {
     if (typeof coords[0] === "number") {
       const [lon, lat] = coords;
@@ -170,9 +166,7 @@ async function processActionableQueries(configs: Map<string, YamlConfig>) {
 
 /** Builds a hierarchical tree structure from the directory structure and generated boundary data. */
 function buildHierarchyTree(currentPath: string, configs: Map<string, YamlConfig>): IndexNode {
-  let overallBbox: BoundingBox = { x0: Infinity, x1: -Infinity, y0: Infinity, y1: -Infinity };
-
-  const entries = readdirSync(currentPath, { withFileTypes: true });
+  let overallBbox = initBbox();
 
   // First check if this directory itself has a boundary
   const boundaryPath = join(currentPath, "boundary.geojson");
@@ -188,12 +182,12 @@ function buildHierarchyTree(currentPath: string, configs: Map<string, YamlConfig
   const self: IndexNode = { _bbox: overallBbox };
 
   // Recurse into children
-  for (const entry of entries) {
+  for (const entry of readdirSync(currentPath, { withFileTypes: true })) {
     if (entry.name.startsWith(".") || !entry.isDirectory()) continue;
 
     const childNode = buildHierarchyTree(join(currentPath, entry.name), configs);
     if (childNode._bbox) {
-      overallBbox = mergeBbox(overallBbox, childNode._bbox);
+      self._bbox = mergeBbox(self._bbox, childNode._bbox);
     }
     self[entry.name] = childNode;
   }
@@ -203,8 +197,6 @@ function buildHierarchyTree(currentPath: string, configs: Map<string, YamlConfig
     if (dirname(file) === currentPath) {
       if (config.displayName) {
         self["_name"] = config.displayName;
-      } else {
-        self["_name"] = basename(currentPath);
       }
     }
   }
@@ -246,10 +238,7 @@ function validateConfigs(configs: Map<string, YamlConfig>) {
 }
 
 async function main() {
-  if (!existsSync(DATA_DIR)) {
-    console.error(`Error: Data root directory "${DATA_DIR}" does not exist.`);
-    process.exit(1);
-  }
+  ensureDirExists(DATA_DIR);
 
   console.log("=== PHASE 1: SCANNING AND RESOLVING DEPENDENCIES ===");
   const configs = scanDirectoryForConfigs(DATA_DIR);
