@@ -2,12 +2,12 @@
   "name": "reverse-geocoding-data",
   "version": "1.0.0",
   "description": "Data pipeline for fetching OSM boundaries and compiling static geographic APIs",
+  "type": "module",
   "scripts": {
     "build": "bun run src/main.ts"
   },
   "dependencies": {
     "@turf/boolean-point-in-polygon": "^7.3.5",
-    "@turf/helpers": "^7.3.5",
     "fflate": "^0.8.3",
     "js-yaml": "^4.2.0",
     "osmtogeojson": "^3.0.0-beta.5"

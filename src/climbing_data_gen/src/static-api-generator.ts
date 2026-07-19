@@ -1,345 +1,323 @@
-import { readdirSync, readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
+import { readdir, readFile, writeFile } from "fs/promises";
 import { join, dirname } from "path";
-import { ReverseGeolocator } from "./reverse-geolocation";
-import { zipSync } from "fflate";
 
-// --- CONFIGURATION ---
-const REVERSE_GEOCODING_DATA_DIR = join(dirname(__filename), "../reverse-geocoding-data/data");
-const OSM_DATA_FILE = join(dirname(__filename), "climbing-data.json");
-const GEO_INDEX_FILE = join(REVERSE_GEOCODING_DATA_DIR, "hierarchy-index.json");
-const GEO_WORLD_DIR = join(REVERSE_GEOCODING_DATA_DIR, "world");
+import { zip } from "fflate";
 
-const OUT_API_DIR = join(dirname(__filename), "../../../static/api");
+import { ReverseGeolocator } from "./reverse-geolocation.ts";
+import type { OverpassElement, OverpassRequest } from "./types.ts";
+import { ensureDirExists, slugify } from "../reverse-geocoding-data/src/utils.ts";
 
-// --- INTERFACES ---
-interface VirtualNode {
-  id: string; // The slugified folder/element name
-  path: string; // URL-safe relative path (e.g., 'canada/quebec/val-david')
-  name: string; // Display name
-  type: string; // 'folder' (geographic), 'node', 'way', 'relation'
-  hasChildren: boolean;
-  children: Map<string, VirtualNode>;
-  elementData: any; // The full JSON payload for SvelteKit
+export type StaticApiGeneratorOptions = {
+  outApiDirectory: string;
+  osmDataFile: string;
+  geoIndexFile: string;
+  reverseGeocodingDataDirectory: string;
+  maxCacheSize?: number;
+};
+
+export function generateStaticAPI(options: StaticApiGeneratorOptions) {
+  ensureDirExists(options.outApiDirectory);
+
+  console.info("Processing OSM Climbing Data...");
+  const allElements = readOsmData(options.osmDataFile);
+  const rootNodes = getRootOsmDataNodes(allElements);
+
+  console.info("Writing static API endpoints");
+  writeStaticApi(options, allElements, rootNodes);
 }
 
-// --- UTILS ---
-function ensureDir(dir: string) {
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-}
-
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[–—\s]+/g, "-")
-    .replace(/[^a-z0-9-]/g, "");
-}
-
-// Ensure base output directory exists
-ensureDir(OUT_API_DIR);
-
-// --- MAIN GENERATOR CLASS ---
-export class StaticApiGenerator {
-  private geolocator: ReverseGeolocator;
-  private virtualTree: VirtualNode;
-  private osmElementsMap = new Map<string, any>();
-  private osmParentSet = new Set<string>();
-  private textEncoder = new TextEncoder();
-
-  constructor() {
-    // Index roots include "world", so base dir must be the parent of the world folder.
-    this.geolocator = new ReverseGeolocator(GEO_INDEX_FILE, REVERSE_GEOCODING_DATA_DIR, 100);
-    this.virtualTree = {
-      id: "world",
-      path: "world",
-      name: "World",
-      type: "folder",
-      hasChildren: true,
-      children: new Map(),
-      elementData: { slug: "world", path: "world", name: "World", type: "folder" },
-    };
+function readOsmData(osmDataFile: string): Map<string, OverpassElement> {
+  if (!existsSync(osmDataFile)) {
+    throw new Error(`Missing OSM Data: Please ensure ${osmDataFile} exists.`);
   }
 
-  public async run() {
-    console.log("🌍 Initializing geographic base tree...");
-    this.buildGeographicTree(GEO_WORLD_DIR, this.virtualTree);
+  const rawData: OverpassRequest = JSON.parse(readFileSync(osmDataFile, "utf8"));
 
-    console.log("🧗 Processing OSM Climbing Data...");
-    this.processOsmData();
-
-    console.log("🧹 Pruning empty geographic regions...");
-    this.pruneEmptyFolders(this.virtualTree);
-
-    console.log("🏗️  Writing static API endpoints for SvelteKit...");
-    this.writeStaticApi(this.virtualTree);
-
-    console.log("📦 Generating offline regional ZIP bundles...");
-    this.generateZips(this.virtualTree);
-
-    console.log(`✅ Success! Static API generated in ${OUT_API_DIR}`);
+  // Index all elements
+  const osmElementsMap = new Map<string, OverpassElement>();
+  for (const el of rawData.elements) {
+    osmElementsMap.set(`${el.type}:${el.id}`, el);
   }
 
-  // 1. Pre-build the geographic folder structure (Canada -> Quebec -> etc.)
-  private buildGeographicTree(currentDir: string, parentNode: VirtualNode) {
-    const entries = readdirSync(currentDir, { withFileTypes: true });
-    for (const entry of entries) {
-      if (entry.isDirectory() && !entry.name.startsWith(".")) {
-        const fullPath = join(currentDir, entry.name);
-        const relPath = parentNode.path ? `${parentNode.path}/${entry.name}` : entry.name;
+  return osmElementsMap;
+}
 
-        let prettyName = entry.name;
-
-        // Attempt to extract official name from geojson if it exists
-        const boundaryPath = join(fullPath, "boundary.geojson");
-        if (existsSync(boundaryPath)) {
-          try {
-            const geojson = JSON.parse(readFileSync(boundaryPath, "utf8"));
-            const feature = geojson.features?.[0] || geojson;
-            prettyName = feature.properties?.name || prettyName;
-          } catch (e) {
-            console.warn(`⚠️  Failed to parse boundary.geojson for ${relPath}: ${e}`);
-          }
-        }
-
-        const node: VirtualNode = {
-          id: entry.name,
-          path: relPath,
-          name: prettyName,
-          type: "folder",
-          hasChildren: false, // Will be updated later
-          children: new Map(),
-          elementData: { slug: entry.name, path: relPath, name: prettyName, type: "folder" },
-        };
-
-        parentNode.children.set(node.id, node);
-        this.buildGeographicTree(fullPath, node);
-      }
+function getRootOsmDataNodes(allElements: Map<string, OverpassElement>): OverpassElement[] {
+  // Identify dependent children (so we don't geolocate a route that belongs to a crag)
+  const osmParentSet = new Set<string>();
+  for (const el of allElements.values()) {
+    if (el.type === "way" && el.nodes) {
+      el.nodes.forEach((n: number) => osmParentSet.add(`node:${n}`));
+    }
+    if (el.type === "relation" && el.members) {
+      el.members.forEach((m) => osmParentSet.add(`${m.type}:${m.ref}`));
     }
   }
 
-  // 2. Parse flat OSM data, find hierarchies, and geolocate top-level features
-  private processOsmData() {
-    if (!existsSync(OSM_DATA_FILE)) {
-      throw new Error(`Missing OSM Data: Please ensure ${OSM_DATA_FILE} exists.`);
-    }
+  // Process only root elements (Areas/Crags that aren't inside another relation)
+  const rootElements = Array.from(allElements.values()).filter(
+    (el) => !osmParentSet.has(`${el.type}:${el.id}`),
+  );
 
-    const rawData = JSON.parse(readFileSync(OSM_DATA_FILE, "utf8"));
+  // Recursively add children to parents
+  return rootElements;
+}
 
-    // Index all elements
-    for (const el of rawData.elements) {
-      this.osmElementsMap.set(`${el.type}:${el.id}`, el);
-    }
-
-    // Identify dependent children (so we don't geolocate a route that belongs to a crag)
-    for (const el of rawData.elements) {
-      if (el.type === "way" && el.nodes) {
-        el.nodes.forEach((n: number) => this.osmParentSet.add(`node:${n}`));
-      }
-      if (el.type === "relation" && el.members) {
-        el.members.forEach((m: any) => this.osmParentSet.add(`${m.type}:${m.ref}`));
+function* iterateOverpassElementsChildren(
+  element: OverpassElement,
+  allElements: Map<string, OverpassElement>,
+) {
+  if (element.type === "way" && element.nodes) {
+    for (const nodeId of element.nodes) {
+      const child = allElements.get(`node:${nodeId}`);
+      if (child) {
+        yield child;
       }
     }
+  } else if (element.type === "relation" && element.members) {
+    for (const member of element.members) {
+      const child = allElements.get(`${member.type}:${member.ref}`);
+      if (child) {
+        yield child;
+      }
+    }
+  }
+}
 
-    // Process only root elements (Areas/Crags that aren't inside another relation)
-    const rootElements = rawData.elements.filter(
-      (el: any) => !this.osmParentSet.has(`${el.type}:${el.id}`),
-    );
-    let geolocatedCount = 0;
+function* recursiveIterateOverpassElementChildren(
+  el: OverpassElement,
+  allElements: Map<string, OverpassElement>,
+  path: OverpassElement[] = [el],
+): Generator<{ path: OverpassElement[]; el: OverpassElement }> {
+  yield { path, el };
+  for (const child of iterateOverpassElementsChildren(el, allElements)) {
+    yield* recursiveIterateOverpassElementChildren(child, allElements, [...path, child]);
+  }
+}
 
-    for (const rootEl of rootElements) {
-      // Only process features that are actually tagged (ignore raw untagged boundary geometry)
-      if (!rootEl.tags || Object.keys(rootEl.tags).length === 0) continue;
+// Find a lat/lon to use for reverse geocoding
+function getRepresentativeCoordinates(
+  element: OverpassElement,
+  allElements: Map<string, OverpassElement>,
+): { lon: number; lat: number } | null {
+  if (element.type === "node") return { lon: element.lon, lat: element.lat };
+  if (element.center) return { lon: element.center.lon, lat: element.center.lat };
+  // @ts-ignore
+  if (element.geometry?.length > 0) {
+    // @ts-ignore
+    return { lon: element.geometry[0].lon, lat: element.geometry[0].lat };
+  }
 
-      const coords = this.getRepresentativeCoordinates(rootEl);
-      if (!coords) {
-        console.warn(`Could not find coordinates for ${rootEl.type} ${rootEl.id}`);
+  // TODO: compute center
+  if (element.type === "way" && element.nodes?.length > 0) {
+    const child = allElements.get(`node:${element.nodes[0]}`);
+    if (child) return getRepresentativeCoordinates(child, allElements);
+  }
+  if (element.type === "relation" && element.members?.length > 0) {
+    const child = allElements.get(`${element.members[0].type}:${element.members[0].ref}`);
+    if (child) return getRepresentativeCoordinates(child, allElements);
+  }
+
+  return null;
+}
+
+interface MapTree {
+  children: Map<string, MapTree>;
+}
+
+function addPathToMapTree(mapTree: MapTree, path: string[], index = 0) {
+  if (!mapTree) {
+    return;
+  }
+  addPathToMapTree(
+    mapTree.children.getOrInsertComputed(path[index], () => ({ children: new Map() })),
+    path,
+    index + 1,
+  );
+}
+
+function getName(el: OverpassElement): string | null {
+  const tags = el.tags;
+  if (tags) {
+    return tags.official_name || tags.name || tags["name:en"] || tags["name:fr"] || null;
+  }
+
+  return null;
+}
+
+function getPathName(el: OverpassElement): string {
+  return slugify(getName(el) || `${el.type}:${el.id}`);
+}
+
+function getOsmPath(els: OverpassElement[]) {
+  return els.map((el) => getPathName(el));
+}
+
+function writeDataJson(options: StaticApiGeneratorOptions, path: string, el: OverpassElement) {
+  const targetPath = join(options.outApiDirectory, path, "data.json");
+  ensureDirExists(dirname(targetPath));
+  writeFileSync(targetPath, JSON.stringify(el));
+}
+
+function writeStaticApi(
+  options: StaticApiGeneratorOptions,
+  allElements: Map<string, OverpassElement>,
+  rootNodes: OverpassElement[],
+) {
+  const geolocator = new ReverseGeolocator(
+    options.geoIndexFile,
+    options.reverseGeocodingDataDirectory,
+    options.maxCacheSize,
+  );
+
+  // Create the geographic hierarchy
+  const geographicTree: MapTree = { children: new Map() };
+
+  let noTags = 0;
+  let emptyTags = 0;
+  let cliffs = 0;
+  for (const rootNode of rootNodes) {
+    const coordinates = getRepresentativeCoordinates(rootNode, allElements);
+    if (!coordinates) {
+      console.error("Failed to get representative coordinates for node", rootNode);
+      continue;
+    }
+    const location = geolocator.geolocate(coordinates.lon, coordinates.lat);
+
+    if (!location) {
+      console.error("Failed to geolocate coordinates", coordinates, "from node", rootNode);
+      continue;
+    }
+
+    addPathToMapTree(geographicTree, location);
+    mkdirSync(join(options.outApiDirectory, ...location), { recursive: true });
+
+    const visited = new Set<string>();
+
+    for (const { el, path } of recursiveIterateOverpassElementChildren(rootNode, allElements)) {
+      if (!el.tags) {
+        noTags++;
+        continue;
+      }
+      if (el.tags && Object.keys(el.tags).length === 0) {
+        emptyTags++;
+        continue;
+      }
+      // Sectors sometimes include the contour of their cliffs
+      if (el.type === "way" && el.tags?.natural === "cliff") {
+        cliffs++;
+        // TODO: yield back so we don't go through children.
         continue;
       }
 
-      const geoPath = this.geolocator.geolocate(coords[0], coords[1]);
-      if (geoPath) {
-        // Strip the base data dir from the returned path to match our virtual tree
-        const relativeGeoPath = geoPath
-          .replace(GEO_WORLD_DIR, "")
-          .replace(/^[/\\]/, "")
-          .replace(/\\/g, "/");
+      const completePath = [...location, ...getOsmPath(path)];
+      let pathString = completePath.join("/");
+      let duplicate = visited.has(pathString);
+      if (duplicate) {
+        console.warn(
+          "Duplicate path:",
+          pathString,
+          "For routes or projects, disambiguate the name (e.g. 'Project 1'. If this shows up for a route with the same name as its sector, don't forget to set the sector as a relation and add this route to the relation.",
+        );
+      }
+      visited.add(pathString);
 
-        // Find the geographic node to attach this to
-        let targetNode = this.virtualTree;
-        if (relativeGeoPath) {
-          const parts = relativeGeoPath.split("/");
-          for (const part of parts) {
-            if (targetNode.children.has(part)) {
-              targetNode = targetNode.children.get(part)!;
-            }
-          }
-        }
+      writeDataJson(options, pathString, el);
+    }
+  }
+  console.info("no tags:", noTags);
+  console.info("empty tags:", emptyTags);
+  console.info("cliffs:", cliffs);
 
-        // Build the hierarchical OSM branch and attach it
-        const osmBranch = this.buildOsmTreeBranch(rootEl, targetNode.path);
-        targetNode.children.set(osmBranch.id, osmBranch);
-        geolocatedCount++;
+  // TODO: add info to the geographicTree api endpoints by iterating through it.
+
+  writeZipsRecursive(options.outApiDirectory);
+}
+
+function writeDataToGeoTree(geographicTree: MapTree) {}
+
+/** Write the zips for a folder. Each folder contains a shallow zips, which contains only the data for from all children, and a deep zip, which contains all the data rest of the data.
+ *
+ * This means that in order to completely download an area, you need:
+ *  - the area's data.json
+ *  - shallow.zip
+ *  - download.zip
+ *
+ * data.json is downloaded whenever a page is loaded, along with shallow.zip, which is used for the sidebar.
+ * download.zip is downloaded when the user clicks "download" on an area.
+ */
+async function writeZipsRecursive(path: string) {
+  const inShallowZip = await writeShallowZip(path);
+  inShallowZip.add(join(path, "data.json"));
+  writeDeepZip(path, inShallowZip);
+  for (const entry of await readdir(path, { withFileTypes: true })) {
+    if (entry.isDirectory()) {
+      writeZipsRecursive(join(entry.parentPath, entry.name));
+    }
+  }
+}
+
+async function writeShallowZip(path: string): Promise<Set<string>> {
+  const files: Record<string, Uint8Array> = {};
+
+  // Get all children immediately children data.json
+  const entries = await readdir(path, { withFileTypes: true });
+
+  const promises = entries.map(async (entry) => {
+    if (entry.isDirectory()) {
+      const childDataPath = join(entry.parentPath, entry.name, "data.json");
+      if (existsSync(childDataPath)) {
+        // TODO: had to revert to readFileSync else I got EMFILES: Too Many Open Files
+        files[childDataPath.slice(path.length + 1)] = readFileSync(childDataPath);
       }
     }
+  });
 
-    console.log(`📍 Successfully geolocated and mapped ${geolocatedCount} root climbing areas.`);
-  }
+  await Promise.all(promises);
 
-  // 3. Recursively build the OSM element tree (Relation -> Way -> Node)
-  private buildOsmTreeBranch(element: any, parentPath: string): VirtualNode {
-    const name = element.tags?.name || `Unnamed ${element.type}`;
-    // Attach ID to slug to prevent URL collisions of "unnamed-way"
-    const slug = `${slugify(name)}-${element.id}`;
-    const currentPath = parentPath ? `${parentPath}/${slug}` : slug;
-
-    const node: VirtualNode = {
-      id: slug,
-      path: currentPath,
-      name: name,
-      type: element.type,
-      hasChildren: false,
-      children: new Map(),
-      elementData: { ...element, path: currentPath, slug: slug },
-    };
-
-    // Recursively resolve children (Ways -> Nodes, Relations -> Members)
-    if (element.type === "way" && element.nodes) {
-      for (const nodeId of element.nodes) {
-        const child = this.osmElementsMap.get(`node:${nodeId}`);
-        // Only add children to the navigation tree if they have tags (e.g. named routes/boulders).
-        // Untagged nodes are just geometry points drawing the crag line.
-        if (child && child.tags) {
-          const childNode = this.buildOsmTreeBranch(child, currentPath);
-          node.children.set(childNode.id, childNode);
-        }
+  if (Object.keys(files).length) {
+    zip(files, async (err, data) => {
+      if (err) {
+        console.error("An error occured while zipping files.", err);
+        return;
       }
-    } else if (element.type === "relation" && element.members) {
-      for (const member of element.members) {
-        const child = this.osmElementsMap.get(`${member.type}:${member.ref}`);
-        if (child && child.tags) {
-          const childNode = this.buildOsmTreeBranch(child, currentPath);
-          node.children.set(childNode.id, childNode);
-        }
+
+      await writeFile(join(path, "shallow.zip"), data);
+    });
+  }
+
+  return new Set(Object.keys(files));
+}
+
+async function writeDeepZip(path: string, inShallowZip: Set<string>) {
+  // Collect all files recursively, skipping the ones already included in inShallowZip.
+  const files: Record<string, Uint8Array> = {};
+
+  // Get all children immediately children data.json
+  const entries = await readdir(path, { withFileTypes: true, recursive: true });
+
+  const promises = entries.map(async (entry) => {
+    const childPath = join(entry.parentPath, entry.name);
+    if (inShallowZip.has(childPath)) {
+      return;
+    }
+    if (entry.isFile() && entry.name === "data.json") {
+      // TODO: had to revert to readFileSync else I got EMFILES: Too Many Open Files
+      files[childPath.slice(path.length + 1)] = readFileSync(childPath);
+    }
+  });
+
+  await Promise.all(promises);
+
+  if (Object.keys(files).length) {
+    zip(files, async (err, data) => {
+      if (err) {
+        console.error("An error occured while zipping files.", err);
+        return;
       }
-    }
 
-    node.hasChildren = node.children.size > 0;
-    return node;
-  }
-
-  // Find a lat/lon to use for reverse geocoding
-  private getRepresentativeCoordinates(element: any): [number, number] | null {
-    if (element.lat !== undefined && element.lon !== undefined) return [element.lon, element.lat];
-    if (element.center) return [element.center.lon, element.center.lat];
-    if (element.geometry?.length > 0) return [element.geometry[0].lon, element.geometry[0].lat];
-
-    // Fallback: look up the first member node
-    if (element.type === "way" && element.nodes?.length > 0) {
-      const child = this.osmElementsMap.get(`node:${element.nodes[0]}`);
-      if (child) return this.getRepresentativeCoordinates(child);
-    }
-    if (element.type === "relation" && element.members?.length > 0) {
-      const child = this.osmElementsMap.get(`${element.members[0].type}:${element.members[0].ref}`);
-      if (child) return this.getRepresentativeCoordinates(child);
-    }
-
-    return null;
-  }
-
-  // 4. Remove geographic regions (like specific cities) that contain zero climbing data
-  private pruneEmptyFolders(node: VirtualNode): boolean {
-    if (node.type !== "folder") return true; // Keep all OSM data
-
-    let hasValuableContent = false;
-    for (const [key, childNode] of node.children.entries()) {
-      const keep = this.pruneEmptyFolders(childNode);
-      if (!keep) {
-        node.children.delete(key);
-      } else {
-        hasValuableContent = true;
-      }
-    }
-
-    node.hasChildren = node.children.size > 0;
-    return hasValuableContent;
-  }
-
-  // 5. Walk the finalized tree and write the files SvelteKit expects into a unified directory structure
-  private writeStaticApi(node: VirtualNode) {
-    const shallowChildrenArray = Array.from(node.children.values()).map((child) => ({
-      id: child.id,
-      path: child.path,
-      name: child.name,
-      type: child.type,
-      hasChildren: child.hasChildren,
-    }));
-
-    const dirPath = node.path || "world";
-    const targetDir = join(OUT_API_DIR, dirPath);
-    ensureDir(targetDir);
-
-    // 1. Write Sidebar Tree payload
-    writeFileSync(join(targetDir, "tree.json"), JSON.stringify(shallowChildrenArray, null, 2));
-
-    // 2. Write Element Page payload
-    writeFileSync(join(targetDir, "elements.json"), JSON.stringify(node.elementData, null, 2));
-
-    // 3. Recurse
-    for (const childNode of node.children.values()) {
-      this.writeStaticApi(childNode);
-    }
-  }
-
-  // 6. Recursively build ZIP bundles for offline PWA
-  private generateZips(node: VirtualNode) {
-    // Only generate zip bundles for geographic regions, not individual climbing routes
-    if (node.type === "folder") {
-      const files: Record<string, Uint8Array> = {};
-
-      // Collect every JSON file for this region and its sub-regions
-      this.collectSubtreeFiles(node, files);
-
-      // Compress them into a single zip buffer using fflate
-      const zipBuffer = zipSync(files);
-
-      const dirPath = node.path || "world";
-      const targetDir = join(OUT_API_DIR, dirPath);
-      ensureDir(targetDir);
-
-      writeFileSync(join(targetDir, "download.zip"), zipBuffer);
-    }
-
-    // Recurse to generate nested regional zips
-    for (const childNode of node.children.values()) {
-      this.generateZips(childNode);
-    }
-  }
-
-  // Helper method to gather all files in a subtree for compression
-  private collectSubtreeFiles(node: VirtualNode, files: Record<string, Uint8Array>) {
-    const shallowChildrenArray = Array.from(node.children.values()).map((child) => ({
-      id: child.id,
-      path: child.path,
-      name: child.name,
-      type: child.type,
-      hasChildren: child.hasChildren,
-    }));
-
-    const dirPath = node.path || "world";
-
-    // Set paths explicitly for the unified format: api/region/tree.json
-    files[`api/${dirPath}/tree.json`] = this.textEncoder.encode(
-      JSON.stringify(shallowChildrenArray, null, 2),
-    );
-
-    files[`api/${dirPath}/elements.json`] = this.textEncoder.encode(
-      JSON.stringify(node.elementData, null, 2),
-    );
-
-    // Recurse to add all descendant files
-    for (const childNode of node.children.values()) {
-      this.collectSubtreeFiles(childNode, files);
-    }
+      await writeFile(join(path, "deep.zip"), data);
+    });
   }
 }

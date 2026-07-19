@@ -1,27 +1,21 @@
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
-import { point } from "@turf/helpers";
-import type { Feature, Point, GeoJsonProperties } from "geojson";
-
-interface BoundingBox {
-  x0: number;
-  x1: number;
-  y0: number;
-  y1: number;
-}
-
-interface IndexNode {
-  bbox: BoundingBox | null;
-  [key: string]: any; // Children directories
-}
+import type { Position, Feature, MultiPolygon, Polygon } from "geojson";
+import type { IndexNode } from "../reverse-geocoding-data/src/types.ts";
 
 export class ReverseGeolocator {
-  private indexTree: { [key: string]: IndexNode };
+  /** The tree with the bounding boxes and the children. */
+  private indexTree: IndexNode;
+
+  /** Base directory where the world data is stored */
   private dataDir: string;
 
-  // LRU Cache: Maps filepath -> Array of parsed Turf Polygon features
-  private geoJsonCache: Map<string, any[]>;
+  /**
+   * LRU Cache: Maps filepath -> Array of parsed Turf Polygon features
+   * TODO: add types for the features.
+   */
+  private geoJsonCache: Map<string, Feature<MultiPolygon | Polygon>[]>;
   private maxCacheSize: number;
 
   /**
@@ -46,75 +40,67 @@ export class ReverseGeolocator {
   /**
    * Finds the deepest matching directory for a given coordinate.
    */
-  public geolocate(lon: number, lat: number): string | null {
-    const targetPoint = point([lon, lat]);
-
-    // Start the recursive search from the root objects (e.g., "world")
-    for (const [rootName, rootNode] of Object.entries(this.indexTree)) {
-      // Support both layouts:
-      // 1) dataDir is parent directory containing the root key folder (e.g. .../data + world)
-      // 2) dataDir already points at the root key folder (e.g. .../data/world)
-      const candidatePath = join(this.dataDir, rootName);
-      const rootPath = existsSync(candidatePath) ? candidatePath : this.dataDir;
-      const matchedPath = this.searchHierarchy(rootNode, rootPath, targetPoint);
-
-      if (matchedPath) {
-        return matchedPath;
-      }
-    }
-
-    return null;
+  public geolocate(lon: number, lat: number): string[] | null {
+    return this.geolocateRecursive(lon, lat, ["world"]);
   }
 
-  private searchHierarchy(
-    node: IndexNode,
-    currentPath: string,
-    targetPoint: Feature<Point, GeoJsonProperties>,
-  ): string | null {
-    // 1. BOUNDING BOX CHECK (Fast Pre-filter)
-    if (node.bbox) {
-      const [lon, lat] = targetPoint.geometry.coordinates;
-      const { x0, x1, y0, y1 } = node.bbox;
-
-      if (lon < x0 || lon > x1 || lat < y0 || lat > y1) {
-        // Point is completely outside this directory's bounding box. Stop searching this branch.
-        return null;
-      }
-    } else {
-      // If a node lacks a bbox entirely, we cannot safely assume anything about its bounds.
+  private geolocateRecursive(
+    lon: number,
+    lat: number,
+    path: string[],
+    node?: IndexNode,
+  ): string[] | null {
+    const indexNode = node || this.getIndexNodeForPath(path);
+    if (!indexNode) {
+      console.error(`Index node not found for path: ${path.join("/")}`);
       return null;
     }
 
-    // 2. CHECK CHILDREN (Attempt to find the deepest/most granular match)
-    for (const [key, val] of Object.entries(node)) {
-      if (key === "bbox") continue;
+    // Do a fast prefilter using bounding boxes
+    if (indexNode._bbox) {
+      const { x0, x1, y0, y1 } = indexNode._bbox;
+      if (lon < x0 || lon > x1 || lat < y0 || lat > y1) {
+        // Point is outside the bounding box of this node
+        return null;
+      }
+    }
 
-      const childPath = join(currentPath, key);
-      const matched = this.searchHierarchy(val as IndexNode, childPath, targetPoint);
+    // If we are inside the bounding box, check children recursively
+    for (const [key, val] of Object.entries(indexNode)) {
+      if (key === "_bbox" || key === "_name") continue;
+
+      const matched = this.geolocateRecursive(lon, lat, [...path, key], val as IndexNode);
 
       if (matched) {
-        return matched; // Found a granular match deep in the tree!
+        return matched;
       }
     }
 
-    // 3. PRECISE POLYGON CHECK (Fallback)
-    const geojsonPath = join(currentPath, "boundary.geojson");
-
-    if (existsSync(geojsonPath)) {
-      if (this.checkPolygonContains(geojsonPath, targetPoint)) {
-        return currentPath;
-      }
+    // If no children matched, check if this node has a precise polygon
+    if (this.checkPolygonContains(path, [lon, lat])) {
+      return path;
     }
 
+    // If we reach here, it means the point is inside the bounding box but not in the child itself. False positive.
     return null;
   }
 
-  private checkPolygonContains(
-    filepath: string,
-    targetPoint: Feature<Point, GeoJsonProperties>,
-  ): boolean {
+  private getIndexNodeForPath(path: string[]): IndexNode | null {
+    let currentNode: IndexNode | null = this.indexTree;
+
+    for (const segment of path) {
+      if (!currentNode || !currentNode[segment]) {
+        return null;
+      }
+      currentNode = currentNode[segment] as IndexNode;
+    }
+
+    return currentNode;
+  }
+
+  private checkPolygonContains(path: string[], targetPoint: Position): boolean {
     try {
-      const features = this.getCachedFeatures(filepath);
+      const features = this.getCachedFeatures(path);
 
       for (const feature of features) {
         if (booleanPointInPolygon(targetPoint, feature)) {
@@ -122,17 +108,43 @@ export class ReverseGeolocator {
         }
       }
     } catch (err) {
-      console.error(`Error processing polygon for ${filepath}:`, err);
+      console.error(`Error processing polygon for ${join(...path)}:`, err);
     }
 
     return false;
+  }
+
+  // Get the name of a path, as given by the geojson properties.
+  public getName(path: string[]) {
+    // Check if the hierarchy-index.json has a name for this path
+    let currentNode: IndexNode | null = this.indexTree;
+    for (const segment of path) {
+      if (!currentNode || !currentNode[segment]) {
+        currentNode = null;
+        break;
+      }
+      currentNode = currentNode[segment] as IndexNode;
+    }
+
+    if (currentNode && currentNode._name) {
+      return currentNode._name;
+    }
+
+    const features = this.getCachedFeatures(path);
+
+    const properties = features[0]?.properties;
+    // TODO: handle translations
+    return properties?.official_name || properties?.name;
   }
 
   /**
    * Retrieves GeoJSON features from memory, or loads them from disk if missing.
    * Manages memory using a Least Recently Used (LRU) eviction strategy.
    */
-  private getCachedFeatures(filepath: string): any[] {
+  private getCachedFeatures(path: string[]): Feature<MultiPolygon | Polygon>[] {
+    const fullFilePath = join(this.dataDir, ...path, "boundary.geojson");
+
+    const filepath = join(...path, "boundary.geojson");
     if (this.geoJsonCache.has(filepath)) {
       // Cache Hit: Move this item to the end of the Map to mark it as most recently used
       const features = this.geoJsonCache.get(filepath)!;
@@ -142,7 +154,12 @@ export class ReverseGeolocator {
     }
 
     // Cache Miss: Load and parse from disk
-    const rawData = readFileSync(filepath, "utf8");
+
+    if (!existsSync(fullFilePath)) {
+      throw new Error(`GeoJSON file not found: ${fullFilePath}`);
+    }
+
+    const rawData = readFileSync(fullFilePath, "utf8");
     const geojson = JSON.parse(rawData);
 
     // Normalize into an array of features
@@ -154,7 +171,7 @@ export class ReverseGeolocator {
           : [{ type: "Feature", geometry: geojson }];
 
     // Optimization: Filter out points/lines to only cache the polygons we actually need
-    const polygonFeatures = allFeatures.filter((f: any) => {
+    const polygonFeatures = allFeatures.filter((f: Feature) => {
       const geomType = f.geometry?.type;
       return geomType === "Polygon" || geomType === "MultiPolygon";
     });
