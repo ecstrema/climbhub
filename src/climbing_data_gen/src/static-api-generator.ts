@@ -5,7 +5,12 @@ import { join, dirname } from "path";
 import { zip } from "fflate";
 
 import { ReverseGeolocator } from "./reverse-geolocation.ts";
-import type { OverpassElement, OverpassRequest } from "./types.ts";
+import type {
+  DataJSON,
+  GeographicFolderElement,
+  OverpassElement,
+  OverpassRequest,
+} from "./types.ts";
 import { ensureDirExists, slugify } from "../reverse-geocoding-data/src/utils.ts";
 
 export type StaticApiGeneratorOptions = {
@@ -127,7 +132,7 @@ interface MapTree {
 }
 
 function addPathToMapTree(mapTree: MapTree, path: string[], index = 0) {
-  if (!mapTree) {
+  if (!path[index] || !mapTree) {
     return;
   }
   addPathToMapTree(
@@ -230,12 +235,32 @@ function writeStaticApi(
   console.info("empty tags:", emptyTags);
   console.info("cliffs:", cliffs);
 
-  // TODO: add info to the geographicTree api endpoints by iterating through it.
+  // Add info to the geographicTree api endpoints by iterating through it.
+  writeChildrenDataToGeoTree([options.outApiDirectory], geographicTree, geolocator);
 
   writeZipsRecursive(options.outApiDirectory);
 }
 
-function writeDataToGeoTree(geographicTree: MapTree) {}
+function writeChildrenDataToGeoTree(
+  path: string[],
+  mapTree: MapTree,
+  geolocator: ReverseGeolocator,
+) {
+  for (const [childName, childMapTree] of mapTree.children) {
+    const newPath = [...path, childName];
+
+    const data: GeographicFolderElement = {
+      type: "geographic",
+      name: geolocator.getName(newPath.slice(1)),
+    };
+
+    writeFile(join(newPath.join("/"), "data.json"), JSON.stringify(data satisfies DataJSON), {
+      encoding: "utf-8",
+    });
+
+    writeChildrenDataToGeoTree(newPath, childMapTree, geolocator);
+  }
+}
 
 /** Write the zips for a folder. Each folder contains a shallow zips, which contains only the data for from all children, and a deep zip, which contains all the data rest of the data.
  *

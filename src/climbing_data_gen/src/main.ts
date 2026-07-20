@@ -6,6 +6,14 @@ if (!Map.prototype.getOrInsertComputed) {
     this.set(key, callback(key));
   };
 }
+if (!Map.prototype.getOrInsert) {
+  Map.prototype.getOrInsert = function (key, value) {
+    if (this.has(key)) {
+      return this.get(key);
+    }
+    this.set(key, value);
+  };
+}
 
 import { join, dirname } from "path";
 import { generateStaticAPI } from "./static-api-generator.ts";
