@@ -58,4 +58,4 @@ Additionnally, if a query with `multiple: true` is not referenced by any other q
 
 ## Usage
 
-For an example of a rust crate that uses this structure, see `crates/reverse-geocoding`.
+See src/climbing_data_gen, the parent folder.
