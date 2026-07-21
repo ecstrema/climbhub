@@ -239,7 +239,7 @@ function writeStaticApi(
   // Add info to the geographicTree api endpoints by iterating through it.
   writeChildrenDataToGeoTree([options.outApiDirectory], geographicTree, geolocator);
 
-  writeZipsRecursive(options.outApiDirectory);
+  writeZipsRecursive(join(options.outApiDirectory, "world"));
 }
 
 function writeChildrenDataToGeoTree(
