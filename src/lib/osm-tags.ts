@@ -18,6 +18,15 @@ export function getGrade(element: OverpassElement): string | null {
   );
 }
 
+export function getDescription(element: OverpassElement): string | null {
+  const tags = element.tags;
+  if (!tags) {
+    return null;
+  }
+
+  return tags["description"] || null;
+}
+
 export function getCoordinates(element: OverpassElement): Coordinates | null {
   if (element.type === "node") return { lon: element.lon, lat: element.lat };
   if (element.center) return { lon: element.center.lon, lat: element.center.lat };

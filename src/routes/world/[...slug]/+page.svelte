@@ -2,7 +2,7 @@
     import * as Table from "@/ui/table";
     import type { PageProps } from "./$types";
     import { getName } from "$lib/data";
-    import { getGrade } from "$lib/osm-tags";
+    import { getCoordinates, getDescription, getGrade } from "$lib/osm-tags";
 
     const { data }: PageProps = $props();
 
@@ -14,12 +14,19 @@
     const grade = $derived(currentNode.type !== "geographic" ? getGrade(currentNode) : null);
 
     const coordinates = $derived.by(() => {
-
-        if (currentNode.type === "node" && currentNode.lat) {
-            return `${currentNode.lat}, ${currentNode.lon}`;
+        if (currentNode.type === "geographic") {
+            return null;
         }
-        return "No coordinates available";
+
+        return getCoordinates(currentNode)
     });
+
+    const description: string | null = $derived.by(() => {
+        if (currentNode.type === "geographic") {
+            return null;
+        }
+        return getDescription(currentNode)
+    })
 </script>
 
 <div class="prose">
@@ -30,7 +37,13 @@
         {/if}
     </h1>
 
-    <p class="text-sm text-muted-foreground">{coordinates}</p>
+    {#if coordinates}
+        <p class="text-sm text-muted-foreground">{coordinates.lat}, {coordinates.lon}</p>
+    {/if}
+
+    {#if description}
+        <p>{description}</p>
+    {/if}
 
     <!-- Renders the OSM tags instead of the routes list, as children are in tree.json -->
     {#if currentNode.type !== "geographic" && currentNode.tags && Object.keys(currentNode.tags).length > 0}
