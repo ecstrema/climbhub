@@ -23,7 +23,7 @@
       onMount(() => {
         // TODO: since this is in an effect, it is not done during serverside rendering, so names are incorrect
         $effect(() => {
-          fetch(asset(`/api/world${slug}/data.json`)).then(async (res) => {
+          fetch(asset(`/api/world/${slug}/data.json`)).then(async (res) => {
             if (res.ok) {
               const data: DataJSON = await res.json()
               const name = getName(data);
@@ -44,10 +44,10 @@
       return [];
     }
 
-    let acc = "";
+    let acc: string[] = [];
     const segments = slug.split("/").map((segment) => {
-      acc += "/" + segment;
-      return new FetchingBreadcrumbSegment(acc, segment);
+      acc.push(segment)
+      return new FetchingBreadcrumbSegment(acc.join("/"), segment);
     })
 
     return segments;
@@ -74,7 +74,7 @@
                 {#if index === lastElementIndex}
                   <Breadcrumb.Page>{breadcrumb.name}</Breadcrumb.Page>
                 {:else}
-                  <Breadcrumb.Link href={resolve(breadcrumb.link as any)}>
+                  <Breadcrumb.Link href={resolve("/world/[...slug]", {slug: breadcrumb.link})}>
                     {breadcrumb.name}
                   </Breadcrumb.Link>
                 {/if}
