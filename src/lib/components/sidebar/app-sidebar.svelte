@@ -3,9 +3,10 @@
   import type { ComponentProps } from "svelte";
   import { page } from "$app/state";
   import AppSidebarNode from "./app-sidebar-node.svelte";
+    import type { BreadcrumbSegment } from "$lib/types";
 
   interface AppSidebarProps {
-    breadcrumbs?: { name: string; link: string }[];
+    breadcrumbs?: BreadcrumbSegment[];
   }
 
   let {
