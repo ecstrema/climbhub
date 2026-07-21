@@ -6,6 +6,7 @@ import { zip } from "fflate";
 
 import { ReverseGeolocator } from "./reverse-geolocation.ts";
 import type {
+  Coordinates,
   DataJSON,
   GeographicFolderElement,
   OverpassElement,
@@ -105,7 +106,7 @@ function* recursiveIterateOverpassElementChildren(
 function getRepresentativeCoordinates(
   element: OverpassElement,
   allElements: Map<string, OverpassElement>,
-): { lon: number; lat: number } | null {
+): Coordinates | null {
   if (element.type === "node") return { lon: element.lon, lat: element.lat };
   if (element.center) return { lon: element.center.lon, lat: element.center.lat };
   // @ts-ignore
