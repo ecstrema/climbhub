@@ -1,22 +1,20 @@
 <script lang="ts">
-  import { resolve } from "$app/paths";
+  import { asset, resolve } from "$app/paths";
   import * as Collapsible from "@/ui/collapsible/index.js";
   import * as Sidebar from "@/ui/sidebar/index.js";
   import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
   import { page } from "$app/state";
-  import type { TreeNode, BreadcrumbSegment } from "$lib/types";
+  import type { ElementsJSON, BreadcrumbSegment } from "$lib/types";
 
   // Using a self-import to make the component recursive!
   import AppSidebarNode from "./app-sidebar-node.svelte";
 
   let {
     item,
-    breadcrumbs,
-    rootPath = "world"
+    breadcrumbs
   }: {
-    item: TreeNode;
+    item: ElementsJSON;
     breadcrumbs: BreadcrumbSegment[];
-    rootPath?: string;
   } = $props();
 
   // Check if this specific node is part of the active path being viewed
@@ -24,7 +22,7 @@
   let isCurrentPage = $derived(breadcrumbs.at(-1)?.link.includes(item.path));
 
   // Initialize with pre-fetched data from the load function if it exists
-  let children = $state<TreeNode[]>([]);
+  let children = $state<ElementsJSON[]>([]);
   let isLoading = $state(false);
   let isOpen = $state(false);
 
@@ -45,10 +43,10 @@
   // Lazy-load the children when the user clicks the folder toggle
   async function handleOpenChange(open: boolean) {
     isOpen = open;
-    if (open && children.length === 0 && item.hasChildren) {
+    if (open && children.length === 0) {
       isLoading = true;
       try {
-        const res = await fetch(`/api/${item.path}/tree.json`);
+        const res = await fetch(asset(`/api/${item.path}/tree.json`));
         if (res.ok) {
           children = await res.json();
         }
@@ -58,19 +56,12 @@
     }
   }
 
-  function getLink(path: string) {
-    // Convert "world/canada" to "/World/canada"
-    const prefix = rootPath;
-    const displayName = prefix.charAt(0).toUpperCase() + prefix.slice(1);
-    const relativePath = path.replace(new RegExp(`^${prefix}/?`), "");
-    return relativePath ? `/${displayName}/${relativePath}` : `/${displayName}`;
-  }
 </script>
 
-{#if item.type === "route" || item.type === "node" || !item.hasChildren}
+{#if item.type === "node"}
   <Sidebar.MenuButton isActive={isCurrentPage} class="data-[active=true]:bg-transparent">
     <!-- Optional: Add grade or icon here -->
-    <a href={getLink(item.path)}>{item.name}</a>
+    <a href={resolve(item.path)}>{item.name}</a>
   </Sidebar.MenuButton>
 {:else}
   <Sidebar.MenuItem>
@@ -83,7 +74,7 @@
         {#snippet child({ props })}
           <Sidebar.MenuButton {...props}>
             <ChevronRightIcon class="transition-transform" />
-            <a href={getLink(item.path)}>{item.name}</a>
+            <a href={resolve(item.path)}>{item.name}</a>
           </Sidebar.MenuButton>
         {/snippet}
       </Collapsible.Trigger>
@@ -93,8 +84,8 @@
           {#if isLoading}
             <Sidebar.MenuSubItem class="text-xs text-muted-foreground pl-4">Loading...</Sidebar.MenuSubItem>
           {:else}
-            {#each children as child (child.id)}
-              <AppSidebarNode item={child} {breadcrumbs} {rootPath} />
+            {#each children as child (child.path)}
+              <AppSidebarNode item={child} {breadcrumbs} />
             {/each}
           {/if}
         </Sidebar.MenuSub>

@@ -3,24 +3,16 @@
   import * as Breadcrumb from "@/ui/breadcrumb/index.js";
   import AppSidebar from "@/sidebar/app-sidebar.svelte";
   import { Separator } from "@/ui/separator";
-  import { getNodeSegments } from "$lib/data";
   import * as Sidebar from "@/ui/sidebar";
-
-  import { page } from "$app/state";
-  import type { TreeNode } from "$lib/types";
 
   const { children } = $props();
 
-  // In the new static architecture, each page (like [...path]/+page.ts)
-  // fetches and returns its own `elementData`. We derive the current node from it.
-  let currentNode = $derived(page.data.elementData as TreeNode);
-
   // Derive breadcrumbs reactively whenever the user navigates
-  let breadcrumbs = $derived(currentNode ? getNodeSegments(currentNode) : []);
+  let breadcrumbs: {name: string, link: string}[] = []
 </script>
 
 <Sidebar.Provider>
-  <AppSidebar rootPath="world" {breadcrumbs} />
+  <AppSidebar {breadcrumbs} />
 
   <Sidebar.Inset>
     <header class="flex h-16 shrink-0 items-center gap-2 border-b px-4">

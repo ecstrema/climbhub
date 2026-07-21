@@ -1,60 +1,52 @@
 <script lang="ts">
     import * as Table from "@/ui/table";
-    import { resolve } from "$app/paths";
-
     import type { PageProps } from "./$types";
-    import type { RouteNode } from "$lib/types";
+    import { getName } from "$lib/data";
+    import { getGrade } from "$lib/osm-tags";
 
     const { data }: PageProps = $props();
 
-    const routesInArea = $derived.by(() => {
-        if (data.currentNode.type === "area" && data.currentNode.children) {
-            return Object.values(data.currentNode.children).filter(
-                (child): child is RouteNode => child.type === "route",
-            );
+    const currentNode = $derived(data.elementData);
+
+    const name: string | null = $derived(getName(currentNode));
+
+    // Extract common climbing tags from OSM
+    const grade = $derived(currentNode.type !== "geographic" ? getGrade(currentNode) : null);
+
+    const coordinates = $derived.by(() => {
+
+        if (currentNode.type === "node" && currentNode.lat) {
+            return `${currentNode.lat}, ${currentNode.lon}`;
         }
-        return [];
+        return "No coordinates available";
     });
 </script>
 
 <div class="prose">
-    {#if data.currentNode.type === "area"}
-        <h1>{data.currentNode.name}</h1>
-    {:else}
-        <h1>{data.currentNode.name} {data.currentNode.grade}</h1>
-    {/if}
+    <h1>
+        {name}
+        {#if grade}
+            <span class="text-xl text-muted-foreground ml-2">{grade}</span>
+        {/if}
+    </h1>
 
-    <p>{data.currentNode.coordinates}</p>
-    {@html data.currentNode.html}
+    <p class="text-sm text-muted-foreground">{coordinates}</p>
 
-    {#if data.currentNode.type === "area" && routesInArea.length > 0}
-        <h2>Routes</h2>
+    <!-- Renders the OSM tags instead of the routes list, as children are in tree.json -->
+    {#if currentNode.type !== "geographic" && currentNode.tags && Object.keys(currentNode.tags).length > 0}
+        <h2>OpenStreetMap Data</h2>
         <Table.Root>
             <Table.Header>
                 <Table.Row>
-                    <Table.Head>Name</Table.Head>
-                    <Table.Head>Grade</Table.Head>
-                    <Table.Head>Rating</Table.Head>
-                    <Table.Head>Kind</Table.Head>
+                    <Table.Head>Tag</Table.Head>
+                    <Table.Head>Value</Table.Head>
                 </Table.Row>
             </Table.Header>
             <Table.Body>
-                {#each routesInArea as route}
+                {#each Object.entries(currentNode.tags) as [key, val]}
                     <Table.Row>
-                        <Table.Cell class="font-medium">
-                            <a href={resolve(route.link)}>{route.name}</a>
-                        </Table.Cell>
-                        <Table.Cell>{route.grade}</Table.Cell>
-                        <Table.Cell>
-                            {#if route.rating}
-                                {route.rating}
-                            {:else}
-                                <span class="text-muted-foreground">
-                                    No rating
-                                </span>
-                            {/if}
-                        </Table.Cell>
-                        <Table.Cell>{route.kind || "Sport"}</Table.Cell>
+                        <Table.Cell class="font-medium">{key}</Table.Cell>
+                        <Table.Cell>{val}</Table.Cell>
                     </Table.Row>
                 {/each}
             </Table.Body>

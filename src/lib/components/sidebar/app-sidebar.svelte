@@ -6,13 +6,11 @@
 
   interface AppSidebarProps {
     breadcrumbs?: { name: string; link: string }[];
-    rootPath?: string;
   }
 
   let {
     ref = $bindable(null),
     breadcrumbs = [],
-    rootPath = "world",
     ...restProps
   }: ComponentProps<typeof Sidebar.Root> & AppSidebarProps = $props();
 
@@ -27,7 +25,7 @@
       <Sidebar.GroupContent>
         <Sidebar.Menu>
           {#each rootTree as item (item.id)}
-            <AppSidebarNode {item} {breadcrumbs} {rootPath} />
+            <AppSidebarNode {item} {breadcrumbs} />
           {/each}
         </Sidebar.Menu>
       </Sidebar.GroupContent>

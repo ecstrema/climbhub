@@ -1,12 +1,4 @@
-export interface TreeNode {
-  id: string | number;
-  name: string;
-  type: "node" | "way" | "relation" | "route";
-  path: string;
-  hasChildren?: boolean;
-  children?: TreeNode[];
-  tags?: Record<string, string>;
-}
+export * from "$lib/../climbing_data_gen/src/types";
 
 export interface BreadcrumbSegment {
   name: string;
