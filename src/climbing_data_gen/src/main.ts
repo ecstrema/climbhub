@@ -15,11 +15,10 @@ if (!Map.prototype.getOrInsert) {
   };
 }
 
-import { join, dirname } from "path";
+import { join } from "path";
 import { generateStaticAPI } from "./static-api-generator.ts";
 
-const filename = typeof __filename === "string" ? __filename : "src/main.ts";
-const dir = dirname(filename);
+const dir = import.meta.dirname;
 
 export const REVERSE_GEOCODING_DATA_DIR = join(dir, "../reverse-geocoding-data/data");
 export const OSM_DATA_FILE = join(dir, "climbing-data.json");
