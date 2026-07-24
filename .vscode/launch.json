@@ -5,9 +5,15 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "command": "npm run dev",
+      "name": "Launch climbhub",
+      "request": "launch",
+      "type": "node-terminal"
+    },
+    {
       "type": "node",
       "request": "launch",
-      "name": "Launch Program",
+      "name": "Generate static API",
       "skipFiles": ["<node_internals>/**"],
       "program": "src/main.ts",
       "cwd": "${workspaceFolder}/src/climbing_data_gen/"
