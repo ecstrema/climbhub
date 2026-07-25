@@ -29,9 +29,9 @@
     })
 </script>
 
-<div class="prose">
+<div>
     <h1>
-        {name}
+        <span class="text-2xl font-bold">{name}</span>
         {#if grade}
             <span class="text-xl text-muted-foreground ml-2">{grade}</span>
         {/if}
@@ -47,7 +47,7 @@
 
     <!-- Renders the OSM tags instead of the routes list, as children are in tree.json -->
     {#if currentNode.type !== "geographic" && currentNode.tags && Object.keys(currentNode.tags).length > 0}
-        <h2>OpenStreetMap Data</h2>
+        <h2 class="text-lg font-semibold">OpenStreetMap Data</h2>
         <Table.Root>
             <Table.Header>
                 <Table.Row>

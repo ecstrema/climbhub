@@ -24,7 +24,7 @@ export const REVERSE_GEOCODING_DATA_DIR = join(dir, "../reverse-geocoding-data/d
 export const OSM_DATA_FILE = join(dir, "climbing-data.json");
 export const GEO_INDEX_FILE = join(REVERSE_GEOCODING_DATA_DIR, "hierarchy-index.json");
 
-export const OUT_API_DIR = join(dir, "../../../static/api");
+export const OUT_API_DIR = join(dir, "../data");
 
 generateStaticAPI({
   geoIndexFile: GEO_INDEX_FILE,

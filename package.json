@@ -17,6 +17,7 @@
   "dependencies": {
     "@types/yargs": "^17.0.35",
     "arktype": "^2.2.0",
+    "mode-watcher": "^1.1.0",
     "rehype-stringify": "^10.0.1",
     "remark-frontmatter": "^5.0.0",
     "remark-parse": "^11.0.0",
@@ -31,7 +32,7 @@
   "devDependencies": {
     "@fontsource-variable/inter": "^5.2.8",
     "@internationalized/date": "^3.12.0",
-    "@lucide/svelte": "^0.577.0",
+    "@lucide/svelte": "^1.26.0",
     "@sveltejs/adapter-static": "^3.0.10",
     "@sveltejs/kit": "^2.56.1",
     "@sveltejs/vite-plugin-svelte": "^7.0.0",
@@ -43,7 +44,7 @@
     "@vitejs/devtools": "^0.1.13",
     "bits-ui": "^2.16.3",
     "clsx": "^2.1.1",
-    "oxfmt": "^0.43.0",
+    "oxfmt": "^0.60.0",
     "oxlint": "^1.58.0",
     "shadcn-svelte": "^1.2.7",
     "svelte": "^5.55.1",

@@ -238,8 +238,6 @@ function writeStaticApi(
 
   // Add info to the geographicTree api endpoints by iterating through it.
   writeChildrenDataToGeoTree([options.outApiDirectory], geographicTree, geolocator);
-
-  writeZipsRecursive(join(options.outApiDirectory, "world"));
 }
 
 function writeChildrenDataToGeoTree(
@@ -273,77 +271,3 @@ function writeChildrenDataToGeoTree(
  * data.json is downloaded whenever a page is loaded, along with shallow.zip, which is used for the sidebar.
  * download.zip is downloaded when the user clicks "download" on an area.
  */
-async function writeZipsRecursive(path: string) {
-  const inShallowZip = await writeShallowZip(path);
-  inShallowZip.add(join(path, "data.json"));
-  writeDeepZip(path, inShallowZip);
-  for (const entry of await readdir(path, { withFileTypes: true })) {
-    if (entry.isDirectory()) {
-      writeZipsRecursive(join(entry.parentPath, entry.name));
-    }
-  }
-}
-
-async function writeShallowZip(path: string): Promise<Set<string>> {
-  const files: Record<string, Uint8Array> = {};
-
-  // Get all children immediately children data.json
-  const entries = await readdir(path, { withFileTypes: true });
-
-  const promises = entries.map(async (entry) => {
-    if (entry.isDirectory()) {
-      const childDataPath = join(entry.parentPath, entry.name, "data.json");
-      if (existsSync(childDataPath)) {
-        // TODO: had to revert to readFileSync else I got EMFILES: Too Many Open Files
-        files[childDataPath.slice(path.length + 1)] = readFileSync(childDataPath);
-      }
-    }
-  });
-
-  await Promise.all(promises);
-
-  if (Object.keys(files).length) {
-    zip(files, async (err, data) => {
-      if (err) {
-        console.error("An error occured while zipping files.", err);
-        return;
-      }
-
-      await writeFile(join(path, "shallow.zip"), data);
-    });
-  }
-
-  return new Set(Object.keys(files));
-}
-
-async function writeDeepZip(path: string, inShallowZip: Set<string>) {
-  // Collect all files recursively, skipping the ones already included in inShallowZip.
-  const files: Record<string, Uint8Array> = {};
-
-  // Get all children immediately children data.json
-  const entries = await readdir(path, { withFileTypes: true, recursive: true });
-
-  const promises = entries.map(async (entry) => {
-    const childPath = join(entry.parentPath, entry.name);
-    if (inShallowZip.has(childPath)) {
-      return;
-    }
-    if (entry.isFile() && entry.name === "data.json") {
-      // TODO: had to revert to readFileSync else I got EMFILES: Too Many Open Files
-      files[childPath.slice(path.length + 1)] = readFileSync(childPath);
-    }
-  });
-
-  await Promise.all(promises);
-
-  if (Object.keys(files).length) {
-    zip(files, async (err, data) => {
-      if (err) {
-        console.error("An error occured while zipping files.", err);
-        return;
-      }
-
-      await writeFile(join(path, "deep.zip"), data);
-    });
-  }
-}

@@ -4,7 +4,7 @@
   import * as Sidebar from "@/ui/sidebar/index.js";
   import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
   import { page } from "$app/state";
-  import type { ElementsJSON, BreadcrumbSegment } from "$lib/types";
+  import type { DataJSON, BreadcrumbSegment } from "$lib/types";
 
   // Using a self-import to make the component recursive!
   import AppSidebarNode from "./app-sidebar-node.svelte";
@@ -13,7 +13,7 @@
     item,
     breadcrumbs
   }: {
-    item: ElementsJSON;
+    item: DataJSON;
     breadcrumbs: BreadcrumbSegment[];
   } = $props();
 

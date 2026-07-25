@@ -1,28 +1,60 @@
-import { asset } from "$app/paths";
+import { resolve } from "$app/paths";
+import type { BreadcrumbSegment, DataJSONRecord } from "$lib/types";
+import { error } from "@sveltejs/kit";
 import type { LayoutLoad } from "./$types";
+import { getName } from "$lib/data";
 
-// export const load: LayoutLoad = async ({ params, fetch }) => {
-//   // 1. Always fetch the root level of the sidebar
-//   const rootRes = await fetch(asset("/api/world/tree.json"));
-//   const rootTree = rootRes.ok ? await rootRes.json() : [];
+export const load: LayoutLoad = async ({ params, fetch }) => {
+  const slug = params.slug;
+  if (!slug) {
+    return [];
+  }
 
-//   const expandedTrees: Record<string, any[]> = {};
+  let acc: string[] = [];
+  const segments = slug.split("/").map((segment) => {
+    acc.push(segment);
+    return acc.join("/");
+  });
 
-//   // 2. If the user directly links to a deep path (e.g. /canada/quebec),
-//   // we must fetch those intermediate tree.jsons at build time so the
-//   // sidebar renders instantly fully expanded without layout shift!
-//   if (params.slug) {
-//     const segments = params.slug.split("/");
-//     let currentPath = "";
+  const childrenRecords: DataJSONRecord[] = [];
+  for (const segment of [
+    "", // add the world/ segment
+    ...segments,
+  ]) {
+    const res = await fetch(resolve("/api/world/[...slug]/shallow.json", { slug: segment }));
 
-//     for (const segment of segments) {
-//       currentPath = currentPath ? `${currentPath}/${segment}` : segment;
-//       const res = await fetch(asset(`/api/${currentPath}/tree.json`));
-//       if (res.ok) {
-//         expandedTrees[currentPath] = await res.json();
-//       }
-//     }
-//   }
+    if (!res.ok) {
+      console.error(res.status, res.statusText);
+      continue;
+    }
 
-//   return { rootTree, expandedTrees };
-// };
+    childrenRecords.push(await res.json());
+  }
+
+  // children will include the next breadcrumb segment
+  const breadcrumbs: BreadcrumbSegment[] = segments.map((segment, i) => {
+    const el = childrenRecords[i][segment];
+    if (!el) {
+      return {
+        link: resolve("/world"),
+        name: "Not found",
+      };
+    }
+    return {
+      name: getName(el) || "No name",
+      link: resolve("/world/[...slug]", { slug: segment }),
+    };
+  });
+
+  const elementData = breadcrumbs.at(-1);
+
+  if (!elementData) {
+    error(500, "Internal error");
+  }
+
+  return {
+    childrenRecords,
+    breadcrumbs,
+    elementData,
+  };
+};
