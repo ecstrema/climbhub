@@ -3,6 +3,8 @@
     import type { PageProps } from "./$types";
     import { getName } from "$lib/data";
     import { getCoordinates, getDescription, getGrade } from "$lib/osm-tags";
+    import Button from "@/ui/button/button.svelte";
+    import { resolve } from "$app/paths";
 
     const { data }: PageProps = $props();
 
@@ -44,6 +46,11 @@
     {#if description}
         <p>{description}</p>
     {/if}
+
+    {#if data.stats}
+        <p>{data.stats.totalRoutes}</p>
+    {/if}
+
 
     <!-- Renders the OSM tags instead of the routes list, as children are in tree.json -->
     {#if currentNode.type !== "geographic" && currentNode.tags && Object.keys(currentNode.tags).length > 0}

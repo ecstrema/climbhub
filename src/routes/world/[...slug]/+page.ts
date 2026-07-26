@@ -5,7 +5,7 @@ import type { PageLoad } from "./$types";
 export const load: PageLoad<{
   stats: AreaStats;
 }> = async ({ params, fetch }) => {
-  const res = await fetch(resolve("/api/world/[...slug]/data.json", { slug: params.slug || "" }));
+  const res = await fetch(resolve("/api/world/[...slug]/stats.json", { slug: params.slug || "" }));
   if (!res.ok) {
     return {
       stats: {
@@ -14,5 +14,5 @@ export const load: PageLoad<{
     };
   }
 
-  return { stats: await res.json() };
+  return { stats: (await res.json()) as AreaStats };
 };

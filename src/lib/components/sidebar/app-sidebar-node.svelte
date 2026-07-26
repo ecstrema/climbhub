@@ -55,6 +55,8 @@
   const name = $derived(getName(item.own));
 </script>
 
+<a class="hidden" href={resolve("/api/world/[...slug]/deep.json", {slug})}>Download</a>
+
 {#if item.own.type === "node"}
   <Sidebar.MenuButton
     isActive={isCurrentPage}
