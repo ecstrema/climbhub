@@ -4,10 +4,29 @@ import { error } from "@sveltejs/kit";
 import type { LayoutLoad } from "./$types";
 import { recursiveDataJSONFromRecord } from "$lib/data";
 
-export const load: LayoutLoad = async ({ params, fetch }) => {
+export const load: LayoutLoad<{
+  tree: RecursiveData<DataJSON>;
+  breadcrumbs: BreadcrumbSegment[];
+  elementData: DataJSON;
+}> = async ({ params, fetch }) => {
+  const res = await fetch(resolve("/api/world/[...slug]/data.json", { slug: "" }));
+  if (!res.ok) {
+    error(500, "Internal error");
+  }
+
+  const rootData = await res.json();
+  const tree: RecursiveData<DataJSON> = {
+    own: rootData,
+  };
+  const breadcrumbs: BreadcrumbSegment[] = [];
+
   const slug = params.slug;
   if (!slug) {
-    return [];
+    return {
+      tree,
+      breadcrumbs,
+      elementData: rootData,
+    };
   }
 
   let acc: string[] = [];
@@ -18,16 +37,6 @@ export const load: LayoutLoad = async ({ params, fetch }) => {
       return acc.join("/");
     }),
   ];
-
-  const res = await fetch(resolve("/api/world/[...slug]/data.json", { slug: "" }));
-  if (!res.ok) {
-    error(500, "Internal error");
-  }
-
-  const tree: RecursiveData<DataJSON> = {
-    own: await res.json(),
-  };
-  const breadcrumbs: BreadcrumbSegment[] = [];
   let current = tree;
   for (const segment of segments) {
     if (segment && current.children) {
