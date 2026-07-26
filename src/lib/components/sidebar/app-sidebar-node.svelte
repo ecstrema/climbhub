@@ -3,91 +3,95 @@
   import * as Collapsible from "@/ui/collapsible/index.js";
   import * as Sidebar from "@/ui/sidebar/index.js";
   import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
-  import { page } from "$app/state";
-  import type { DataJSON, BreadcrumbSegment } from "$lib/types";
+  import type { BreadcrumbSegment, DataJSON, RecursiveData } from "$lib/types";
 
   // Using a self-import to make the component recursive!
   import AppSidebarNode from "./app-sidebar-node.svelte";
+  import { getName, recursiveDataJSONFromRecord } from "$lib/data";
 
   let {
+    slug,
     item,
-    breadcrumbs
+    breadcrumbs,
   }: {
-    item: DataJSON;
+    slug: string;
+    item: RecursiveData<DataJSON>;
     breadcrumbs: BreadcrumbSegment[];
   } = $props();
 
   // Check if this specific node is part of the active path being viewed
-  let isActivePath = $derived(breadcrumbs.some((b) => b.link.includes(item.path)));
-  let isCurrentPage = $derived(breadcrumbs.at(-1)?.link.includes(item.path));
+  const isActivePath = $derived(breadcrumbs.some((b) => b.slug === slug));
+  const isCurrentPage = $derived(breadcrumbs.at(-1)?.slug === slug);
 
-  // Initialize with pre-fetched data from the load function if it exists
-  let children = $state<ElementsJSON[]>([]);
-  let isLoading = $state(false);
-  let isOpen = $state(false);
-
-  // Sync with page data and active path
-  $effect(() => {
-    const prefetched = page.data.expandedTrees?.[item.path] || [];
-    if (prefetched.length > 0) {
-      children = prefetched;
-    }
-  });
-
+  let open = $state(false);
   $effect(() => {
     if (isActivePath) {
-      isOpen = true;
+      open = true;
     }
   });
 
-  // Lazy-load the children when the user clicks the folder toggle
-  async function handleOpenChange(open: boolean) {
-    isOpen = open;
-    if (open && children.length === 0) {
-      isLoading = true;
-      try {
-        const res = await fetch(asset(`/api/${item.path}/tree.json`));
-        if (res.ok) {
-          children = await res.json();
-        }
-      } finally {
-        isLoading = false;
-      }
-    }
-  }
+  let children: typeof item.children | Promise<typeof item.children> =
+    $derived.by(() => {
+      return item.children;
+    });
 
+  const getChildren = async () => {
+    if (await children) {
+      return;
+    }
+
+    children = fetch(
+      resolve("/api/world/[...slug]/shallow.json", { slug }),
+    ).then(async (res) => {
+      if (res.ok) {
+        return recursiveDataJSONFromRecord(await res.json());
+      }
+    });
+  };
+
+  const link = $derived.by(() => {
+    return resolve("/world/[...slug]", { slug });
+  });
+  const name = $derived(getName(item.own));
 </script>
 
-{#if item.type === "node"}
-  <Sidebar.MenuButton isActive={isCurrentPage} class="data-[active=true]:bg-transparent">
+{#if item.own.type === "node"}
+  <Sidebar.MenuButton
+    isActive={isCurrentPage}
+    class="data-[active=true]:bg-transparent"
+  >
     <!-- Optional: Add grade or icon here -->
-    <a href={resolve(item.path)}>{item.name}</a>
+    <a href={link}>{name || "No name"}</a>
   </Sidebar.MenuButton>
 {:else}
   <Sidebar.MenuItem>
     <Collapsible.Root
-      open={isOpen}
-      onOpenChange={handleOpenChange}
+      {open}
+      onmouseenter={getChildren}
       class="group/collapsible [&[data-state=open]>button>svg:first-child]:rotate-90"
     >
       <Collapsible.Trigger>
         {#snippet child({ props })}
           <Sidebar.MenuButton {...props}>
             <ChevronRightIcon class="transition-transform" />
-            <a href={resolve(item.path)}>{item.name}</a>
+            <a href={link}>{name || "No name"}</a>
           </Sidebar.MenuButton>
         {/snippet}
       </Collapsible.Trigger>
 
       <Collapsible.Content>
         <Sidebar.MenuSub>
-          {#if isLoading}
-            <Sidebar.MenuSubItem class="text-xs text-muted-foreground pl-4">Loading...</Sidebar.MenuSubItem>
-          {:else}
-            {#each children as child (child.path)}
-              <AppSidebarNode item={child} {breadcrumbs} />
-            {/each}
-          {/if}
+          {#await children}
+            <Sidebar.MenuSubItem class="text-xs text-muted-foreground pl-4">
+              Loading...
+            </Sidebar.MenuSubItem>
+          {:then children}
+            {#if children}
+              {#each Object.entries(children) as [slug, child] (slug)}
+                <AppSidebarNode item={child} {breadcrumbs} {slug} />
+              {/each}
+            {/if}
+          {/await}
         </Sidebar.MenuSub>
       </Collapsible.Content>
     </Collapsible.Root>

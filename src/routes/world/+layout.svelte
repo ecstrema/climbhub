@@ -1,13 +1,15 @@
 <script lang="ts">
-  import { resolve } from "$app/paths";
+  import type { WithChildren } from "bits-ui";
 
   import * as Breadcrumb from "@/ui/breadcrumb/index.js";
   import AppSidebar from "@/sidebar/app-sidebar.svelte";
   import { Separator } from "@/ui/separator";
   import * as Sidebar from "@/ui/sidebar";
   import AppThemeToggle from "@/theme-toggle/app-theme-toggle.svelte";
-  import type { WithChildren } from "bits-ui";
+
   import type { PageProps } from "./$types";
+  import { getName } from "$lib/data";
+  import { resolve } from "$app/paths";
 
   const { children, data }: WithChildren<PageProps> = $props();
 
@@ -15,7 +17,7 @@
 </script>
 
 <Sidebar.Provider>
-  <AppSidebar {breadcrumbs} />
+  <AppSidebar {breadcrumbs} tree={data.tree!}/>
 
   <Sidebar.Inset>
     <header class="flex h-16 shrink-0 items-center gap-2 border-b px-4">
@@ -30,12 +32,14 @@
           <Breadcrumb.List>
             {@const lastElementIndex = breadcrumbs.length - 1}
             {#each breadcrumbs as breadcrumb, index}
+              {@const name = getName(breadcrumb.data)}
+
               <Breadcrumb.Item>
                 {#if index === lastElementIndex}
-                  <Breadcrumb.Page>{breadcrumb.name}</Breadcrumb.Page>
+                  <Breadcrumb.Page>{name}</Breadcrumb.Page>
                 {:else}
-                  <Breadcrumb.Link href={breadcrumb.link}>
-                    {breadcrumb.name}
+                  <Breadcrumb.Link href={resolve("/world/[...slug]", {slug: breadcrumb.slug})}>
+                    {name}
                   </Breadcrumb.Link>
                 {/if}
               </Breadcrumb.Item>

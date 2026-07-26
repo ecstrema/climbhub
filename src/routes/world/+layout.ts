@@ -1,8 +1,8 @@
 import { resolve } from "$app/paths";
-import type { BreadcrumbSegment, DataJSONRecord } from "$lib/types";
+import type { BreadcrumbSegment, DataJSON, DataJSONRecord, RecursiveData } from "$lib/types";
 import { error } from "@sveltejs/kit";
 import type { LayoutLoad } from "./$types";
-import { getName } from "$lib/data";
+import { recursiveDataJSONFromRecord } from "$lib/data";
 
 export const load: LayoutLoad = async ({ params, fetch }) => {
   const slug = params.slug;
@@ -11,49 +11,57 @@ export const load: LayoutLoad = async ({ params, fetch }) => {
   }
 
   let acc: string[] = [];
-  const segments = slug.split("/").map((segment) => {
-    acc.push(segment);
-    return acc.join("/");
-  });
+  const segments = [
+    "",
+    ...slug.split("/").map((segment) => {
+      acc.push(segment);
+      return acc.join("/");
+    }),
+  ];
 
-  const childrenRecords: DataJSONRecord[] = [];
-  for (const segment of [
-    "", // add the world/ segment
-    ...segments,
-  ]) {
-    const res = await fetch(resolve("/api/world/[...slug]/shallow.json", { slug: segment }));
+  const res = await fetch(resolve("/api/world/[...slug]/data.json", { slug: "" }));
+  if (!res.ok) {
+    error(500, "Internal error");
+  }
+
+  const tree: RecursiveData<DataJSON> = {
+    own: await res.json(),
+  };
+  const breadcrumbs: BreadcrumbSegment[] = [];
+  let current = tree;
+  for (const segment of segments) {
+    if (segment && current.children) {
+      current = current.children[segment];
+      if (!current) {
+        error(500, "Internal error");
+      }
+    }
+
+    const link = resolve("/api/world/[...slug]/shallow.json", { slug: segment });
+    const res = await fetch(link);
 
     if (!res.ok) {
-      console.error(res.status, res.statusText);
+      console.error(link, res.status, res.statusText);
       continue;
     }
 
-    childrenRecords.push(await res.json());
+    const data: DataJSONRecord = await res.json();
+    current.children = recursiveDataJSONFromRecord(data);
+
+    breadcrumbs.push({
+      data: current.own,
+      slug: segment,
+    });
   }
 
-  // children will include the next breadcrumb segment
-  const breadcrumbs: BreadcrumbSegment[] = segments.map((segment, i) => {
-    const el = childrenRecords[i][segment];
-    if (!el) {
-      return {
-        link: resolve("/world"),
-        name: "Not found",
-      };
-    }
-    return {
-      name: getName(el) || "No name",
-      link: resolve("/world/[...slug]", { slug: segment }),
-    };
-  });
-
-  const elementData = breadcrumbs.at(-1);
+  const elementData: DataJSON = breadcrumbs.at(-1)!.data;
 
   if (!elementData) {
     error(500, "Internal error");
   }
 
   return {
-    childrenRecords,
+    tree,
     breadcrumbs,
     elementData,
   };

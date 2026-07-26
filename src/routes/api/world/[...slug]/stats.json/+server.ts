@@ -24,10 +24,11 @@ export const GET: RequestHandler = async ({ params, fetch }) => {
       }
 
       const slug = join(entry.parentPath.slice(root.length + 1)).replaceAll("\\", "/");
-      const res = await fetch(resolve("/api/world/[...slug]/data.json", { slug }));
+      const link = resolve("/api/world/[...slug]/data.json", { slug });
+      const res = await fetch(link);
 
       if (!res.ok) {
-        console.error(res.status, res.statusText);
+        console.error(link, res.status, res.statusText);
       }
 
       const data: DataJSON = await res.json();
