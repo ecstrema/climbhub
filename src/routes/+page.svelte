@@ -4,4 +4,4 @@
 
 <h1>Climbhub</h1>
 
-<a href={resolve("/world")}>See all routes</a>
+<a href={resolve("/world/[...slug]", {slug: "north-america"})}>See all routes</a>

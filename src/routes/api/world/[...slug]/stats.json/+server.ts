@@ -9,7 +9,7 @@ import type { RequestHandler } from "./$types";
 import { resolve } from "$app/paths";
 
 export const GET: RequestHandler = async ({ params, fetch }) => {
-  const root = join(import.meta.dirname, "../../../../../climbing_data_gen/data/world");
+  const root = join(process.cwd(), "src/climbing_data_gen/data/world");
   const path = join(root, params.slug);
 
   const stats: AreaStats = {
@@ -46,3 +46,5 @@ export const GET: RequestHandler = async ({ params, fetch }) => {
 
   return json(stats);
 };
+
+export const prerender = true;

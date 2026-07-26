@@ -1,8 +1,6 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
-import { readdir, readFile, writeFile } from "fs/promises";
+import { writeFile } from "fs/promises";
 import { join, dirname } from "path";
-
-import { zip } from "fflate";
 
 import { ReverseGeolocator } from "./reverse-geolocation.ts";
 import type {
@@ -213,8 +211,16 @@ function writeStaticApi(
       // Sectors sometimes include the contour of their cliffs
       if (el.type === "way" && el.tags?.natural === "cliff") {
         cliffs++;
-        // TODO: yield back so we don't go through children.
-        continue;
+        let hasChildrenWithTags = false;
+        for (const child of iterateOverpassElementsChildren(el, allElements)) {
+          if (child.tags) {
+            hasChildrenWithTags = true;
+            break;
+          }
+        }
+        if (!hasChildrenWithTags) {
+          continue;
+        }
       }
 
       const completePath = [...location, ...getOsmPath(path)];

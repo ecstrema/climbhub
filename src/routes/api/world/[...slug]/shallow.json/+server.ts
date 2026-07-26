@@ -11,11 +11,7 @@ import { resolve } from "$app/paths";
 export const GET: RequestHandler = async ({ params, fetch }) => {
   const files: DataJSONRecord = {};
 
-  const path = join(
-    import.meta.dirname,
-    "../../../../../climbing_data_gen/data/world",
-    params.slug,
-  );
+  const path = join(process.cwd(), "src/climbing_data_gen/data/world", params.slug);
 
   // Get all children immediately children data.json
   try {

@@ -11,7 +11,7 @@ import { resolve } from "$app/paths";
 export const GET: RequestHandler = async ({ params, fetch }) => {
   const files: DataJSONRecord = {};
 
-  const root = join(import.meta.dirname, "../../../../../climbing_data_gen/data/world");
+  const root = join(process.cwd(), "src/climbing_data_gen/data/world");
   const path = join(root, params.slug);
 
   try {
@@ -45,3 +45,5 @@ export const GET: RequestHandler = async ({ params, fetch }) => {
 
   return json(files);
 };
+
+export const prerender = true;

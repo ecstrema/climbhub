@@ -1,21 +1,18 @@
-import { error } from "@sveltejs/kit";
+import { resolve } from "$app/paths";
+import type { AreaStats } from "$lib/types";
 import type { PageLoad } from "./$types";
-import { asset } from "$app/paths";
-import type { DataJSON } from "$lib/types";
 
-export const load: PageLoad = async ({ params, fetch }) => {
-  // add "world" as the root path for the API request, and append the slug if it exists
-  const apiPath = "world" + (params.slug ? `/${params.slug}` : "");
-
-  const res = await fetch(asset(`/api/${apiPath}/data.json`));
-
+export const load: PageLoad<{
+  stats: AreaStats;
+}> = async ({ params, fetch }) => {
+  const res = await fetch(resolve("/api/world/[...slug]/data.json", { slug: params.slug || "" }));
   if (!res.ok) {
-    error(404, "Climbing area or route not found");
+    return {
+      stats: {
+        totalRoutes: 0,
+      },
+    };
   }
 
-  const elementData = (await res.json()) as DataJSON;
-
-  return {
-    elementData,
-  };
+  return { stats: await res.json() };
 };
