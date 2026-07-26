@@ -12,6 +12,19 @@ jobs:
         with:
           submodules: recursive
       - uses: oven-sh/setup-bun@v2
+
+      # generate reverse-geocoding-data
+      - run: cd src/climbing_data_gen/reverse-geociding-data
+      - run: bun install
+      - run: bun run build
+
+      # generate climbing data
+      - run: cd ..
+      - run: bun install
+      - run: bun run build
+
+      # build the app
+      - run: cd ../..
       - run: bun install
 
       - name: build
