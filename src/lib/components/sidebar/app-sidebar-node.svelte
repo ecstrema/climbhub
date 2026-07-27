@@ -8,6 +8,7 @@
   import { getName, recursiveDataJSONFromRecord } from "$lib/data";
   import { Skeleton } from "@/ui/skeleton";
   import AppSidebarChildren from "./app-sidebar-children.svelte";
+  import { getGrade } from "$lib/osm-tags";
 
   let {
     slug,
@@ -55,17 +56,20 @@
   const name = $derived(getName(item.own));
 </script>
 
-<a class="hidden" href={resolve("/api/world/[...slug]/deep.json", { slug })}
-  >Download</a
->
-
 {#if item.own.type === "node"}
+  {@const grade = getGrade(item.own)}
   <Sidebar.MenuButton
     isActive={isCurrentPage}
     class="data-[active=true]:bg-transparent"
   >
-    <!-- TODO: Add grade/icon/color for difficulty -->
-    <a href={link}>{name || "No name"}</a>
+
+    <a href={link}>
+      <!-- TODO: Add grade/icon/color for difficulty -->
+       {#if grade}
+       <span class="border-amber-300 border-2 p-1 rounded-xl">{grade}</span>
+       {/if}
+      <span>{name || "No name"}</span>
+    </a>
   </Sidebar.MenuButton>
 {:else}
   <Sidebar.MenuItem>

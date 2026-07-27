@@ -51,6 +51,7 @@
 		isActive = false,
 		tooltipContent,
 		tooltipContentProps,
+		href,
 		...restProps
 	}: WithElementRef<
 		HTMLAttributes<HTMLButtonElement | HTMLAnchorElement>,
@@ -77,13 +78,15 @@
 		"data-active": isActive,
 		...restProps,
 	});
+
+	$inspect(href);
 </script>
 
 {#snippet Button({ props }: { props?: Record<string, unknown> })}
 	{@const mergedProps = mergeProps(buttonProps, props)}
 	{#if child}
 		{@render child({ props: mergedProps })}
-	{:else if props && props.href}
+	{:else if href}
 		<a bind:this={ref} {...mergedProps}>
 			{@render children?.()}
 		</a>
