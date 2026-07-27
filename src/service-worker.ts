@@ -67,6 +67,13 @@ async function handleFetchGet(request: Request): Promise<Response> {
   return handleAppFile(request, pathname);
 }
 
+// TODO: instead of no caching in dev, use hot reloading to clear cache for modified modules.
+// import.meta.hot?.on("vite:beforeUpdate", (p) => {
+//   for (const u of p.updates) {
+//     console.log(u.path);
+//   }
+// });
+
 /**
  * We store data.json. When we get a children.json, we delete the included data.json, and when we get a deep.json, we delete the included data.json and children.json.
  * That means that when we fetch a path/to/the/data.json, we must check all these locations:
