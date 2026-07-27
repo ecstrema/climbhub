@@ -18,6 +18,10 @@ export const load: LayoutLoad<{
   const tree: RecursiveData<DataJSON> = {
     own: rootData,
   };
+  const rootChildren = await getChildren("");
+  if (rootChildren) {
+    tree.children = rootChildren;
+  }
   const breadcrumbs: BreadcrumbSegment[] = [];
 
   const slug = params.slug;
@@ -30,13 +34,10 @@ export const load: LayoutLoad<{
   }
 
   let acc: string[] = [];
-  const segments = [
-    "",
-    ...slug.split("/").map((segment) => {
-      acc.push(segment);
-      return acc.join("/");
-    }),
-  ];
+  const segments = slug.split("/").map((segment) => {
+    acc.push(segment);
+    return acc.join("/");
+  });
   let current = tree;
   for (const segment of segments) {
     if (segment && current.children) {
@@ -46,16 +47,12 @@ export const load: LayoutLoad<{
       }
     }
 
-    const link = resolve("/api/world/[...slug]/children.json", { slug: segment });
-    const res = await fetch(link);
-
-    if (!res.ok) {
-      console.error(link, res.status, res.statusText);
+    const children = await getChildren(segment);
+    if (!children) {
       continue;
     }
 
-    const data: DataJSONRecord = await res.json();
-    current.children = recursiveDataJSONFromRecord(data);
+    current.children = children;
 
     breadcrumbs.push({
       data: current.own,
@@ -74,4 +71,17 @@ export const load: LayoutLoad<{
     breadcrumbs,
     elementData,
   };
+
+  async function getChildren(slug: string) {
+    const link = resolve("/api/world/[...slug]/children.json", { slug });
+    const res = await fetch(link);
+
+    if (!res.ok) {
+      console.error(link, res.status, res.statusText);
+      return;
+    }
+
+    const data: DataJSONRecord = await res.json();
+    return recursiveDataJSONFromRecord(data);
+  }
 };
