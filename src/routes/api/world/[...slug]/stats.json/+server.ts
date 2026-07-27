@@ -1,50 +1,60 @@
 import { join } from "path";
-import { readdir } from "fs/promises";
 
-import { error, json } from "@sveltejs/kit";
+import { error } from "@sveltejs/kit";
 
-import type { AreaStats, DataJSON } from "$lib/types";
+import type { AreaStats, DataJSONRecord } from "$lib/types";
 
 import type { RequestHandler } from "./$types";
 import { resolve } from "$app/paths";
+import { rootPath, withCache } from "../utils";
 
 export const GET: RequestHandler = async ({ params, fetch }) => {
-  const root = join(process.cwd(), "src/climbing_data_gen/data/world");
-  const path = join(root, params.slug);
+  const path = join(rootPath, params.slug);
 
-  const stats: AreaStats = {
-    totalRoutes: 0,
-  };
+  return withCache(join(path, "stats.json"), async () => {
+    const childrenRes = await fetch(
+      resolve("/api/world/[...slug]/children.json", { slug: params.slug }),
+    );
 
-  try {
-    const entries = await readdir(path, { withFileTypes: true, recursive: true });
-    for (const entry of entries) {
-      if (!(entry.isFile() && entry.name === "data.json" && entry.parentPath !== path)) {
-        continue;
-      }
-
-      const slug = join(entry.parentPath.slice(root.length + 1)).replaceAll("\\", "/");
-      const link = resolve("/api/world/[...slug]/data.json", { slug });
-      const res = await fetch(link);
-
-      if (!res.ok) {
-        console.error(link, res.status, res.statusText);
-      }
-
-      const data: DataJSON = await res.json();
-
-      if (data.type === "node" && data.tags && data.tags["climbing"] === "route_bottom") {
-        stats.totalRoutes += 1;
-      }
+    if (!childrenRes.ok) {
+      error(404, "Not Found");
     }
-  } catch (err) {
-    if (err instanceof Error) {
-      error(404, err.message);
-    }
-    throw err;
-  }
 
-  return json(stats);
+    const children: DataJSONRecord = await childrenRes.json();
+
+    const allStats = await Promise.all(
+      Object.entries(children).map(async ([childSlug, child]): Promise<AreaStats> => {
+        if (child.type === "node") {
+          // TODO: moulinettes only have a route_top
+          if (child.tags && child.tags["climbing"] === "route_bottom") {
+            return {
+              totalRoutes: 1,
+            };
+          }
+          if (child.tags) console.warn("ignored node with tags", child.tags);
+          return {
+            totalRoutes: 0,
+          };
+        }
+        const res = await fetch(resolve("/api/world/[...slug]/stats.json", { slug: childSlug }));
+        if (!res.ok) {
+          console.error("Could not get stats for child", childSlug);
+          return {
+            totalRoutes: 0,
+          };
+        }
+        return await res.json();
+      }),
+    );
+
+    return allStats.reduce(
+      (acc, current) => {
+        for (const key of Object.keys(acc) as (keyof typeof acc)[]) {
+          acc[key] += current[key];
+        }
+        return acc;
+      },
+      { totalRoutes: 0 },
+    );
+  });
 };
-
-export const prerender = true;

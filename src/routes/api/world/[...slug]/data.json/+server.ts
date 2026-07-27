@@ -6,9 +6,10 @@ import { error, json } from "@sveltejs/kit";
 import type { DataJSON } from "$lib/types";
 
 import type { RequestHandler } from "./$types";
+import { rootPath } from "../utils";
 
 export const GET: RequestHandler = async ({ params }) => {
-  const path = join(process.cwd(), "src/climbing_data_gen/data/world", params.slug, "data.json");
+  const path = join(rootPath, params.slug, "data.json");
 
   try {
     const data: DataJSON = JSON.parse(await readFile(path, { encoding: "utf-8" }));
@@ -20,7 +21,3 @@ export const GET: RequestHandler = async ({ params }) => {
     throw err;
   }
 };
-
-// since there's no dynamic data here, we can prerender
-// it so that it gets served as a static asset in production
-export const prerender = true;

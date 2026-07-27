@@ -267,13 +267,13 @@ function writeChildrenDataToGeoTree(
   }
 }
 
-/** Write the zips for a folder. Each folder contains a shallow zips, which contains only the data for from all children, and a deep zip, which contains all the data rest of the data.
+/** Write the zips for a folder. Each folder contains a children zips, which contains only the data for from all children, and a deep zip, which contains all the data rest of the data.
  *
  * This means that in order to completely download an area, you need:
  *  - the area's data.json
- *  - shallow.zip
- *  - download.zip
+ *  - children.zip
+ *  - deep.zip
  *
- * data.json is downloaded whenever a page is loaded, along with shallow.zip, which is used for the sidebar.
- * download.zip is downloaded when the user clicks "download" on an area.
+ * data.json is downloaded whenever a page is loaded, along with children.zip, which is used for the sidebar.
+ * deep.zip is downloaded when the user clicks "download" on an area. It is completed by children.zip. Very often, a series of requests to recursively get all children will be better, but we can also just get the whole subchildren array to simplify things.
  */

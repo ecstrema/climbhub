@@ -46,7 +46,7 @@ export const load: LayoutLoad<{
       }
     }
 
-    const link = resolve("/api/world/[...slug]/shallow.json", { slug: segment });
+    const link = resolve("/api/world/[...slug]/children.json", { slug: segment });
     const res = await fetch(link);
 
     if (!res.ok) {

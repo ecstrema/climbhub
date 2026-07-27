@@ -41,7 +41,7 @@
     }
 
     children = fetch(
-      resolve("/api/world/[...slug]/shallow.json", { slug }),
+      resolve("/api/world/[...slug]/children.json", { slug }),
     ).then(async (res) => {
       if (res.ok) {
         return recursiveDataJSONFromRecord(await res.json());
