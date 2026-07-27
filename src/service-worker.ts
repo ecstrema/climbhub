@@ -30,8 +30,10 @@ const ASSETS = [
 self.addEventListener("install", (event) => {
   // Create a new cache and add all files to it
   async function addFilesToCache() {
-    const cache = await caches.open(APP_CACHE);
-    await cache.addAll(ASSETS);
+    if (!import.meta.env.DEV) {
+      const cache = await caches.open(APP_CACHE);
+      await cache.addAll(ASSETS);
+    }
   }
 
   event.waitUntil(addFilesToCache());
@@ -151,7 +153,7 @@ async function handleClimbingData(request: Request, pathname: string): Promise<R
 // App files. Those are automatically up to date, because when a new service worker is installed, it installs the new version of the app too, and uninstalls the old version.
 async function handleAppFile(request: Request, pathname: string): Promise<Response> {
   const appCache = await caches.open(APP_CACHE);
-  return safeFetchWithCache(appCache, pathname, request);
+  return import.meta.env.DEV ? safeFetch(request) : safeFetchWithCache(appCache, pathname, request);
 }
 
 async function safeFetchWithCache(
