@@ -5,9 +5,9 @@
   import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
   import type { BreadcrumbSegment, DataJSON, RecursiveData } from "$lib/types";
 
-  // Using a self-import to make the component recursive!
-  import AppSidebarNode from "./app-sidebar-node.svelte";
   import { getName, recursiveDataJSONFromRecord } from "$lib/data";
+  import { Skeleton } from "@/ui/skeleton";
+  import AppSidebarChildren from "./app-sidebar-children.svelte";
 
   let {
     slug,
@@ -55,14 +55,16 @@
   const name = $derived(getName(item.own));
 </script>
 
-<a class="hidden" href={resolve("/api/world/[...slug]/deep.json", {slug})}>Download</a>
+<a class="hidden" href={resolve("/api/world/[...slug]/deep.json", { slug })}
+  >Download</a
+>
 
 {#if item.own.type === "node"}
   <Sidebar.MenuButton
     isActive={isCurrentPage}
     class="data-[active=true]:bg-transparent"
   >
-    <!-- Optional: Add grade or icon here -->
+    <!-- TODO: Add grade/icon/color for difficulty -->
     <a href={link}>{name || "No name"}</a>
   </Sidebar.MenuButton>
 {:else}
@@ -84,15 +86,9 @@
       <Collapsible.Content>
         <Sidebar.MenuSub>
           {#await children}
-            <Sidebar.MenuSubItem class="text-xs text-muted-foreground pl-4">
-              Loading...
-            </Sidebar.MenuSubItem>
+            <Skeleton class="h-8 mt-2" />
           {:then children}
-            {#if children}
-              {#each Object.entries(children) as [slug, child] (slug)}
-                <AppSidebarNode item={child} {breadcrumbs} {slug} />
-              {/each}
-            {/if}
+            <AppSidebarChildren {children} {breadcrumbs} />
           {/await}
         </Sidebar.MenuSub>
       </Collapsible.Content>

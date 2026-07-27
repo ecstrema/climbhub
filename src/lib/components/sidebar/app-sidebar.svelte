@@ -3,6 +3,10 @@
   import type { ComponentProps } from "svelte";
   import AppSidebarNode from "./app-sidebar-node.svelte";
   import type { BreadcrumbSegment, DataJSON, RecursiveData } from "$lib/types";
+    import { getName } from "$lib/data";
+    import { resolve } from "$app/paths";
+    import AppSidebarChildren from "./app-sidebar-children.svelte";
+    import { Item } from "@/ui/breadcrumb";
 
   let {
     tree,
@@ -15,10 +19,10 @@
 <Sidebar.Root bind:ref {...restProps}>
   <Sidebar.Content>
     <Sidebar.Group>
-      <Sidebar.GroupLabel>Regions & Areas</Sidebar.GroupLabel>
+      <Sidebar.GroupLabel><a href={resolve("/world")}>{getName(tree.own)}</a></Sidebar.GroupLabel>
       <Sidebar.GroupContent>
         <Sidebar.Menu>
-          <AppSidebarNode item={tree} slug={""} breadcrumbs={breadcrumbs}/>
+          <AppSidebarChildren children={tree.children} {breadcrumbs} />
         </Sidebar.Menu>
       </Sidebar.GroupContent>
     </Sidebar.Group>
