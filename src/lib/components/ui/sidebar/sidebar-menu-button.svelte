@@ -78,8 +78,6 @@
 		"data-active": isActive,
 		...restProps,
 	});
-
-	$inspect(href);
 </script>
 
 {#snippet Button({ props }: { props?: Record<string, unknown> })}

@@ -92,7 +92,8 @@
           {#await children}
             <Skeleton class="h-8 mt-2" />
           {:then children}
-            <AppSidebarChildren {children} {breadcrumbs} />
+            {@const i: RecursiveData<DataJSON> = {own: item.own, children}}
+            <AppSidebarChildren item={i} {breadcrumbs} />
           {/await}
         </Sidebar.MenuSub>
       </Collapsible.Content>

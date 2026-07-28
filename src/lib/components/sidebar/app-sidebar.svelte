@@ -25,7 +25,7 @@
       </Sidebar.GroupLabel>
       <Sidebar.GroupContent>
         <Sidebar.Menu>
-          <AppSidebarChildren children={tree.children} {breadcrumbs} />
+          <AppSidebarChildren item={tree} {breadcrumbs} />
         </Sidebar.Menu>
       </Sidebar.GroupContent>
     </Sidebar.Group>
