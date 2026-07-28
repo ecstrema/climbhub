@@ -5,6 +5,7 @@
 /// <reference lib="webworker" />
 
 // Ensures that the `$service-worker` import has proper type definitions
+// oxlint-disable-next-line typescript/triple-slash-reference
 /// <reference types="@sveltejs/kit" />
 
 // Only necessary if you have an import from `$env/static/public`
