@@ -18,6 +18,13 @@ export type SidebarStateProps = {
    * the sub-components and any `bind:` references.
    */
   setOpen: (open: boolean) => void;
+
+  /**
+   * The current sidebar width, shared so draggable rails can update it.
+   */
+  width: {
+    current: string;
+  };
 };
 
 class SidebarState {
@@ -25,11 +32,13 @@ class SidebarState {
   open = $derived.by(() => this.props.open());
   openMobile = $state(false);
   setOpen: SidebarStateProps["setOpen"];
+  width: SidebarStateProps["width"];
   #isMobile: IsMobile;
   state = $derived.by(() => (this.open ? "expanded" : "collapsed"));
 
   constructor(props: SidebarStateProps) {
     this.setOpen = props.setOpen;
+    this.width = props.width;
     this.#isMobile = new IsMobile();
     this.props = props;
   }
