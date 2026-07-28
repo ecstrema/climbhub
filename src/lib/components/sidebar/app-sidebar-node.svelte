@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { asset, resolve } from "$app/paths";
+  import { resolve } from "$app/paths";
   import * as Collapsible from "@/ui/collapsible/index.js";
   import * as Sidebar from "@/ui/sidebar/index.js";
   import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
@@ -62,12 +62,11 @@
     isActive={isCurrentPage}
     class="data-[active=true]:bg-transparent"
   >
-
-    <a href={link}>
+    <a href={link} class="truncate">
       <!-- TODO: Add grade/icon/color for difficulty -->
-       {#if grade}
-       <span class="border-amber-300 border-2 p-1 rounded-xl">{grade}</span>
-       {/if}
+      {#if grade}
+        <span class="text-sm text-amber-700 dark:text-amber-300">{grade}</span>
+      {/if}
       <span>{name || "No name"}</span>
     </a>
   </Sidebar.MenuButton>
@@ -82,7 +81,7 @@
         {#snippet child({ props })}
           <Sidebar.MenuButton {...props}>
             <ChevronRightIcon class="transition-transform" />
-            <a href={link}>{name || "No name"}</a>
+            <a href={link} class="truncate">{name || "No name"}</a>
           </Sidebar.MenuButton>
         {/snippet}
       </Collapsible.Trigger>

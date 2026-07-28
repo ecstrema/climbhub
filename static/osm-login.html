@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <script>
+      if (new URLSearchParams(location.search).has("code")) {
+        new BroadcastChannel("osm-api-auth-complete").postMessage(location.href);
+        window.close();
+      }
+    </script>
+  </head>
+  <body>
+    <main>Login successful - This popup should close automatically</main>
+  </body>
+</html>

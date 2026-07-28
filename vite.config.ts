@@ -6,4 +6,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   plugins: [tailwindcss(), sveltekit(), devtoolsJson()],
   test: { include: ["src/**/*.{test,spec}.{js,ts}"] },
+  server: {
+    host: "127.0.0.1",
+  },
 });
