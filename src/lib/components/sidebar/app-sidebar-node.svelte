@@ -31,19 +31,16 @@
     }
   });
 
-  let children: typeof item.children | Promise<typeof item.children> =
-    $derived.by(() => {
-      return item.children;
-    });
+  let children: typeof item.children | Promise<typeof item.children> = $derived.by(() => {
+    return item.children;
+  });
 
   const getChildren = async () => {
     if (await children) {
       return;
     }
 
-    children = fetch(
-      resolve("/api/world/[...slug]/children.json", { slug }),
-    ).then(async (res) => {
+    children = fetch(resolve("/api/world/[...slug]/children.json", { slug })).then(async (res) => {
       if (res.ok) {
         return recursiveDataJSONFromRecord(await res.json());
       }
@@ -58,10 +55,7 @@
 
 {#if item.own.type === "node"}
   {@const grade = getGrade(item.own)}
-  <Sidebar.MenuButton
-    isActive={isCurrentPage}
-    class="data-[active=true]:bg-transparent"
-  >
+  <Sidebar.MenuButton isActive={isCurrentPage} class="data-[active=true]:bg-transparent">
     <a href={link} class="truncate">
       <!-- TODO: Add grade/icon/color for difficulty -->
       {#if grade}
