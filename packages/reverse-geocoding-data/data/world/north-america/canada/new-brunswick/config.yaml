@@ -1,0 +1,5 @@
+query: |
+  [out:json][timeout:90];
+  relation["ISO3166-2"="CA-NB"]["boundary"="administrative"]["admin_level"="4"];
+  out geom;
+displayName: New Brunswick
