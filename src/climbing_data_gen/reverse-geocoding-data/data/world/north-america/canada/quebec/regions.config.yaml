@@ -1,7 +1,0 @@
-query: |
-  [out:json][timeout:90];
-  area["ISO3166-2"="CA-QC"]->.quebec;
-  relation["boundary"="administrative"]["admin_level"="5"](area.quebec);
-  out geom;
-multiple: true
-displayName: Québec

@@ -13,10 +13,18 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Generate static API",
+      "name": "Generate static climbing data",
       "skipFiles": ["<node_internals>/**"],
       "program": "src/main.ts",
-      "cwd": "${workspaceFolder}/src/climbing_data_gen/"
+      "cwd": "${workspaceFolder}/packages/climbing-data-gen/"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Generate reverse geocoding data",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "src/main.ts",
+      "cwd": "${workspaceFolder}/packages/reverse-geocoding-data/"
     }
   ]
 }
