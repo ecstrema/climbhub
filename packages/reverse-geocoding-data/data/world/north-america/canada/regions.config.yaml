@@ -1,0 +1,6 @@
+query: |
+  [out:json][timeout:90];
+  area["ISO3166-1"="CA"]->.canada;
+  relation["boundary"="administrative"]["admin_level"="4"](area.canada);
+  out geom;
+multiple: true
