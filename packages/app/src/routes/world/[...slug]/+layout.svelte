@@ -36,6 +36,11 @@
   });
 
   const tree: RecursiveData<DataJSON> = $state(rootElement);
+  const title = $derived.by(() => {
+    const last = breadcrumbs.at(-1)?.data;
+    const name = last ? getName(last) : null;
+    return `${name || "World"} - Climbhub`;
+  });
 
   const parentMap: Record<string, RecursiveData<DataJSON>> = {
     "": tree,
@@ -74,6 +79,10 @@
     }
   }
 </script>
+
+<svelte:head>
+  <title>{title}</title>
+</svelte:head>
 
 <OSMProvider>
   <Sidebar.Provider>
