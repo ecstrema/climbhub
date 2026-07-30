@@ -2,11 +2,11 @@ import { join } from "path";
 
 let dirname = import.meta.dirname;
 
-// during build, split dirname by / and \\, then pop until we find .svelte-kit, then join with ../climbing-data-gen/src and we are back at the right place
+// When building with SvelteKit, the import.meta.dirname will point to the .svelte-kit directory, which is not where we want to store our output files. We need to adjust the path to point to the climbing-data-gen package instead.
 if (dirname.includes(".svelte-kit")) {
-  const parts = dirname.split(/[/\\]/);
-  while (parts.length > 0 && parts.pop() !== ".svelte-kit") {}
-  dirname = join(...parts, "../climbing-data-gen/src");
+  const svelteKitIndex = dirname.indexOf(".svelte-kit");
+  const appDir = dirname.slice(0, svelteKitIndex);
+  dirname = join(appDir, "../climbing-data-gen/src");
 }
 
 export const OSM_DATA_FILE = join(dirname, "climbing-data.json");
