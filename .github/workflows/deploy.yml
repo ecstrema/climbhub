@@ -16,21 +16,16 @@ jobs:
         uses: actions/cache@v3
         with:
           path: packages/reverse-geocoding-data/output
-          key: ${{ runner.os }}-reverse-geocoding-data
-          restore-keys: ${{ runner.os }}-reverse-geocoding-data
+          key: ${{ runner.os }}-reverse-geocoding-data-${{ github.run_id }}
+          restore-keys: ${{ runner.os }}-reverse-geocoding-data-
 
       - name: Cache Bun dependencies
         uses: actions/cache@v3
         with:
           path: |
             ~/.bun
-            node_modules
-            packages/app/node_modules
-            packages/reverse-geocoding-data/node_modules
-            packages/climbing-data-gen/node_modules
-          key: ${{ runner.os }}-bun-dependencies
-          restore-keys: |
-            ${{ runner.os }}-bun-dependencies
+          key: ${{ runner.os }}-bun-dependencies-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: ${{ runner.os }}-bun-dependencies
 
       - uses: oven-sh/setup-bun@v2
 
