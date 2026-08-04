@@ -34,7 +34,7 @@ export interface OverpassRelationElement {
     ref: number;
     role: string;
   }[];
-  tags: Record<string, string>;
+  tags?: Record<string, string>;
 }
 
 export type OverpassElement = OverpassNodeElement | OverpassWayElement | OverpassRelationElement;

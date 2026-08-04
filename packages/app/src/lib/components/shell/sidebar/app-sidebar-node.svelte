@@ -3,12 +3,13 @@
   import * as Collapsible from "@/ui/collapsible/index.js";
   import * as Sidebar from "@/ui/sidebar/index.js";
   import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
-  import type { BreadcrumbSegment, DataJSON, RecursiveData } from "$lib/types";
+  import type { BreadcrumbSegment, RecursiveData } from "$lib/types";
 
   import { getName, recursiveDataJSONFromRecord } from "$lib/data";
   import { Skeleton } from "@/ui/skeleton";
   import AppSidebarChildren from "./app-sidebar-children.svelte";
-  import { getGrade } from "$lib/osm-tags";
+  import type { DataJSON } from "climbing-data-gen";
+  import HolyGrade from "@/grade/holy-grade.svelte";
 
   let {
     slug,
@@ -54,13 +55,9 @@
 </script>
 
 {#if item.own.type === "node"}
-  {@const grade = getGrade(item.own)}
   <Sidebar.MenuButton isActive={isCurrentPage} class="data-[active=true]:bg-transparent">
     <a href={link} class="truncate">
-      <!-- TODO: Add grade/icon/color for difficulty -->
-      {#if grade}
-        <span class="text-sm text-amber-700 dark:text-amber-300">{grade}</span>
-      {/if}
+      <HolyGrade tags={item.own.tags} />
       <span>{name || "No name"}</span>
     </a>
   </Sidebar.MenuButton>
@@ -69,13 +66,13 @@
     <Collapsible.Root
       {open}
       onmouseenter={getChildren}
-      class="group/collapsible [&[data-state=open]>button>svg:first-child]:rotate-90"
+      class="group/collapsible [&[data-state=open]>button>svg:first-child]:rotate-90 size-full"
     >
       <Collapsible.Trigger>
         {#snippet child({ props })}
           <Sidebar.MenuButton {...props}>
             <ChevronRightIcon class="transition-transform" />
-            <a href={link} class="truncate">{name || "No name"}</a>
+            <a href={link} class="truncate size-full">{name || "No name"}</a>
           </Sidebar.MenuButton>
         {/snippet}
       </Collapsible.Trigger>

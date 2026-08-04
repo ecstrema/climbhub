@@ -1,5 +1,4 @@
-import type { DataJSON } from "$lib/../climbing-data-gen/src/types";
-export * from "$lib/../climbing-data-gen/src/types";
+import type { DataJSON } from "climbing-data-gen";
 
 export interface BreadcrumbSegment {
   data: DataJSON;

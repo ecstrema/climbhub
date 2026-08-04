@@ -83,8 +83,8 @@
       class={cn(
         "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) md:flex",
         side === "left"
-          ? "inset-s-0 group-data-[collapsible=offcanvas]:inset-s-[calc(var(--sidebar-width)*-1)]"
-          : "inset-e-0 group-data-[collapsible=offcanvas]:inset-e-[calc(var(--sidebar-width)*-1)]",
+          ? "inset-s-0 group-data-[collapsible=offcanvas]:-inset-s-(--sidebar-width)"
+          : "inset-e-0 group-data-[collapsible=offcanvas]:-inset-e-(--sidebar-width)",
         // Adjust the padding for floating and inset variants.
         variant === "floating" || variant === "inset"
           ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"

@@ -61,7 +61,6 @@
         "@types/geojson": "catalog:",
         "@types/js-yaml": "catalog:",
         "@types/node": "catalog:",
-        "vite": "catalog:",
       },
     },
     "packages/reverse-geocoding-data": {

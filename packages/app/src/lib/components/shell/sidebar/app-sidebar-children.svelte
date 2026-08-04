@@ -1,5 +1,6 @@
 <script lang="ts">
-  import type { BreadcrumbSegment, DataJSON, RecursiveData } from "$lib/types";
+  import type { BreadcrumbSegment, RecursiveData } from "$lib/types";
+  import type { DataJSON } from "climbing-data-gen";
 
   import AppSidebarNode from "./app-sidebar-node.svelte";
 

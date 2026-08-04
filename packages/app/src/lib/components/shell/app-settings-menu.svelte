@@ -4,7 +4,7 @@
   import { Button } from "@/ui/button";
   import { setMode, userPrefersMode } from "mode-watcher";
 
-  import { getOsmUser } from "@/osm";
+  import { getOsmUser } from "@/shell/providers";
 
   const user = getOsmUser();
 

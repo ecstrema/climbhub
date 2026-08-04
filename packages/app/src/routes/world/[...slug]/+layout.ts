@@ -3,14 +3,14 @@ import type { DataJSONRecord } from "$lib/types";
 import type { LayoutLoad } from "./$types";
 
 export const load: LayoutLoad<{
-  data: DataJSONRecord;
+  elements: DataJSONRecord;
 }> = async ({ params, fetch }) => {
   const childrenToFetch: string[] = [""];
 
   const slug = params.slug;
   if (!slug) {
     return {
-      data: await fetchAll(childrenToFetch),
+      elements: await fetchAll(childrenToFetch),
     };
   }
 
@@ -22,7 +22,7 @@ export const load: LayoutLoad<{
   childrenToFetch.push(...segments);
 
   return {
-    data: await fetchAll(childrenToFetch),
+    elements: await fetchAll(childrenToFetch),
   };
 
   function fetchAll(slugs: string[]) {
@@ -35,8 +35,6 @@ export const load: LayoutLoad<{
         }
         return res.json() as Promise<DataJSONRecord>;
       }),
-    ).then((results) => {
-      return results.reduce((acc, result) => Object.assign(acc, result), {});
-    });
+    ).then((results) => Object.assign({}, ...results));
   }
 };
