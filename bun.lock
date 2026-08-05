@@ -14,7 +14,6 @@
       "version": "0.0.1",
       "dependencies": {
         "@friendofsvelte/state": "^0.2.0",
-        "@openbeta/sandbag": "^0.0.55",
         "arktype": "^2.2.3",
         "holy-grade": "workspace:*",
         "mode-watcher": "^1.1.0",
@@ -150,8 +149,6 @@
     "@mapbox/geojson-rewind": ["@mapbox/geojson-rewind@0.5.2", "", { "dependencies": { "get-stream": "^6.0.1", "minimist": "^1.2.6" }, "bin": { "geojson-rewind": "geojson-rewind" } }, "sha512-tJaT+RbYGJYStt7wI3cq4Nl4SXxG8W7JDG5DMJu97V25RnbNg3QtQtf+KD+VLjNpWKYsRvXDNmNrBgEETr1ifA=="],
 
     "@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@1.2.0", "", { "dependencies": { "@tybys/wasm-util": "^0.10.3" }, "peerDependencies": { "@emnapi/core": "^2.0.0-alpha.3", "@emnapi/runtime": "^2.0.0-alpha.3" } }, "sha512-kDoONqMa+VnZ4vvvu/ZUurpJ4gkZU57e7g69qpNgWhYcZFPUHZM2CEMKm+cG6ufDVALbjMvfmMjFVqaK7uEMnA=="],
-
-    "@openbeta/sandbag": ["@openbeta/sandbag@0.0.55", "", {}, "sha512-mHRK0uY/DpwstuTws6rJ89XwqJxkGKuJo9SWnLWqoWo51ITaXAHkPn4dwa1y3K4OJ+yoBl5SQuETB4JvbzgZhg=="],
 
     "@oxc-parser/binding-android-arm-eabi": ["@oxc-parser/binding-android-arm-eabi@0.126.0", "", { "os": "android", "cpu": "arm" }, "sha512-svyoHt25J4741QJ5aa4R+h0iiBeSRt63Lr3aAZcxy2c/NeSE1IfDeMnSij6rIg7EjxkdlXzz613wUjeCeilBNA=="],
 
