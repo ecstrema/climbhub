@@ -4,7 +4,8 @@
   import { Button } from "@/ui/button";
   import { setMode, userPrefersMode } from "mode-watcher";
 
-  import { getOsmUser } from "@/shell/providers";
+  import { getOsmUser, getPreferredGradeScale } from "@/shell/providers";
+  import { allScales, convertGrade, French, type Scale, type ScaleName } from "holy-grade";
 
   const user = getOsmUser();
 
@@ -27,6 +28,19 @@
         };
     }
   });
+
+  const exampleRouteGrades = ["6a", "7a", "8a"];
+  const exampleBoulderGrades = ["5A", "6A", "7A"];
+
+  function getExampleRouteGrades(scale: Scale) {
+    return exampleRouteGrades.map((g) => convertGrade(g, French, scale)).join(", ");
+  }
+
+  function getExampleBoulderGrades(scale: Scale) {
+    return exampleBoulderGrades.map((g) => convertGrade(g, French, scale)).join(", ");
+  }
+
+  const preferredGradeScale = $derived.by(() => getPreferredGradeScale());
 </script>
 
 <DropdownMenu.Root>
@@ -37,7 +51,7 @@
       </Button>
     {/snippet}
   </DropdownMenu.Trigger>
-  <DropdownMenu.Content>
+  <DropdownMenu.Content class="w-56">
     <DropdownMenu.Label>Accounts</DropdownMenu.Label>
     <DropdownMenu.Group>
       <DropdownMenu.Item onclick={osmButton.action}>
@@ -54,6 +68,17 @@
             <DropdownMenu.RadioItem value="light">Light</DropdownMenu.RadioItem>
             <DropdownMenu.RadioItem value="dark">Dark</DropdownMenu.RadioItem>
             <DropdownMenu.RadioItem value="system">System</DropdownMenu.RadioItem>
+          </DropdownMenu.RadioGroup>
+        </DropdownMenu.SubContent>
+      </DropdownMenu.Sub>
+      <DropdownMenu.Sub>
+        <DropdownMenu.SubTrigger>Route Grading Scale</DropdownMenu.SubTrigger>
+        <DropdownMenu.SubContent>
+          <DropdownMenu.RadioGroup bind:value={preferredGradeScale.current}>
+            <DropdownMenu.RadioItem value="local">Local</DropdownMenu.RadioItem>
+            <DropdownMenu.RadioItem value="YDS">YDS</DropdownMenu.RadioItem>
+            <DropdownMenu.RadioItem value="UIAA">UIAA</DropdownMenu.RadioItem>
+            <DropdownMenu.RadioItem value="French">French</DropdownMenu.RadioItem>
           </DropdownMenu.RadioGroup>
         </DropdownMenu.SubContent>
       </DropdownMenu.Sub>

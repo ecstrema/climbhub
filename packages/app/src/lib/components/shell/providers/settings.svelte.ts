@@ -1,6 +1,7 @@
 import { createContext } from "svelte";
-import type { GradeScalesTypes } from "@openbeta/sandbag";
+
 import type { FromCurrent } from "./types";
+import type { ScaleName } from "holy-grade";
 
 export const [getPreferredGradeScale, setPreferredGradeScale] =
-  createContext<FromCurrent<GradeScalesTypes>>();
+  createContext<FromCurrent<ScaleName | "local">>();

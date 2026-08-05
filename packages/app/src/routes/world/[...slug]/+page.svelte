@@ -6,6 +6,7 @@
   import type { PageProps } from "./$types";
   import type { DataJSON } from "climbing-data-gen";
   import { getCurrentNode } from "@/shell/providers";
+  import HolyGrade from "@/grade/holy-grade.svelte";
 
   const { data }: PageProps = $props();
 
@@ -13,11 +14,6 @@
   const currentNode: DataJSON = $derived(currentNodeProvider.current);
 
   const name: string | null = $derived(getName(currentNode));
-
-  // Extract common climbing tags from OSM
-  const grade = $derived(
-    currentNode.type !== "geographic" ? getGrade(currentNode.tags ?? {}) : null,
-  );
 
   const coordinates = $derived.by(() => {
     if (currentNode.type === "geographic") {
@@ -38,8 +34,8 @@
 <div>
   <h1>
     <span class="text-2xl font-bold">{name}</span>
-    {#if grade}
-      <span class="text-xl text-muted-foreground ml-2">{grade}</span>
+    {#if currentNode.type !== "geographic" && currentNode.tags}
+      <HolyGrade class="font-semibold text-sm" tags={currentNode.tags} />
     {/if}
   </h1>
 

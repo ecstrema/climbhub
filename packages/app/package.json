@@ -13,8 +13,9 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@openbeta/sandbag": "^0.0.55",
+    "@friendofsvelte/state": "^0.2.0",
     "arktype": "^2.2.3",
+    "holy-grade": "workspace:*",
     "mode-watcher": "^1.1.0",
     "osm-api": "^4.0.0"
   },

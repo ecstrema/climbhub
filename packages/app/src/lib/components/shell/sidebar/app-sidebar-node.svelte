@@ -56,8 +56,8 @@
 
 {#if item.own.type === "node"}
   <Sidebar.MenuButton isActive={isCurrentPage} class="data-[active=true]:bg-transparent">
-    <a href={link} class="truncate">
-      <HolyGrade tags={item.own.tags} />
+    <a href={link} class="truncate w-full">
+      <HolyGrade class="text-xs font-semibold" tags={item.own.tags} />
       <span>{name || "No name"}</span>
     </a>
   </Sidebar.MenuButton>
@@ -66,7 +66,7 @@
     <Collapsible.Root
       {open}
       onmouseenter={getChildren}
-      class="group/collapsible [&[data-state=open]>button>svg:first-child]:rotate-90 size-full"
+      class="group/collapsible [&[data-state=open]>button>svg:first-child]:rotate-90 w-full"
     >
       <Collapsible.Trigger>
         {#snippet child({ props })}

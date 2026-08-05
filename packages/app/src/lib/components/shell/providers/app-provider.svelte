@@ -3,7 +3,7 @@
   import type { DataJSON } from "climbing-data-gen";
   import OSMProvider from "./osm-provider.svelte";
   import AppDataProvider from "./app-data-provider.svelte";
-  import GradeProvider from "./grade-provider.svelte";
+  import GradeProvider from "./settings-provider.svelte";
 
   const {
     children,

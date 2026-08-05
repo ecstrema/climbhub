@@ -1,13 +1,15 @@
 import type { Coordinates, OverpassElement } from "climbing-data-gen";
-import type { Tags } from "osm-api";
 import {
+  allScales,
+  allScalesMap,
+  FB,
   French,
-  YosemiteDecimal,
-  getScale,
   UIAA,
-  type GradeScalesTypes,
-  Font,
-} from "@openbeta/sandbag";
+  YDS,
+  type Scale,
+  type ScaleName,
+} from "holy-grade";
+import type { Tags } from "osm-api";
 
 export type ProcessedTags = Record<string, (value: string) => boolean>;
 
@@ -19,6 +21,17 @@ export function allowSingleValue(value: string): (value: string) => boolean {
   return (v) => v === value;
 }
 
+export function allowFromNormalize(normalize: Scale["normalize"]): (value: string) => boolean {
+  return (v) => {
+    try {
+      normalize(v);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+}
+
 export function allowMultipleValues(values: Set<string>): (value: string) => boolean {
   return (v) => values.has(v);
 }
@@ -27,27 +40,34 @@ export function getNameOSM(tags: Tags): string | null {
   return tags.name || null;
 }
 
+const YDSValidator = allowFromNormalize(YDS.normalize);
+const FrenchValidator = allowFromNormalize(French.normalize);
+const FBValidator = allowFromNormalize(FB.normalize);
+const UIAAValidator = allowFromNormalize(UIAA.normalize);
 const processedGrades: ProcessedTags = {
   "climbing:grade": allowAll,
-  "climbing:grade:uiaa": UIAA.isType,
-  "climbing:grade:yds": YosemiteDecimal.isType,
-  "climbing:grade:yds_class": YosemiteDecimal.isType,
-  "climbing:grade:french": French.isType,
-  "climbing:grade:french_british": Font.isType,
-  "climbing:grade:font": Font.isType,
-  "climbing:grade:fontainebleau": Font.isType,
+  "climbing:grade:uiaa": UIAAValidator,
+  "climbing:grade:yds": YDSValidator,
+  "climbing:grade:yds_class": YDSValidator,
+  "climbing:grade:french": FrenchValidator,
+  "climbing:grade:fb": FBValidator,
+  "climbing:grade:french_british": FBValidator,
+  "climbing:grade:font": FBValidator,
+  "climbing:grade:fontainebleau": FBValidator,
 };
 
 /** See https://wiki.openstreetmap.org/wiki/Climbing#Grading */
 export function getGrade(tags: Tags): Grade | null {
   const grade =
-    testKey("climbing:grade:uiaa", "uiaa") ||
-    testKey("climbing:grade:yds", "yds") ||
-    testKey("climbing:grade:yds_class", "yds") ||
-    testKey("climbing:grade:french", "french") ||
-    testKey("climbing:grade:french_british", "french") ||
-    testKey("climbing:grade:font", "font") ||
-    testKey("climbing:grade:fontainebleau", "font");
+    testKey("climbing:grade:uiaa", "UIAA") ||
+    testKey("climbing:grade:yds", "YDS") ||
+    testKey("climbing:grade:yds_class", "YDS") ||
+    testKey("climbing:grade:french", "French") ||
+    testKey("climbing:grade:french_british", "French") ||
+    testKey("climbing:grade:font", "FB") ||
+    testKey("climbing:grade:fontainebleau", "FB") ||
+    testKey("climbing:grade:hueco", "Hueco") ||
+    testKey("climbing:grade:vscale", "Hueco");
 
   if (grade) {
     return grade;
@@ -57,9 +77,12 @@ export function getGrade(tags: Tags): Grade | null {
   const genericGrade = tags["climbing:grade"];
   if (genericGrade) {
     // Try to detect the scale from the value
-    for (const scale of Object.keys(getScale) as GradeScalesTypes[]) {
-      if (getScale(scale)?.isType(genericGrade)) {
-        return { v: genericGrade, scale };
+    for (const scale of allScales) {
+      try {
+        scale.normalize(genericGrade);
+        return { v: genericGrade, scale: scale.nameShort };
+      } catch {
+        // Ignore normalization errors
       }
     }
 
@@ -69,13 +92,14 @@ export function getGrade(tags: Tags): Grade | null {
 
   return null;
 
-  function testKey(key: string, scale: GradeScalesTypes): Grade | null {
+  function testKey(key: string, scale: ScaleName): Grade | null {
     const v = tags[key];
     if (v) {
-      if (getScale(scale)?.isType(v)) {
+      try {
+        const normalized = allScalesMap[scale].normalize(v);
         // validate the grade, but ignore the result
-        return { v, scale };
-      } else {
+        return { v: normalized, scale };
+      } catch {
         return { v, scale: "unknown" };
       }
     }
@@ -104,7 +128,7 @@ export function getCoordinates(element: OverpassElement): Coordinates | null {
 
 export type Grade = {
   v: string;
-  scale: GradeScalesTypes | "unknown";
+  scale: ScaleName | "unknown";
 };
 
 export type ProcessingError = "GradeParsingError" | "GradeMissingScaleSpecifier";
