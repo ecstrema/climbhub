@@ -2,6 +2,10 @@
   import { resolve } from "$app/paths";
 </script>
 
+<head>
+  <title>Climbhub</title>
+</head>
+
 <h1>Climbhub</h1>
 
 <a href={resolve("/world/[...slug]", { slug: "" })}>See all routes</a>
