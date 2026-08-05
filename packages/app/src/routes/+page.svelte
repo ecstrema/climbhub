@@ -2,9 +2,9 @@
   import { resolve } from "$app/paths";
 </script>
 
-<head>
+<svelte:head>
   <title>Climbhub</title>
-</head>
+</svelte:head>
 
 <h1>Climbhub</h1>
 

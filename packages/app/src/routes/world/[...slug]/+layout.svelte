@@ -10,11 +10,13 @@
   import SettingsMenu from "@/shell/app-settings-menu.svelte";
 
   import type { LayoutProps } from "./$types";
+  import Head from "@/shell/head.svelte";
 
   const { children, data, params }: WithChildren<LayoutProps> = $props();
 </script>
 
 <AppProvider slug={params.slug} elements={data.elements}>
+  <Head />
   <Sidebar.Provider>
     <AppSidebar />
 

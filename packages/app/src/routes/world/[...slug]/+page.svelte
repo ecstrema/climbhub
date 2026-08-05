@@ -31,10 +31,6 @@
   });
 </script>
 
-<head>
-  <title>Climbhub {name ? ` - ${name}` : ""}</title>
-</head>
-
 <div>
   <h1>
     <span class="text-2xl font-bold">{name}</span>

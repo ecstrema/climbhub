@@ -2,8 +2,8 @@
   import GradeComparison from "./GradeComparison.svelte";
 </script>
 
-<head>
+<svelte:head>
   <title>Climbhub - Grade Comparison</title>
-</head>
+</svelte:head>
 
 <GradeComparison />
