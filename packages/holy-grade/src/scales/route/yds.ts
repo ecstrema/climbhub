@@ -110,22 +110,28 @@ export const gradeMapping: GradeMapping<Grades> = {
 } as GradeMapping<Grades>;
 
 type ExtendedPossibleUnits = "0" | "1" | "2" | "3" | "4" | "5";
-type ExtendedPossibleSign = "+" | "-";
+type ExtendedPossibleSign = "+" | "-" | "";
 type ExtendedGrades = `5.1${ExtendedPossibleUnits}${ExtendedPossibleSign}` | "V";
 
 export const extendedGradeNormalizationMapping: Record<ExtendedGrades, Grades> = {
   V: "5.4",
   "5.10-": "5.10a/b",
+  "5.10": "5.10b/c",
   "5.10+": "5.10c/d",
   "5.11-": "5.11a/b",
+  "5.11": "5.11b/c",
   "5.11+": "5.11c/d",
   "5.12-": "5.12a/b",
+  "5.12": "5.12b/c",
   "5.12+": "5.12c/d",
   "5.13-": "5.13a/b",
+  "5.13": "5.13b/c",
   "5.13+": "5.13c/d",
   "5.14-": "5.14a/b",
+  "5.14": "5.14b/c",
   "5.14+": "5.14c/d",
   "5.15-": "5.15a/b",
+  "5.15": "5.15b/c",
   "5.15+": "5.15c/d",
 };
 
