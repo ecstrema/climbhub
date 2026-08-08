@@ -5,79 +5,51 @@ const _typecheck: Scale = Self;
 
 export const nameShort = "French";
 export const nameLong = "French Scale";
-export const description =
-  "Now the most common scale in the world, used in Europe and many other countries.";
+export const description = "Now the most common scale in the world, born in France.";
 
 export const gradeType: GradeType = "route";
 
-type Qualifiers = "a" | "b" | "c" | "a+" | "b+" | "c+";
+type Qualifiers = "a" | "b" | "c" | "a+" | "b+" | "c+" | "a/+" | "a+/b" | "b/+" | "b+/c" | "c/+";
+type Units = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 export type Grades =
-  | `${1 | 2 | 3 | 4 | 5}${Qualifiers | ""}`
-  | `${6 | 7 | 8 | 9}${Qualifiers}`
-  | "10a";
+  | `${Units}${Qualifiers}`
+  | "10a"
+  | "1c+/2a"
+  | "2c+/3a"
+  | "3c+/4a"
+  | "4c+/5a"
+  | "5c+/6a"
+  | "6c+/7a"
+  | "7c+/8a"
+  | "8c+/9a"
+  | "9c+/10a";
 
-export const gradeMapping: GradeMapping<Grades> = {
-  "1": 1,
-  "1a": 1.5,
-  "1a+": 3,
-  "1b": 4,
-  "1b+": 5,
-  "1c": 6,
-  "1c+": 6.5,
-  "2": 7.5,
-  "2a": 7.5,
-  "2a+": 8.5,
-  "2b": 9.5,
-  "2b+": 10.5,
-  "2c": 11.5,
-  "2c+": 12.5,
-  "3": 14,
-  "3a": 14,
-  "3a+": 15,
-  "3b": 16,
-  "3b+": 17,
-  "3c": 18,
-  "3c+": 19,
-  "4": 20.5,
-  "4a": 20.5,
-  "4a+": 26.5,
-  "4b": 27,
-  "4b+": 33,
-  "4c": 33.5,
-  "4c+": 39.5,
-  "5": 40,
-  "5a": 40,
-  "5a+": 46.5,
-  "5b": 47,
-  "5b+": 53,
-  "5c": 54,
-  "5c+": 59,
-  "6a": 60,
-  "6a+": 61,
-  "6b": 62.5,
-  "6b+": 64.5,
-  "6c": 66.5,
-  "6c+": 68.5,
-  "7a": 70.5,
-  "7a+": 72.5,
-  "7b": 74,
-  "7b+": 75.5,
-  "7c": 77.5,
-  "7c+": 79.5,
-  "8a": 81.5,
-  "8a+": 83.5,
-  "8b": 85.5,
-  "8b+": 87,
-  "8c": 88.5,
-  "8c+": 90.5,
-  "9a": 92.5,
-  "9a+": 94.5,
-  "9b": 96.5,
-  "9b+": 98.5,
-  "9c": 100,
-  "9c+": 102,
-  "10a": 104,
-};
+// @ts-ignore
+export const gradeMapping: GradeMapping<Grades> = {};
+const variantsPerNumber: Qualifiers[] = [
+  "a",
+  "a/+",
+  "a+",
+  "a+/b",
+  "b",
+  "b/+",
+  "b+",
+  "b+/c",
+  "c",
+  "c/+",
+  "c+",
+];
+for (let n: Units = 1; n <= 9; n++) {
+  for (let qualifierIndex = 0; qualifierIndex < variantsPerNumber.length; qualifierIndex++) {
+    const qualifier = variantsPerNumber[qualifierIndex];
+    const grade = `${n}${qualifier}` as Grades;
+    gradeMapping[grade] = (n - 1) * (variantsPerNumber.length + 1) + qualifierIndex + 1;
+  }
+  const transitionGrade = `${n}c+/${n + 1}a` as Grades;
+  gradeMapping[transitionGrade] =
+    (n - 1) * (variantsPerNumber.length + 1) + variantsPerNumber.length + 1;
+}
+gradeMapping["10a"] = 9 * (variantsPerNumber.length + 1) + 1;
 
 export function normalize(grade: string): Grades {
   const loweredGrade = grade.toLowerCase();
@@ -87,3 +59,38 @@ export function normalize(grade: string): Grades {
 
   throw new Error(`Invalid grade: ${grade}`);
 }
+
+export type ExtendedGrades =
+  | "1-"
+  | "1"
+  | "1+"
+  | "2-"
+  | "2"
+  | "2+"
+  | "3-"
+  | "3"
+  | "3+"
+  | "4-"
+  | "4"
+  | "4+"
+  | "5-"
+  | "5"
+  | "5+";
+
+export const extendedGradeNormalizationMapping: Record<ExtendedGrades, Grades> = {
+  "1-": "1a",
+  "1": "1b",
+  "1+": "1c",
+  "2-": "2a",
+  "2": "2b",
+  "2+": "2c",
+  "3-": "3a",
+  "3": "3b",
+  "3+": "3c",
+  "4-": "4a",
+  "4": "4b",
+  "4+": "4c",
+  "5-": "5a",
+  "5": "5b",
+  "5+": "5c",
+};

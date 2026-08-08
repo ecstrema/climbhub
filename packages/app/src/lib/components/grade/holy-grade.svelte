@@ -4,6 +4,7 @@
   import { mode } from "mode-watcher";
   import { getPreferredGradeScale } from "@/shell/providers/settings.svelte";
   import { allScalesMap, convertGrade, getReference } from "holy-grade";
+  import { getColorFromGrade } from "./helpers";
 
   const {
     tags,
@@ -23,14 +24,7 @@
   const color = $derived.by(() => {
     if (!grade) return null;
 
-    if (!scale) {
-      return "hsl(0deg 0% 50%)";
-    }
-
-    let score = getReference(grade.v, scale);
-    score = 120 - (score / 100) * 120;
-
-    return `hsl(${score.toFixed(0)}deg 80% ${mode.current === "dark" ? 30 : 70}%);`;
+    return getColorFromGrade(grade, mode.current === "dark");
   });
 
   const preferredGradeScale = $derived.by(() => {

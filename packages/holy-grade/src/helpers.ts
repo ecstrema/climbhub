@@ -7,18 +7,20 @@ export function convertGrade(grade: string, fromScale: Scale, toScale: Scale): s
 
   const reference = getReference(grade, fromScale);
 
-  // choose the closest grade in the target scale
+  return getGradeFromReference(reference, toScale);
+}
+
+export function getGradeFromReference(reference: number, scale: Scale): string {
   let closestGrade: string | null = null;
   let closestDifference = Infinity;
 
-  for (const [targetGrade, targetReference] of Object.entries(toScale.gradeMapping)) {
-    const difference = Math.abs(reference - targetReference);
+  for (const [grade, gradeReference] of Object.entries(scale.gradeMapping)) {
+    const difference = Math.abs(reference - gradeReference);
     if (difference < closestDifference) {
       closestDifference = difference;
-      closestGrade = targetGrade;
+      closestGrade = grade;
     }
   }
-
   return closestGrade!;
 }
 
