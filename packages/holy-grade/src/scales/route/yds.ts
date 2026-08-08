@@ -16,6 +16,8 @@ export type Grades =
   | "III"
   | "IV"
   | "V"
+  | "5.2"
+  | "5.3"
   | "5.4"
   | "5.5"
   | "5.6"
@@ -38,6 +40,8 @@ export type Grades =
 export const gradeMapping: GradeMapping<Grades> = {
   III: 1,
   IV: 13,
+  "5.2": 19,
+  "5.3": 22,
   "5.4": 25,
   "5.5": 30,
   "5.6": 36,
