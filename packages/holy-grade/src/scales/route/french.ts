@@ -51,15 +51,6 @@ for (let n: Units = 1; n <= 9; n++) {
 }
 gradeMapping["10a"] = 9 * (variantsPerNumber.length + 1) + 1;
 
-export function normalize(grade: string): Grades {
-  const loweredGrade = grade.toLowerCase();
-  if (loweredGrade in gradeMapping) {
-    return loweredGrade as Grades;
-  }
-
-  throw new Error(`Invalid grade: ${grade}`);
-}
-
 export type ExtendedGrades =
   | "1-"
   | "1"
@@ -94,3 +85,16 @@ export const extendedGradeNormalizationMapping: Record<ExtendedGrades, Grades> =
   "5": "5b",
   "5+": "5c",
 };
+
+export function normalize(grade: string): Grades {
+  const loweredGrade = grade.toLowerCase();
+  if (loweredGrade in gradeMapping) {
+    return loweredGrade as Grades;
+  }
+
+  if (loweredGrade in extendedGradeNormalizationMapping) {
+    return extendedGradeNormalizationMapping[loweredGrade as ExtendedGrades];
+  }
+
+  throw new Error(`Invalid grade: ${grade}`);
+}
