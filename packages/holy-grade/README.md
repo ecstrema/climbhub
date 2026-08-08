@@ -1,3 +1,3 @@
 # Holy-Grade
 
-A grading library
+A climbing grade conversion library

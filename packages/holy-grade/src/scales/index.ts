@@ -1,13 +1,17 @@
 export * from "./types";
+import type { Scale, BoulderScaleId, RouteScaleId } from "./types";
 
-import * as French from "./route/french";
-import * as YDS from "./route/yds";
-import * as UIAA from "./route/uiaa";
+import { french } from "./route/french";
+import { yds } from "./route/yds";
+import { uiaa } from "./route/uiaa";
 
-import * as FB from "./bouldering/fb";
-import * as Hueco from "./bouldering/hueco";
+import { fb } from "./bouldering/fb";
+import { hueco } from "./bouldering/hueco";
 
-export { French, YDS, UIAA, FB, Hueco };
+export { french, yds, uiaa, fb, hueco };
 
-export const allScales = [French, YDS, UIAA, FB, Hueco];
-export const allScalesMap = Object.fromEntries(allScales.map((scale) => [scale.nameShort, scale]));
+export const allRouteScales: Scale<RouteScaleId>[] = [french, yds, uiaa];
+export const allBoulderScales: Scale<BoulderScaleId>[] = [fb, hueco];
+
+export const allScales: Scale[] = [...allRouteScales, ...allBoulderScales];
+export const allScalesMap = Object.fromEntries(allScales.map((scale) => [scale.id, scale]));

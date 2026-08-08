@@ -2,12 +2,12 @@ import type { Coordinates, OverpassElement } from "climbing-data-gen";
 import {
   allScales,
   allScalesMap,
-  FB,
-  French,
-  UIAA,
-  YDS,
+  fb,
+  french,
+  uiaa,
+  yds,
   type Scale,
-  type ScaleName,
+  type ScaleId,
 } from "holy-grade";
 import type { Tags } from "osm-api";
 
@@ -40,10 +40,10 @@ export function getNameOSM(tags: Tags): string | null {
   return tags.name || null;
 }
 
-const YDSValidator = allowFromNormalize(YDS.normalize);
-const FrenchValidator = allowFromNormalize(French.normalize);
-const FBValidator = allowFromNormalize(FB.normalize);
-const UIAAValidator = allowFromNormalize(UIAA.normalize);
+const YDSValidator = allowFromNormalize(yds.normalize);
+const FrenchValidator = allowFromNormalize(french.normalize);
+const FBValidator = allowFromNormalize(fb.normalize);
+const UIAAValidator = allowFromNormalize(uiaa.normalize);
 const processedGrades: ProcessedTags = {
   "climbing:grade": allowAll,
   "climbing:grade:uiaa": UIAAValidator,
@@ -80,7 +80,7 @@ export function getGrade(tags: Tags): Grade | null {
     for (const scale of allScales) {
       try {
         scale.normalize(genericGrade);
-        return { v: genericGrade, scale: scale.nameShort };
+        return { v: genericGrade, scale: scale.id };
       } catch {
         // Ignore normalization errors
       }
@@ -92,16 +92,12 @@ export function getGrade(tags: Tags): Grade | null {
 
   return null;
 
-  function testKey(key: string, scale: ScaleName): Grade | null {
+  function testKey(key: string, scale: ScaleId): Grade | null {
     const v = tags[key];
     if (v) {
-      try {
-        const normalized = allScalesMap[scale].normalize(v);
-        // validate the grade, but ignore the result
-        return { v: normalized, scale };
-      } catch {
-        return { v, scale: "unknown" };
-      }
+      const normalized = allScalesMap[scale].normalize(v);
+      // validate the grade, but ignore the result
+      return normalized ? { v: normalized, scale } : { v, scale: "unknown" };
     }
 
     return null;
@@ -128,7 +124,7 @@ export function getCoordinates(element: OverpassElement): Coordinates | null {
 
 export type Grade = {
   v: string;
-  scale: ScaleName | "unknown";
+  scale: ScaleId | "unknown";
 };
 
 export type ProcessingError = "GradeParsingError" | "GradeMissingScaleSpecifier";

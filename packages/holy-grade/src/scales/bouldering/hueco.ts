@@ -1,40 +1,7 @@
-import type { GradeMapping, Scale, GradeType } from "../types";
-import * as Self from "./hueco";
+import type { GradeMapping, Scale } from "../types";
+import { normalizeFromGradeMappings } from "../helpers";
 
-const _typecheck: Scale = Self;
-
-export const nameShort = "Hueco";
-export const nameLong = "Hueco Scale - V Scale";
-export const description = "A bouldering grade system used primarily in North America.";
-
-export const gradeType: GradeType = "boulder";
-
-type Difficulty =
-  | "B"
-  | "0-"
-  | 0
-  | 1
-  | 2
-  | 3
-  | 4
-  | 5
-  | 6
-  | 7
-  | 8
-  | 9
-  | 10
-  | 11
-  | 12
-  | 13
-  | 14
-  | 15
-  | 16
-  | 17
-  | 18;
-
-export type Grades = `V${Difficulty}`;
-
-export const gradeMapping: GradeMapping<Grades> = {
+const gradeMapping: GradeMapping = {
   VB: 25.5,
   "V0-": 50,
   V0: 56,
@@ -58,11 +25,18 @@ export const gradeMapping: GradeMapping<Grades> = {
   V18: 102,
 };
 
-export function normalize(grade: string): Grades {
-  const uppercaseGrade = grade.toUpperCase();
-  if (uppercaseGrade in gradeMapping) {
-    return uppercaseGrade as Grades;
-  }
+const normalizer = normalizeFromGradeMappings(gradeMapping);
 
-  throw new Error(`Invalid grade: ${grade}`);
-}
+export const hueco: Scale = {
+  id: "Hueco",
+  name: "Hueco Scale - V Scale",
+  description: "A bouldering grade system used primarily in North America.",
+
+  gradeType: "boulder",
+
+  gradeMapping,
+
+  normalize: (grade) => {
+    return normalizer(grade.toUpperCase());
+  },
+};

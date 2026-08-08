@@ -1,7 +1,9 @@
 import { createContext } from "svelte";
 
 import type { FromCurrent } from "./types";
-import type { ScaleName } from "holy-grade";
+import type { RouteScaleId, BoulderScaleId } from "holy-grade";
 
-export const [getPreferredGradeScale, setPreferredGradeScale] =
-  createContext<FromCurrent<ScaleName | "local">>();
+export const [getPreferredRouteGradingScale, setPreferredRouteGradingScale] =
+  createContext<FromCurrent<RouteScaleId | "local">>();
+export const [getPreferredBoulderGradingScale, setPreferredBoulderGradingScale] =
+  createContext<FromCurrent<BoulderScaleId | "local">>();

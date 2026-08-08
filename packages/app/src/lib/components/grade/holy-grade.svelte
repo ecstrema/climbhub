@@ -2,8 +2,8 @@
   import { getGrade } from "$lib/osm-tags";
   import type { Tags } from "osm-api";
   import { mode } from "mode-watcher";
-  import { getPreferredGradeScale } from "@/shell/providers/settings.svelte";
-  import { allScalesMap, convertGrade, getReference } from "holy-grade";
+  import { getPreferredRouteGradingScale } from "@/shell/providers/settings.svelte";
+  import { allScalesMap, convertGrade } from "holy-grade";
   import { getColorFromGrade } from "./helpers";
 
   const {
@@ -22,13 +22,13 @@
   });
 
   const color = $derived.by(() => {
-    if (!grade) return null;
+    if (!grade || grade.scale === "unknown") return null;
 
-    return getColorFromGrade(grade, mode.current === "dark");
+    return getColorFromGrade(grade.v, grade.scale, mode.current === "dark");
   });
 
   const preferredGradeScale = $derived.by(() => {
-    return getPreferredGradeScale().current;
+    return getPreferredRouteGradingScale().current;
   });
 
   const convertedGrade = $derived.by(() => {
@@ -49,7 +49,7 @@
 </script>
 
 {#if grade}
-  <span class={className} style={`color: ${color};`}>
+  <span class={className} style={`color: ${color || "currentColor"};`}>
     {#if convertedGrade}
       {convertedGrade}
     {:else}

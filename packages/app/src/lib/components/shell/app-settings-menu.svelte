@@ -2,10 +2,24 @@
   import SettingsIcon from "@lucide/svelte/icons/settings";
   import * as DropdownMenu from "@/ui/dropdown-menu";
   import { Button } from "@/ui/button";
+  import * as Tooltip from "@/ui/tooltip/index.js";
+
   import { setMode, userPrefersMode } from "mode-watcher";
 
-  import { getOsmUser, getPreferredGradeScale } from "@/shell/providers";
-  import { allScales, convertGrade, French, type Scale, type ScaleName } from "holy-grade";
+  import {
+    getOsmUser,
+    getPreferredRouteGradingScale,
+    getPreferredBoulderGradingScale,
+  } from "@/shell/providers";
+  import {
+    allBoulderScales,
+    french,
+    convertGrade,
+    type Scale,
+    allRouteScales,
+    type ScaleId,
+  } from "holy-grade";
+  import type { FromCurrent } from "./providers/types";
 
   const user = getOsmUser();
 
@@ -33,14 +47,12 @@
   const exampleBoulderGrades = ["5A", "6A", "7A"];
 
   function getExampleRouteGrades(scale: Scale) {
-    return exampleRouteGrades.map((g) => convertGrade(g, French, scale)).join(", ");
+    return exampleRouteGrades.map((g) => convertGrade(g, french, scale)).join(", ");
   }
 
   function getExampleBoulderGrades(scale: Scale) {
-    return exampleBoulderGrades.map((g) => convertGrade(g, French, scale)).join(", ");
+    return exampleBoulderGrades.map((g) => convertGrade(g, french, scale)).join(", ");
   }
-
-  const preferredGradeScale = $derived.by(() => getPreferredGradeScale());
 </script>
 
 <DropdownMenu.Root>
@@ -73,15 +85,48 @@
       </DropdownMenu.Sub>
       <DropdownMenu.Sub>
         <DropdownMenu.SubTrigger>Route Grading Scale</DropdownMenu.SubTrigger>
-        <DropdownMenu.SubContent>
-          <DropdownMenu.RadioGroup bind:value={preferredGradeScale.current}>
-            <DropdownMenu.RadioItem value="local">Local</DropdownMenu.RadioItem>
-            <DropdownMenu.RadioItem value="YDS">YDS</DropdownMenu.RadioItem>
-            <DropdownMenu.RadioItem value="UIAA">UIAA</DropdownMenu.RadioItem>
-            <DropdownMenu.RadioItem value="French">French</DropdownMenu.RadioItem>
-          </DropdownMenu.RadioGroup>
-        </DropdownMenu.SubContent>
+        {@render preferredScaleMenu(
+          getPreferredRouteGradingScale(),
+          allRouteScales,
+          getExampleRouteGrades,
+        )}
+      </DropdownMenu.Sub>
+      <DropdownMenu.Sub>
+        <DropdownMenu.SubTrigger>Boulder Grading Scale</DropdownMenu.SubTrigger>
+        {@render preferredScaleMenu(
+          getPreferredBoulderGradingScale(),
+          allBoulderScales,
+          getExampleBoulderGrades,
+        )}
       </DropdownMenu.Sub>
     </DropdownMenu.Group>
   </DropdownMenu.Content>
 </DropdownMenu.Root>
+
+{#snippet preferredScaleMenu<T extends ScaleId>(
+  preferredScale: FromCurrent<"local" | T>,
+  scales: Scale<T>[],
+  getExampleGrades: (s: Scale) => string,
+)}
+  <DropdownMenu.SubContent>
+    <DropdownMenu.RadioGroup bind:value={preferredScale.current}>
+      <DropdownMenu.RadioItem value="local">Local</DropdownMenu.RadioItem>
+      {#each scales as s}
+        <DropdownMenu.RadioItem value={s.id}>
+          <Tooltip.Root>
+            <Tooltip.Trigger>
+              <div class="w-full">{s.id}</div>
+            </Tooltip.Trigger>
+            <Tooltip.Content side="left" align="center">
+              <div class="prose prose-sm">
+                <h3>{s.name}</h3>
+                <p>{s.description}</p>
+                <p class="italic">Examples: {getExampleGrades(s)}</p>
+              </div>
+            </Tooltip.Content>
+          </Tooltip.Root>
+        </DropdownMenu.RadioItem>
+      {/each}
+    </DropdownMenu.RadioGroup>
+  </DropdownMenu.SubContent>
+{/snippet}

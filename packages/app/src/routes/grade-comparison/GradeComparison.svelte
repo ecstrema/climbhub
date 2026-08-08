@@ -1,32 +1,25 @@
 <script lang="ts">
-  import { allScales, getGradeFromReference, type ScaleName } from "holy-grade";
+  import { allRouteScales, getGradeFromReference, type RouteScaleId } from "holy-grade";
   import { Chart, Layer, Axis, Point, AnnotationLine } from "layerchart/svg";
   import { scalePoint } from "d3-scale";
   import { mode } from "mode-watcher";
   import { getColorFromGrade } from "@/grade/helpers";
 
   // Transform the nested objects into a flat "tidy" array of data points
-  const data = allScales
-    .filter((scale) => scale.gradeType === "route")
-    .flatMap((scale) => {
-      return Object.entries(scale.gradeMapping).map(([grade, ref]) => ({
-        nameShort: scale.nameShort,
-        reference: ref,
-        grade: grade,
-        showLabel: [1, 7].includes(ref % 12),
-      }));
-    });
+  const data = allRouteScales.flatMap((scale) => {
+    return Object.entries(scale.gradeMapping).map(([grade, ref]) => ({
+      id: scale.id,
+      reference: ref,
+      grade: grade,
+      showLabel: [1, 7].includes(ref % 12),
+    }));
+  });
 
   let selectedReference: number | null = $state(null);
-  const selectedData: Record<ScaleName, string | null> = $derived.by(() => {
-    const s = {} as Record<ScaleName, string | null>;
-    for (const scale of allScales) {
-      if (selectedReference !== null) {
-        const grade = getGradeFromReference(selectedReference, scale);
-        s[scale.nameShort] = grade;
-      } else {
-        s[scale.nameShort] = null;
-      }
+  const selectedData: Record<RouteScaleId, string | null> = $derived.by(() => {
+    const s = {} as Record<RouteScaleId, string | null>;
+    for (const scale of allRouteScales) {
+      s[scale.id] = selectedReference ? getGradeFromReference(selectedReference, scale) : null;
     }
     return s;
   });
@@ -36,11 +29,10 @@
 <div class="flex flex-col items-center justify-center gap-4 p-8 max-w-3xl mx-auto">
   <h1 class="prose dark:prose-invert">Grade Comparison</h1>
   <Chart
-    ssr
-    valueAxis="y"
     {data}
-    height={2400}
-    x="nameShort"
+    height={4000}
+    valueAxis="y"
+    x="id"
     y="reference"
     {padding}
     xScale={scalePoint().padding(0.5)}
@@ -64,25 +56,25 @@
         {#each data as d, i (i)}
           <Point {d}>
             {#snippet children({ x, y })}
-              {@const selected = selectedData[d.nameShort as ScaleName] === d.grade}
+              {@const selected = selectedData[d.id] === d.grade}
               <circle
                 cx={x}
                 cy={y}
-                r={8}
+                r={10}
                 fill={selected
                   ? "var(--primary)"
-                  : getColorFromGrade(
-                      { v: d.grade, scale: d.nameShort as ScaleName },
-                      mode.current === "dark",
-                    )}
+                  : getColorFromGrade(d.grade, d.id, mode.current === "dark")}
                 stroke-width={2}
                 class="stroke-primary-foreground"
               />
               {#if d.showLabel || selected}
                 <text
-                  x={x + 10}
+                  x={x + 12}
                   {y}
-                  class="text-s fill-foreground stroke-background stroke-2 [paint-order:stroke_fill] [alignment-baseline:middle] [text-anchor:left]"
+                  alignment-baseline="central"
+                  paint-order="stroke fill"
+                  text-anchor="left"
+                  class="text-s fill-foreground stroke-background stroke-2"
                 >
                   {d.grade}
                 </text>

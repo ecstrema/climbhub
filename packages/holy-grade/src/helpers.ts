@@ -1,13 +1,12 @@
 import type { Scale } from "./scales";
 
-export function convertGrade(grade: string, fromScale: Scale, toScale: Scale): string {
+export function convertGrade(grade: string, fromScale: Scale, toScale: Scale): string | null {
   if (fromScale === toScale) {
     return grade;
   }
 
   const reference = getReference(grade, fromScale);
-
-  return getGradeFromReference(reference, toScale);
+  return reference ? getGradeFromReference(reference, toScale) : null;
 }
 
 export function getGradeFromReference(reference: number, scale: Scale): string {
@@ -24,7 +23,7 @@ export function getGradeFromReference(reference: number, scale: Scale): string {
   return closestGrade!;
 }
 
-export function getReference(grade: string, scale: Scale): number {
+export function getReference(grade: string, scale: Scale): number | null {
   const normalizedGrade = scale.normalize(grade);
-  return scale.gradeMapping[normalizedGrade];
+  return normalizedGrade ? scale.gradeMapping[normalizedGrade] : null;
 }

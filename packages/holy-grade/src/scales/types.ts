@@ -1,15 +1,18 @@
-export type GradeMapping<T extends string = string> = Record<T, number>;
+export type GradeMapping = Record<string, number>;
 
 export type GradeType = "route" | "boulder";
 
-export interface Scale<StandardizedGrade extends string = string> {
-  nameShort: string;
-  nameLong: string;
+export interface Scale<T extends ScaleId = ScaleId> {
+  /** Can also be used as a shorter name alternative */
+  id: T;
+  name: string;
   description: string;
-  gradeMapping: GradeMapping<StandardizedGrade>;
+  gradeMapping: GradeMapping;
   gradeType: GradeType;
-  normalize: (grade: string) => StandardizedGrade;
-  extendedGradeNormalizationMapping?: Record<string, StandardizedGrade>;
+  normalize: (grade: string) => string | null;
+  extendedGradeNormalizationMapping?: Record<string, string>;
 }
 
-export type ScaleName = keyof typeof import("./index");
+export type RouteScaleId = "UIAA" | "French" | "YDS";
+export type BoulderScaleId = "Hueco" | "FB";
+export type ScaleId = RouteScaleId | BoulderScaleId;

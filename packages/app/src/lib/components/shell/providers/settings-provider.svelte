@@ -2,15 +2,24 @@
   import type { Snippet } from "svelte";
   import { PersistentState } from "@friendofsvelte/state";
 
-  import { setPreferredGradeScale } from "./settings.svelte";
-  import type { ScaleName } from "holy-grade";
+  import {
+    setPreferredRouteGradingScale,
+    setPreferredBoulderGradingScale,
+  } from "./settings.svelte";
+  import type { BoulderScaleId, RouteScaleId } from "holy-grade";
 
-  const preferredGradeScale = new PersistentState<ScaleName | "local">(
-    "preferredGradeScale",
+  const preferredRouteGradingScale = new PersistentState<RouteScaleId | "local">(
+    "preferredRouteGradingScale",
     "local",
   );
 
-  setPreferredGradeScale(preferredGradeScale);
+  const preferredBoulderGradingScale = new PersistentState<BoulderScaleId | "local">(
+    "preferredBoulderGradingScale",
+    "local",
+  );
+
+  setPreferredRouteGradingScale(preferredRouteGradingScale);
+  setPreferredBoulderGradingScale(preferredBoulderGradingScale);
 
   const {
     children,

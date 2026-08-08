@@ -1,66 +1,41 @@
-import type { GradeMapping, Scale, GradeType } from "../types";
-import * as Self from "./uiaa";
+import type { Scale } from "../types";
+import { normalizeFromGradeMappings } from "../helpers";
 
-const _typecheck: Scale = Self;
-
-export const nameShort = "UIAA";
-export const nameLong = "International Climbing and Mountaineering Federation (UIAA) Scale";
-export const description =
-  "The UIAA scale is used in Germany, Austria and Switzerland among others.";
-
-export const gradeType: GradeType = "route";
-
-type Qualifiers = "+" | "-";
-
-export type Grades =
-  | "1"
-  | "2"
-  | "3"
-  | "4"
-  | "4+"
-  | `${5 | 6 | 7 | 8 | 9 | 10 | 11 | 12}${Qualifiers | ""}`;
-
-export const gradeMapping: GradeMapping<Grades> = {
-  1: 2,
-  2: 6.5,
-  3: 12.5,
-  4: 18.5,
-  "4+": 24.5,
-  "5-": 30.5,
-  5: 36.5,
-  "5+": 42.5,
-  "6-": 48.5,
-  6: 54.5,
-  "6+": 59,
-  "7-": 61.5,
-  7: 63.5,
-  "7+": 65.5,
-  "8-": 68,
-  8: 70.5,
-  "8+": 72.5,
-  "9-": 74.5,
-  9: 77,
-  "9+": 79.5,
-  "10-": 81.5,
-  10: 84,
-  "10+": 86.5,
-  "11-": 88.5,
-  11: 90.5,
-  "11+": 93,
-  "12-": 95.5,
-  12: 97.5,
-  "12+": 99.5,
+const gradeMapping = {
+  1: 1,
+  2: 13,
+  3: 19,
+  4: 25,
+  "4+": 31,
+  "5-": 37,
+  5: 43,
+  "5+": 46,
+  "6-": 51,
+  6: 58,
+  "6+": 61,
+  "7-": 64,
+  7: 66,
+  "7+": 68,
+  "8-": 71,
+  8: 73,
+  "8+": 76,
+  "9-": 79,
+  9: 82,
+  "9+": 84,
+  "10-": 86,
+  10: 89,
+  "10+": 92,
+  "11-": 94,
+  11: 96,
+  "11+": 99,
+  "12-": 101,
+  12: 103,
+  "12+": 105,
+  "13-": 107,
+  "13": 109,
 };
 
-export type ExtendedGrades =
-  | "I"
-  | "II"
-  | "III"
-  | "IV"
-  | "IV+"
-  | `${"V" | "VI" | "VII" | "VIII" | "IX" | "X" | "XI" | "XII"}${Qualifiers | ""}`;
-
-export const extendedGradeNormalizationMapping: Record<string, Grades> = {
+const extendedGradeNormalizationMapping = {
   I: "1",
   II: "2",
   III: "3",
@@ -92,11 +67,14 @@ export const extendedGradeNormalizationMapping: Record<string, Grades> = {
   "XII+": "12+",
 };
 
-export function normalize(grade: string): Grades {
-  const loweredGrade = grade.toLowerCase();
-  if (loweredGrade in gradeMapping) {
-    return loweredGrade as Grades;
-  }
+const normalizer = normalizeFromGradeMappings(gradeMapping, extendedGradeNormalizationMapping);
 
-  throw new Error(`Invalid grade: ${grade}`);
-}
+export const uiaa: Scale = {
+  id: "UIAA",
+  name: "International Climbing and Mountaineering Federation (UIAA) Scale",
+  description: "The UIAA scale is used in Germany, Austria and Switzerland among others.",
+  gradeType: "route",
+  gradeMapping,
+  extendedGradeNormalizationMapping,
+  normalize: (grade) => normalizer(grade.toLowerCase()),
+};
