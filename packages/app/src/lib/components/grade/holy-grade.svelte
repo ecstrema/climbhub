@@ -21,6 +21,12 @@
     return allScalesMap[grade.scale];
   });
 
+  $effect(() => {
+    if (grade && grade.scale === "unknown") {
+      console.log("Unknown scale or grade for scale", scale, " and grade", grade);
+    }
+  });
+
   const color = $derived.by(() => {
     if (!grade || grade.scale === "unknown") return null;
 
