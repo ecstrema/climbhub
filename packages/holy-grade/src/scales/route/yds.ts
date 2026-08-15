@@ -2,8 +2,8 @@ import type { Scale } from "../types";
 import { normalizeFromGradeMappings } from "../helpers";
 
 const gradeMapping = {
-  III: 1,
-  IV: 13,
+  "3rd class": 1,
+  "4th class": 13,
   "5.3": 19,
   "5.4": 25,
   "5.5": 31,
@@ -77,6 +77,8 @@ const gradeMapping = {
 };
 
 const extendedGradeNormalizationMapping: Record<string, string> = {
+  III: "3rd class",
+  IV: "4th class",
   V: "5.4",
   "5.10-": "5.10a/b",
   "5.10": "5.10b/c",

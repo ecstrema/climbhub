@@ -4,7 +4,10 @@ import { normalizeFromGradeMappings } from "../helpers";
 const gradeMapping = {
   1: 1,
   2: 13,
+  "3-": 16,
   3: 19,
+  "3+": 21,
+  "4-": 23,
   4: 25,
   "4+": 31,
   "5-": 37,
