@@ -9,6 +9,7 @@
     SIDEBAR_WIDTH_ICON,
   } from "./constants.js";
   import { setSidebar } from "./context.svelte.js";
+  import { PersistentState } from "@friendofsvelte/state";
 
   let {
     ref = $bindable(null),
@@ -23,7 +24,7 @@
     onOpenChange?: (open: boolean) => void;
   } = $props();
 
-  const sidebarWidth = $state({ current: SIDEBAR_WIDTH });
+  const sidebarWidth = new PersistentState<string>("sidebarWidth", SIDEBAR_WIDTH);
 
   const sidebar = setSidebar({
     open: () => open,
