@@ -34,8 +34,10 @@
     class="fixed bottom-5 right-5 p-4 rounded-2xl flex gap-3 items-center z-10 bg-popover text-popover-foreground shadow"
   >
     <p>A new version of Climbhub is available</p>
-    <Button onclick={() => window.location.reload()}>Update</Button>
-    <Button onclick={() => (dismissed = true)} variant="outline">Dismiss</Button>
+    <div>
+      <Button onclick={() => window.location.reload()}>Update</Button>
+      <Button onclick={() => (dismissed = true)} variant="outline">Dismiss</Button>
+    </div>
   </div>
 {/if}
 

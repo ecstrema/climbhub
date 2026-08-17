@@ -10,9 +10,9 @@ export function getName(element: DataJSON) {
   return getNameOSM(element.tags ?? {});
 }
 
-export function recursiveDataJSONFromRecord(record: DataJSONRecord) {
+export function dataTreeFromJsonRecord(data: DataJSONRecord) {
   return Object.fromEntries(
-    Object.entries(record).map(([key, val]) => [
+    Object.entries(data).map(([key, val]) => [
       key,
       {
         own: val,

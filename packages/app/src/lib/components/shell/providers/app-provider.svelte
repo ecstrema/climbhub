@@ -1,9 +1,9 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
-  import type { DataJSON } from "climbing-data-gen";
   import OSMProvider from "./osm-provider.svelte";
   import AppDataProvider from "./app-data-provider.svelte";
   import GradeProvider from "./settings-provider.svelte";
+  import type { DataJSONRecord } from "$lib/types";
 
   const {
     children,
@@ -12,7 +12,7 @@
   }: {
     children: Snippet;
     slug: string | undefined;
-    elements: Record<string, DataJSON>;
+    elements: DataJSONRecord;
   } = $props();
 </script>
 

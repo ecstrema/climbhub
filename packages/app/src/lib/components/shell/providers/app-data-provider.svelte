@@ -1,6 +1,5 @@
 <script lang="ts">
-  import type { BreadcrumbSegment, RecursiveData } from "$lib/types";
-  import type { DataJSON } from "climbing-data-gen";
+  import type { BreadcrumbSegment, DataJSONRecord, DataTree } from "$lib/types";
   import type { Snippet } from "svelte";
   import { setBreadcrumbs, setCurrentNode, setTree } from "./app-data.svelte";
 
@@ -11,7 +10,7 @@
   }: {
     children: Snippet;
     slug: string | undefined;
-    elements: Record<string, DataJSON>;
+    elements: DataJSONRecord;
   } = $props();
 
   const segments: string[] = $derived.by(() => {
@@ -31,11 +30,14 @@
     });
   });
 
-  const tree: RecursiveData<DataJSON> = $state({
+  let tree: DataTree = $state({
     own: { type: "geographic", name: "World" },
   });
 
-  const parentMap: Record<string, RecursiveData<DataJSON>> = {
+  const parentMap: Record<string, DataTree> = {
+    // svelte-ignore state_referenced_locally we can ignore this, because we should never be setting tree.
+    // In fact, the only place we set it is below, in setTree().
+    // If we don't add a setter in setTree, we get a svelte warning of binding to a non reactive property.
     "": tree,
   };
 
@@ -69,7 +71,9 @@
     }
   }
 
-  const currentNode: DataJSON = $derived.by(() => breadcrumbs.at(-1)?.data ?? tree.own);
+  const currentNode: DataTree = $derived.by(
+    () => parentMap[breadcrumbs.at(-1)?.slug ?? ""] ?? tree,
+  );
 
   setCurrentNode({
     get current() {
@@ -84,6 +88,10 @@
   setTree({
     get current() {
       return tree;
+    },
+    set current(t) {
+      console.error("do not warn set the elements tree");
+      tree = t;
     },
   });
 </script>

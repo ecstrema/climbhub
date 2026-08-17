@@ -6,12 +6,14 @@ export interface BreadcrumbSegment {
 }
 
 export type DataJSONRecord = Record<string, DataJSON>;
+export type AreaStatsRecord = Record<string, AreaStats>;
 
 export interface AreaStats {
   totalRoutes: number;
 }
 
-export interface RecursiveData<D> {
-  children?: Record<string, RecursiveData<D>>;
-  own: D;
+export interface DataTree {
+  children?: Record<string, DataTree>;
+  own: DataJSON;
+  stats?: AreaStats;
 }

@@ -1,32 +1,31 @@
 <script lang="ts">
-  import type { BreadcrumbSegment, RecursiveData } from "$lib/types";
-  import type { DataJSON } from "climbing-data-gen";
+  import type { BreadcrumbSegment, DataTree } from "$lib/types";
 
   import AppSidebarNode from "./app-sidebar-node.svelte";
 
   let {
-    item,
+    item = $bindable(),
     breadcrumbs,
   }: {
-    item: RecursiveData<DataJSON>;
+    item: DataTree;
     breadcrumbs: BreadcrumbSegment[];
   } = $props();
 
-  const orderedChildren: [string, RecursiveData<DataJSON>][] | null = $derived.by(() => {
+  const orderedChildren: string[] | null = $derived.by(() => {
     if (!item.children) return null;
 
-    if (item.own.type !== "relation") return Object.entries(item.children);
+    if (item.own.type !== "relation") return Object.keys(item.children);
 
-    const mapIdToItem: Record<string, [string, RecursiveData<DataJSON>]> = {};
+    const mapIdToItem: Record<string, string> = {};
     for (const [slug, data] of Object.entries(item.children)) {
       if (data.own.type === "geographic") {
         console.error("Geographic folder inside of relation");
         continue;
       }
-      mapIdToItem[`${data.own.type}-${data.own.id}`] = [slug, data];
+      mapIdToItem[`${data.own.type}-${data.own.id}`] = slug;
     }
 
-    const ordered: [string, RecursiveData<DataJSON>][] = [];
+    const ordered: string[] = [];
     for (const member of item.own.members) {
       const item = mapIdToItem[`${member.type}-${member.ref}`];
       if (item) {
@@ -37,8 +36,8 @@
   });
 </script>
 
-{#each orderedChildren as [slug, child] (slug)}
-  <AppSidebarNode item={child} {breadcrumbs} {slug} />
+{#each orderedChildren as slug (slug)}
+  <AppSidebarNode bind:item={item.children![slug]} {breadcrumbs} {slug} />
 {:else}
   No children
 {/each}

@@ -21,7 +21,7 @@
       </Sidebar.GroupLabel>
       <Sidebar.GroupContent>
         <Sidebar.Menu>
-          <AppSidebarChildren item={tree.current} breadcrumbs={breadcrumbs.current} />
+          <AppSidebarChildren bind:item={tree.current} breadcrumbs={breadcrumbs.current} />
         </Sidebar.Menu>
       </Sidebar.GroupContent>
     </Sidebar.Group>

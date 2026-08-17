@@ -1,17 +1,14 @@
 <script lang="ts">
   import * as Table from "@/ui/table";
   import { getName } from "$lib/data";
-  import { getCoordinates, getDescription, getGrade } from "$lib/osm-tags";
+  import { getCoordinates, getDescription } from "$lib/osm-tags";
 
-  import type { PageProps } from "./$types";
-  import type { DataJSON } from "climbing-data-gen";
   import { getCurrentNode } from "@/shell/providers";
   import HolyGrade from "@/grade/holy-grade.svelte";
-
-  const { data }: PageProps = $props();
+  import { resolve } from "$app/paths";
 
   const currentNodeProvider = getCurrentNode();
-  const currentNode: DataJSON = $derived(currentNodeProvider.current);
+  const currentNode = $derived(currentNodeProvider.current.own);
 
   const name: string | null = $derived(getName(currentNode));
 
@@ -29,6 +26,8 @@
     }
     return getDescription(currentNode.tags ?? {});
   });
+
+  const children = $derived(Object.entries(currentNodeProvider.current.children ?? {}));
 </script>
 
 <div>
@@ -47,8 +46,24 @@
     <p>{description}</p>
   {/if}
 
-  {#if data.stats}
-    <p>{data.stats.totalRoutes}</p>
+  {#if currentNodeProvider.current.stats?.totalRoutes}
+    <p>{currentNodeProvider.current.stats?.totalRoutes}</p>
+  {/if}
+
+  {#if children.length}
+    <h2 class="text-lg font-semibold">Areas</h2>
+    <Table.Root>
+      <Table.Body>
+        {#each children as [slug, child] (slug)}
+          <Table.Row>
+            <Table.Cell class="font-medium underline underline-offset-2">
+              <a href={resolve("/world/[...slug]", { slug })}>{getName(child.own) || "No Name"}</a>
+            </Table.Cell>
+            <Table.Cell>stats</Table.Cell>
+          </Table.Row>
+        {/each}
+      </Table.Body>
+    </Table.Root>
   {/if}
 
   <!-- Renders the OSM tags instead of the routes list, as children are in tree.json -->

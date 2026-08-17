@@ -78,12 +78,8 @@ export function getGrade(tags: Tags): Grade | null {
   if (genericGrade) {
     // Try to detect the scale from the value
     for (const scale of allScales) {
-      try {
-        scale.normalize(genericGrade);
-        return { v: genericGrade, scale: scale.id };
-      } catch {
-        // Ignore normalization errors
-      }
+      const g = scale.normalize(genericGrade);
+      if (g) return { v: g, scale: scale.id };
     }
 
     // If no scale was detected, return the grade with an unknown scale
