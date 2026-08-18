@@ -23,8 +23,6 @@ export const load: LayoutLoad<{
     return acc.join("/");
   });
   childrenToFetch.push(...segments);
-  const own = childrenToFetch.pop()!;
-  const ownData = await fetchChildren(own);
 
   return {
     elements: await fetchAllChildren(childrenToFetch),
@@ -32,7 +30,8 @@ export const load: LayoutLoad<{
 
   async function fetchAllChildren(slugs: string[]): Promise<DataJSONRecord> {
     const results = await Promise.all(slugs.map(fetchChildren));
-
+    const own = childrenToFetch.pop()!;
+    const ownData = await fetchChildren(own);
     return Object.assign({ ...ownData }, ...results);
   }
 
