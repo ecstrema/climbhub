@@ -130,12 +130,14 @@ export interface RouteNode {
   grade?: Grade;
   name?: string;
   description?: string;
+  coordinates?: Coordinates;
 }
 
 export interface AreaNode {
   type: "area";
   name?: string;
   description?: string;
+  coordinates?: Coordinates;
 }
 
 export type ProcessedOSMData = RouteNode | AreaNode;
@@ -149,6 +151,7 @@ export function processOSM(element: OverpassElement): ProcessedOSMData | null {
   const name = getNameOSM(tags);
   const description = getDescription(tags);
   const grade = getGrade(tags);
+  const coordinates = getCoordinates(element);
 
   if (element.type === "node") {
     if (tags.climbing === "route_bottom" || tags.climbing === "route_top") {
@@ -159,6 +162,7 @@ export function processOSM(element: OverpassElement): ProcessedOSMData | null {
       if (grade) v.grade = grade;
       if (description) v.description = description;
       if (name) v.name = name;
+      if (coordinates) v.coordinates = coordinates;
 
       return v;
     }
@@ -177,6 +181,8 @@ export function processOSM(element: OverpassElement): ProcessedOSMData | null {
 
       if (name) v.name = name;
       if (description) v.description = description;
+      if (coordinates) v.coordinates = coordinates;
+
       return v;
     }
   }
