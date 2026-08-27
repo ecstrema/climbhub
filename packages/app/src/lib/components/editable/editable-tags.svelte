@@ -7,19 +7,27 @@
 
   const currentNode = $derived(getCurrentNode().current.own);
 
-  const tagsArray = $derived.by(() => {
+  const [knownTags, unknownTags] = $derived.by(() => {
     if (currentNode.type === "geographic" || !currentNode.tags) {
-      return [];
+      return [[], []];
     }
-    const processedTagsForElement = processedTags[currentNode.type];
-    return Object.keys(currentNode.tags).filter((key) => {
-      return !processedTagsForElement[key]?.(currentNode.tags![key]);
-    });
+    const processedTagsForElement = processedTags[currentNode.type as "node" | "way" | "relation"];
+    const knownTags: OsmApi.Keys[] = [];
+    const unknownTags: OsmApi.Keys[] = [];
+    for (const key in currentNode.tags) {
+      if (processedTagsForElement[key]?.(currentNode.tags[key]!)) {
+        unknownTags.push(key);
+      } else {
+        knownTags.push(key);
+      }
+    }
+    return [knownTags, unknownTags];
   });
 </script>
 
-{#if currentNode.type !== "geographic" && currentNode.tags && tagsArray.length > 0}
+{#if currentNode.type !== "geographic" && currentNode.tags && (knownTags.length > 0 || unknownTags.length > 0)}
   <h2 class="text-lg font-semibold">OpenStreetMap Data</h2>
+
   <Table.Root>
     <Table.Header>
       <Table.Row>
@@ -28,10 +36,16 @@
       </Table.Row>
     </Table.Header>
     <Table.Body>
-      {#each tagsArray as key (key)}
+      {#each knownTags as key (key)}
         <Table.Row>
           <Table.Cell class="font-medium">{key}</Table.Cell>
-          <Table.Cell><EditableText bind:value={currentNode.tags[key]} /></Table.Cell>
+          <Table.Cell><EditableText bind:value={currentNode.tags[key as string]} /></Table.Cell>
+        </Table.Row>
+      {/each}
+      {#each unknownTags as key (key)}
+        <Table.Row class="font-medium text-muted-foreground">
+          <Table.Cell>{key}</Table.Cell>
+          <Table.Cell><EditableText bind:value={currentNode.tags[key as string]} /></Table.Cell>
         </Table.Row>
       {/each}
     </Table.Body>

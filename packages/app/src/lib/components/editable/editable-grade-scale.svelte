@@ -10,13 +10,14 @@
     getScaleFromId,
     type ScaleId,
   } from "@climbhub/holy-grade";
+  import type { OsmFeature } from "osm-api";
 
   const processedData = $derived(getProcessedData().current);
   const currentNode = $derived(getCurrentNode().current);
 
   const changeGradingScale: (value: string) => void = (targetScaleId) => {
-    const ownData = currentNode.own;
-    if (ownData.type === "geographic") return;
+    if (currentNode.own.type === "geographic") return;
+    const ownData = currentNode.own as OsmFeature;
     if (processedData?.type !== "route") return;
 
     ownData.tags ||= {};

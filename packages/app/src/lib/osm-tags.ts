@@ -12,7 +12,7 @@ import {
 } from "@climbhub/holy-grade";
 import type { Tags } from "osm-api";
 
-export type ProcessedTags = Record<string, (value: string) => boolean>;
+export type ProcessedTags = Partial<Record<OsmApi.Keys["keys"], (value: string) => boolean>>;
 
 export function allowAll(_value: string): boolean {
   return true;
@@ -112,9 +112,9 @@ export function getGrade(tags: Tags): WithSourceTag<Grade> | undefined {
     };
   }
 
-  return;
+  return undefined;
 
-  function testKey(key: string, scale: ScaleId): WithSourceTag<Grade> | undefined {
+  function testKey(key: OsmApi.Keys["keys"], scale: ScaleId): WithSourceTag<Grade> | undefined {
     const v = tags[key];
     if (v) {
       const normalized = allScalesMap[scale].normalize(v);
