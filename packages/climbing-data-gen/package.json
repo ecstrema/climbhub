@@ -25,7 +25,7 @@
     "@types/bun": "catalog:",
     "@types/geojson": "catalog:",
     "@types/js-yaml": "catalog:",
-    "@types/node": "catalog:",
+    "@types/node": "^26.4.0",
     "osm-api": "catalog:",
     "typescript": "catalog:"
   }

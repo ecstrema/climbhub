@@ -25,7 +25,7 @@
     "preview": "cd packages/app && bun run preview",
     "build": "cd packages/app && bun run build",
     "build:reverse-geocoding-data": "cd packages/reverse-geocoding-data && bun run build",
-    "build:@climbhub/climbing-data-gen": "cd packages/@climbhub/climbing-data-gen && bun run build",
+    "build:@climbhub/climbing-data-gen": "cd packages/climbing-data-gen && bun run build",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "fmt": "oxfmt",

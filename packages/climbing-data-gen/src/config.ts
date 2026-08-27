@@ -6,7 +6,7 @@ let dirname = import.meta.dirname;
 if (dirname.includes(".svelte-kit")) {
   const svelteKitIndex = dirname.indexOf(".svelte-kit");
   const appDir = dirname.slice(0, svelteKitIndex);
-  dirname = join(appDir, "../@climbhub/climbing-data-gen/src");
+  dirname = join(appDir, "../climbing-data-gen/src");
 }
 
 export const OSM_DATA_FILE = join(dirname, "climbing-data.json");
