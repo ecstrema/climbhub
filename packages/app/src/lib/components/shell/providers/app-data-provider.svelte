@@ -1,7 +1,8 @@
 <script lang="ts">
   import type { BreadcrumbSegment, DataJSONRecord, DataTree } from "$lib/types";
   import type { Snippet } from "svelte";
-  import { setBreadcrumbs, setCurrentNode, setTree } from "./app-data.svelte";
+  import { setBreadcrumbs, setCurrentNode, setProcessedData, setTree } from "./app-data.svelte";
+  import { process } from "$lib/data";
 
   const {
     children,
@@ -90,8 +91,16 @@
       return tree;
     },
     set current(t) {
-      console.error("do not warn set the elements tree");
+      console.error("do not set the elements tree");
       tree = t;
+    },
+  });
+
+  const processedData = $derived(process(currentNode.own));
+
+  setProcessedData({
+    get current() {
+      return processedData;
     },
   });
 </script>

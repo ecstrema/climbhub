@@ -6,7 +6,7 @@
     setPreferredRouteGradingScale,
     setPreferredBoulderGradingScale,
   } from "./settings.svelte";
-  import type { BoulderScaleId, RouteScaleId } from "holy-grade";
+  import type { BoulderScaleId, RouteScaleId } from "@climbhub/holy-grade";
 
   const preferredRouteGradingScale = new PersistentState<RouteScaleId | "local">(
     "preferredRouteGradingScale",

@@ -11,8 +11,8 @@
     breadcrumbs: BreadcrumbSegment[];
   } = $props();
 
-  const orderedChildren: string[] | null = $derived.by(() => {
-    if (!item.children) return null;
+  const orderedChildren: string[] | undefined = $derived.by(() => {
+    if (!item.children) return;
 
     if (item.own.type !== "relation") return Object.keys(item.children);
 
@@ -27,9 +27,9 @@
 
     const ordered: string[] = [];
     for (const member of item.own.members) {
-      const item = mapIdToItem[`${member.type}-${member.ref}`];
-      if (item) {
-        ordered.push(item);
+      const i = mapIdToItem[`${member.type}-${member.ref}`];
+      if (i) {
+        ordered.push(i);
       }
     }
     return ordered;
@@ -37,7 +37,11 @@
 </script>
 
 {#each orderedChildren as slug (slug)}
-  <AppSidebarNode bind:item={item.children![slug]} {breadcrumbs} {slug} />
+  {#if item.children?.[slug]}
+    <AppSidebarNode bind:item={item.children[slug]} {breadcrumbs} {slug} />
+  {:else}
+    Could not get child
+  {/if}
 {:else}
   No children
 {/each}

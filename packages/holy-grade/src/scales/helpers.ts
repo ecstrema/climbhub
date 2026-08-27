@@ -2,7 +2,7 @@ export function normalizeFromGradeMappings(
   gradeMapping: Record<string, number>,
   extendedGradeNormalizationMapping?: Record<string, string>,
 ) {
-  return (grade: string): string | null => {
+  return (grade: string): string | undefined => {
     if (grade in gradeMapping) {
       return grade;
     }
@@ -10,7 +10,5 @@ export function normalizeFromGradeMappings(
     if (extendedGradeNormalizationMapping && grade in extendedGradeNormalizationMapping) {
       return extendedGradeNormalizationMapping[grade];
     }
-
-    return null;
   };
 }

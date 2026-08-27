@@ -8,7 +8,7 @@ if (import.meta.env.DEV) {
 }
 
 export class OSMUser {
-  loggedIn: boolean | null = $state(null);
+  loggedIn: boolean | undefined = $state();
 
   constructor() {
     onMount(() => {

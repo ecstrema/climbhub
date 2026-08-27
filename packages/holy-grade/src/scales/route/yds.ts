@@ -100,7 +100,7 @@ const extendedGradeNormalizationMapping: Record<string, string> = {
   "5.15+": "5.15c/d",
 };
 
-export const yds: Scale = {
+export const yds: Scale<"YDS"> = {
   id: "YDS",
   name: "Yosemite Decimal System (YDS)",
   description: "North american route standard.",

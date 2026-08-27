@@ -3,14 +3,9 @@ import { writeFile } from "fs/promises";
 import { join, dirname } from "path";
 
 import { ReverseGeolocator } from "./reverse-geolocation.ts";
-import type {
-  Coordinates,
-  DataJSON,
-  GeographicFolderElement,
-  OverpassElement,
-  OverpassRequest,
-} from "./types.ts";
-import { ensureDirExists, slugify } from "reverse-geocoding-data";
+import type { Coordinates, DataJSON, GeographicFolderElement, OverpassRequest } from "./types.ts";
+import { ensureDirExists, slugify } from "@climbhub/reverse-geocoding-data";
+import { OsmFeature } from "osm-api";
 
 export type StaticApiGeneratorOptions = {
   outApiDirectory: string;
@@ -31,7 +26,7 @@ export function generateStaticAPI(options: StaticApiGeneratorOptions) {
   writeStaticApi(options, allElements, rootNodes);
 }
 
-function readOsmData(osmDataFile: string): Map<string, OverpassElement> {
+function readOsmData(osmDataFile: string): Map<string, OsmFeature> {
   if (!existsSync(osmDataFile)) {
     throw new Error(`Missing OSM Data: Please ensure ${osmDataFile} exists.`);
   }
@@ -39,7 +34,7 @@ function readOsmData(osmDataFile: string): Map<string, OverpassElement> {
   const rawData: OverpassRequest = JSON.parse(readFileSync(osmDataFile, "utf8"));
 
   // Index all elements
-  const osmElementsMap = new Map<string, OverpassElement>();
+  const osmElementsMap = new Map<string, OsmFeature>();
   for (const el of rawData.elements) {
     osmElementsMap.set(`${el.type}:${el.id}`, el);
   }
@@ -47,7 +42,7 @@ function readOsmData(osmDataFile: string): Map<string, OverpassElement> {
   return osmElementsMap;
 }
 
-function getRootOsmDataNodes(allElements: Map<string, OverpassElement>): OverpassElement[] {
+function getRootOsmDataNodes(allElements: Map<string, OsmFeature>): OsmFeature[] {
   // Identify dependent children (so we don't geolocate a route that belongs to a crag)
   const osmParentSet = new Set<string>();
   for (const el of allElements.values()) {
@@ -68,10 +63,7 @@ function getRootOsmDataNodes(allElements: Map<string, OverpassElement>): Overpas
   return rootElements;
 }
 
-function* iterateOverpassElementsChildren(
-  element: OverpassElement,
-  allElements: Map<string, OverpassElement>,
-) {
+function* iterateOsmFeaturesChildren(element: OsmFeature, allElements: Map<string, OsmFeature>) {
   if (element.type === "way" && element.nodes) {
     for (const nodeId of element.nodes) {
       const child = allElements.get(`node:${nodeId}`);
@@ -89,23 +81,24 @@ function* iterateOverpassElementsChildren(
   }
 }
 
-function* recursiveIterateOverpassElementChildren(
-  el: OverpassElement,
-  allElements: Map<string, OverpassElement>,
-  path: OverpassElement[] = [el],
-): Generator<{ path: OverpassElement[]; el: OverpassElement }> {
+function* recursiveIterateOsmFeatureChildren(
+  el: OsmFeature,
+  allElements: Map<string, OsmFeature>,
+  path: OsmFeature[] = [el],
+): Generator<{ path: OsmFeature[]; el: OsmFeature }> {
   yield { path, el };
-  for (const child of iterateOverpassElementsChildren(el, allElements)) {
-    yield* recursiveIterateOverpassElementChildren(child, allElements, [...path, child]);
+  for (const child of iterateOsmFeaturesChildren(el, allElements)) {
+    yield* recursiveIterateOsmFeatureChildren(child, allElements, [...path, child]);
   }
 }
 
 // Find a lat/lon to use for reverse geocoding
 function getRepresentativeCoordinates(
-  element: OverpassElement,
-  allElements: Map<string, OverpassElement>,
-): Coordinates | null {
+  element: OsmFeature,
+  allElements: Map<string, OsmFeature>,
+): Coordinates | undefined {
   if (element.type === "node") return { lon: element.lon, lat: element.lat };
+  // @ts-ignore
   if (element.center) return { lon: element.center.lon, lat: element.center.lat };
   // @ts-ignore
   if (element.geometry?.length > 0) {
@@ -119,11 +112,10 @@ function getRepresentativeCoordinates(
     if (child) return getRepresentativeCoordinates(child, allElements);
   }
   if (element.type === "relation" && element.members?.length > 0) {
+    if (!element.members[0]) return;
     const child = allElements.get(`${element.members[0].type}:${element.members[0].ref}`);
     if (child) return getRepresentativeCoordinates(child, allElements);
   }
-
-  return null;
 }
 
 interface MapTree {
@@ -141,24 +133,22 @@ function addPathToMapTree(mapTree: MapTree, path: string[], index = 0) {
   );
 }
 
-function getName(el: OverpassElement): string | null {
+function getName(el: OsmFeature): string | undefined {
   const tags = el.tags;
   if (tags) {
-    return tags.official_name || tags.name || tags["name:en"] || tags["name:fr"] || null;
+    return tags.official_name || tags.name || tags["name:en"] || tags["name:fr"];
   }
-
-  return null;
 }
 
-function getPathName(el: OverpassElement): string {
+function getPathName(el: OsmFeature): string {
   return slugify(getName(el) || `${el.type}:${el.id}`);
 }
 
-function getOsmPath(els: OverpassElement[]) {
+function getOsmPath(els: OsmFeature[]) {
   return els.map((el) => getPathName(el));
 }
 
-function writeDataJson(options: StaticApiGeneratorOptions, path: string, el: OverpassElement) {
+function writeDataJson(options: StaticApiGeneratorOptions, path: string, el: OsmFeature) {
   const targetPath = join(options.outApiDirectory, path, "data.json");
   ensureDirExists(dirname(targetPath));
   writeFileSync(targetPath, JSON.stringify(el));
@@ -166,8 +156,8 @@ function writeDataJson(options: StaticApiGeneratorOptions, path: string, el: Ove
 
 function writeStaticApi(
   options: StaticApiGeneratorOptions,
-  allElements: Map<string, OverpassElement>,
-  rootNodes: OverpassElement[],
+  allElements: Map<string, OsmFeature>,
+  rootNodes: OsmFeature[],
 ) {
   const geolocator = new ReverseGeolocator(
     options.geoIndexFile,
@@ -199,7 +189,7 @@ function writeStaticApi(
 
     const visited = new Set<string>();
 
-    for (const { el, path } of recursiveIterateOverpassElementChildren(rootNode, allElements)) {
+    for (const { el, path } of recursiveIterateOsmFeatureChildren(rootNode, allElements)) {
       if (!el.tags) {
         noTags++;
         continue;
@@ -212,7 +202,7 @@ function writeStaticApi(
       if (el.type === "way" && el.tags?.natural === "cliff") {
         cliffs++;
         let hasChildrenWithTags = false;
-        for (const child of iterateOverpassElementsChildren(el, allElements)) {
+        for (const child of iterateOsmFeaturesChildren(el, allElements)) {
           if (child.tags) {
             hasChildrenWithTags = true;
             break;

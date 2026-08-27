@@ -1,5 +1,5 @@
 {
-  "name": "holy-grade",
+  "name": "@climbhub/holy-grade",
   "version": "0.0.1",
   "type": "module",
   "module": "./src/index.ts",
@@ -10,9 +10,8 @@
     }
   },
   "devDependencies": {
-    "@types/bun": "catalog:"
-  },
-  "peerDependencies": {
+    "@climbhub/types": "workspace:*",
+    "@types/bun": "catalog:",
     "typescript": "catalog:"
   }
 }

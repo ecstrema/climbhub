@@ -1,26 +1,32 @@
 {
-  "name": "climbing-data-gen",
+  "name": "@climbhub/climbing-data-gen",
   "version": "1.0.0",
   "private": true,
   "description": "Data pipeline for fetching OSM boundaries and compiling static geographic APIs",
   "type": "module",
   "main": "src/main.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.d.ts"
+    }
   },
   "scripts": {
     "build": "bun run src/main.ts"
   },
   "dependencies": {
+    "@climbhub/reverse-geocoding-data": "workspace:*",
     "@turf/boolean-point-in-polygon": "catalog:",
     "geojson": "catalog:",
-    "osmtogeojson": "catalog:",
-    "reverse-geocoding-data": "workspace:*"
+    "osmtogeojson": "catalog:"
   },
   "devDependencies": {
+    "@climbhub/types": "workspace:*",
     "@types/bun": "catalog:",
     "@types/geojson": "catalog:",
     "@types/js-yaml": "catalog:",
-    "@types/node": "catalog:"
+    "@types/node": "catalog:",
+    "osm-api": "catalog:",
+    "typescript": "catalog:"
   }
 }

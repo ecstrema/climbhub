@@ -26,7 +26,7 @@ export const GET: RequestHandler = async ({ params, fetch }) => {
       Object.entries(children).map(async ([childSlug, child]): Promise<AreaStats> => {
         if (child.type === "node") {
           // TODO: moulinettes only have a route_top
-          if (child.tags && child.tags["climbing"] === "route_bottom") {
+          if (child.tags && child.tags.climbing === "route_bottom") {
             return {
               totalRoutes: 1,
             };

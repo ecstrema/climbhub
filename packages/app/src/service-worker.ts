@@ -109,10 +109,10 @@ async function handleClimbingData(request: Request, pathname: string): Promise<R
 
   if (filename === "data.json") {
     // Check if there is a parent children.json, or simultaneously, check if there is a deep.json
-    let childrenURL: string | null;
+    let childrenURL: string | undefined;
     switch (slugSegments.length) {
       case 0:
-        childrenURL = null;
+        childrenURL = undefined;
         break;
       case 1:
         childrenURL = "/climbhub/api/world/children.json";
@@ -123,12 +123,12 @@ async function handleClimbingData(request: Request, pathname: string): Promise<R
         childrenURL = "/climbhub/api/world/" + parentSlug + "/children.json";
         break;
     }
-    const toCheck: [string, string | null] = [
+    const toCheck: [string, string | undefined] = [
       slug ? "/climbhub/api/world/" + slug + "/data.json" : "/climbhub/api/world/data.json",
       childrenURL,
     ];
     const [dataRes, childrenRes] = await Promise.all(
-      toCheck.map((target) => (target ? climbingDataCache.match(target) : null)),
+      toCheck.map((target) => (target ? climbingDataCache.match(target) : undefined)),
     );
     if (dataRes) {
       return dataRes;

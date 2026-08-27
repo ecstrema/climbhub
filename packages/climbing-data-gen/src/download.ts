@@ -1,20 +1,27 @@
 import { existsSync } from "fs";
 import { writeFile } from "fs/promises";
-import { USER_AGENT } from "reverse-geocoding-data";
+import { USER_AGENT } from "@climbhub/reverse-geocoding-data";
 
 const query = `
 [out:json][timeout:300];
 // Define Quebec as the search area
 area["ISO3166-2"="CA-QC"]["admin_level"="4"]->.searchArea;
 
-// Find all nodes, ways, and relations tagged with sport=climbing
+// Find all nodes, ways, and relations explicitly tagged with sport=climbing
 nwr["sport"="climbing"](area.searchArea);
 
-// Union block: take the current results (._) and recursively get all their children (>)
+// Union block: Get parent elements of routes and ways (this catches 'type=site' relations
+// that group the climbing routes but lack the sport tag themselves)
+(._; <;);
+
+// Get parent relations of relations:
+(._; <<;);
+
+// Union block: take the current results and recursively get all their children
 (._; >;);
 
-// Output with metadata (this includes the timestamp, user, and changeset)
-out meta;`;
+// Output with metadata AND natively attached geometries
+out geom meta;`;
 
 export async function downloadOSMData(outputFilePath: string, remainingTries = 10) {
   // Check if the file already exists

@@ -1,4 +1,5 @@
-import type { Coordinates, OverpassElement } from "climbing-data-gen";
+import type { OsmFeature } from "osm-api";
+import type { Coordinates } from "@climbhub/climbing-data-gen";
 import {
   allScales,
   allScalesMap,
@@ -8,7 +9,7 @@ import {
   yds,
   type Scale,
   type ScaleId,
-} from "holy-grade";
+} from "@climbhub/holy-grade";
 import type { Tags } from "osm-api";
 
 export type ProcessedTags = Record<string, (value: string) => boolean>;
@@ -36,8 +37,8 @@ export function allowMultipleValues(values: Set<string>): (value: string) => boo
   return (v) => values.has(v);
 }
 
-export function getNameOSM(tags: Tags): string | null {
-  return tags.name || null;
+export function getNameOSM(tags: Tags): string | undefined {
+  return tags.name || undefined;
 }
 
 const YDSValidator = allowFromNormalize(yds.normalize);
@@ -56,8 +57,26 @@ const processedGrades: ProcessedTags = {
   "climbing:grade:fontainebleau": FBValidator,
 };
 
+export function scaleIdToTag(s: ScaleId): string | undefined {
+  switch (s) {
+    case "FB":
+      return "climbing:grade:fb";
+    case "Hueco":
+      return "climbing:grade:hueco";
+    case "French":
+      return "climbing:grade:french";
+    case "UIAA":
+      return "climbing:grade:uiaa";
+    case "YDS":
+      return "climbing:grade:yds_class";
+
+    default:
+      console.error("could not find tag name associated with ScaleId", s);
+  }
+}
+
 /** See https://wiki.openstreetmap.org/wiki/Climbing#Grading */
-export function getGrade(tags: Tags): Grade | null {
+export function getGrade(tags: Tags): WithSourceTag<Grade> | undefined {
   const grade =
     testKey("climbing:grade:uiaa", "UIAA") ||
     testKey("climbing:grade:yds", "YDS") ||
@@ -79,33 +98,42 @@ export function getGrade(tags: Tags): Grade | null {
     // Try to detect the scale from the value
     for (const scale of allScales) {
       const g = scale.normalize(genericGrade);
-      if (g) return { v: g, scale: scale.id };
+      if (g)
+        return {
+          v: { v: g, scale: scale.id },
+          source: "climbing:grade",
+        };
     }
 
     // If no scale was detected, return the grade with an unknown scale
-    return { v: genericGrade, scale: "unknown" };
+    return {
+      v: { v: genericGrade, scale: "unknown" },
+      source: "climbing:grade",
+    };
   }
 
-  return null;
+  return;
 
-  function testKey(key: string, scale: ScaleId): Grade | null {
+  function testKey(key: string, scale: ScaleId): WithSourceTag<Grade> | undefined {
     const v = tags[key];
     if (v) {
       const normalized = allScalesMap[scale].normalize(v);
       // validate the grade, but ignore the result
-      return normalized ? { v: normalized, scale } : { v, scale: "unknown" };
+      return {
+        v: normalized ? { v: normalized, scale } : { v, scale: "unknown" },
+        source: key,
+      };
     }
-
-    return null;
   }
 }
 
-export function getDescription(tags: Tags): string | null {
-  return tags["description"] || null;
+export function getDescription(tags: Tags): string | undefined {
+  return tags.description || undefined;
 }
 
-export function getCoordinates(element: OverpassElement): Coordinates | null {
+export function getCoordinates(element: OsmFeature): Coordinates | undefined {
   if (element.type === "node") return { lon: element.lon, lat: element.lat };
+  // @ts-ignore
   if (element.center) return { lon: element.center.lon, lat: element.center.lat };
 
   // TODO: element may have a geometry. Is that actually happening?
@@ -114,8 +142,6 @@ export function getCoordinates(element: OverpassElement): Coordinates | null {
     // @ts-ignore
     return { lon: element.geometry[0].lon, lat: element.geometry[0].lat };
   }
-
-  return null;
 }
 
 export type Grade = {
@@ -125,9 +151,12 @@ export type Grade = {
 
 export type ProcessingError = "GradeParsingError" | "GradeMissingScaleSpecifier";
 
+/** We add the source tag to the processed value, so we can bind to it and modify the right value. */
+export type WithSourceTag<T> = { v: T; source: string };
+
 export interface RouteNode {
   type: "route";
-  grade?: Grade;
+  grade?: WithSourceTag<Grade>;
   name?: string;
   description?: string;
   coordinates?: Coordinates;
@@ -142,10 +171,10 @@ export interface AreaNode {
 
 export type ProcessedOSMData = RouteNode | AreaNode;
 
-export function processOSM(element: OverpassElement): ProcessedOSMData | null {
+export function processOSM(element: OsmFeature): ProcessedOSMData | undefined {
   const tags = element.tags;
   if (!tags) {
-    return null;
+    return;
   }
 
   const name = getNameOSM(tags);
@@ -170,7 +199,7 @@ export function processOSM(element: OverpassElement): ProcessedOSMData | null {
 
   if (element.type === "way") {
     // TODO: where are the ways?
-    return null;
+    return;
   }
 
   if (element.type === "relation") {
@@ -186,8 +215,6 @@ export function processOSM(element: OverpassElement): ProcessedOSMData | null {
       return v;
     }
   }
-
-  return null;
 }
 
 export const sharedProcessedTags: ProcessedTags = {
@@ -196,7 +223,7 @@ export const sharedProcessedTags: ProcessedTags = {
   description: allowAll,
 };
 
-export const processedTags: Record<OverpassElement["type"], ProcessedTags> = {
+export const processedTags: Record<OsmFeature["type"], ProcessedTags> = {
   node: {
     ...sharedProcessedTags,
     ...processedGrades,

@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
 import type { Position, Feature, MultiPolygon, Polygon } from "geojson";
-import type { IndexNode } from "reverse-geocoding-data";
+import type { IndexNode } from "@climbhub/reverse-geocoding-data";
 
 export class ReverseGeolocator {
   /** The tree with the bounding boxes and the children. */
@@ -40,7 +40,7 @@ export class ReverseGeolocator {
   /**
    * Finds the deepest matching directory for a given coordinate.
    */
-  public geolocate(lon: number, lat: number): string[] | null {
+  public geolocate(lon: number, lat: number): string[] | undefined {
     return this.geolocateRecursive(lon, lat, ["world"]);
   }
 
@@ -49,11 +49,11 @@ export class ReverseGeolocator {
     lat: number,
     path: string[],
     node?: IndexNode,
-  ): string[] | null {
+  ): string[] | undefined {
     const indexNode = node || this.getIndexNodeForPath(path);
     if (!indexNode) {
       console.error(`Index node not found for path: ${path.join("/")}`);
-      return null;
+      return;
     }
 
     // Do a fast prefilter using bounding boxes
@@ -61,7 +61,7 @@ export class ReverseGeolocator {
       const { x0, x1, y0, y1 } = indexNode._bbox;
       if (lon < x0 || lon > x1 || lat < y0 || lat > y1) {
         // Point is outside the bounding box of this node
-        return null;
+        return;
       }
     }
 
@@ -82,15 +82,15 @@ export class ReverseGeolocator {
     }
 
     // If we reach here, it means the point is inside the bounding box but not in the child itself. False positive.
-    return null;
+    return;
   }
 
-  private getIndexNodeForPath(path: string[]): IndexNode | null {
-    let currentNode: IndexNode | null = this.indexTree;
+  private getIndexNodeForPath(path: string[]): IndexNode | undefined {
+    let currentNode: IndexNode | undefined = this.indexTree;
 
     for (const segment of path) {
       if (!currentNode || !currentNode[segment]) {
-        return null;
+        return;
       }
       currentNode = currentNode[segment] as IndexNode;
     }
@@ -117,10 +117,10 @@ export class ReverseGeolocator {
   // Get the name of a path, as given by the geojson properties.
   public getName(path: string[]) {
     // Check if the hierarchy-index.json has a name for this path
-    let currentNode: IndexNode | null = this.indexTree;
+    let currentNode: IndexNode | undefined = this.indexTree;
     for (const segment of path) {
       if (!currentNode || !currentNode[segment]) {
-        currentNode = null;
+        currentNode = undefined;
         break;
       }
       currentNode = currentNode[segment] as IndexNode;

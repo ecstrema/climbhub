@@ -15,7 +15,7 @@ const extendedGradeNormalizationMapping = Object.fromEntries(
 
 const normalizer = normalizeFromGradeMappings(gradeMapping, extendedGradeNormalizationMapping);
 
-export const fb: Scale = {
+export const fb: Scale<"FB"> = {
   id: "FB",
   name: "Fontainebleau",
   description:

@@ -1,4 +1,4 @@
-import type { DataJSON } from "climbing-data-gen";
+import type { DataJSON } from "@climbhub/climbing-data-gen";
 
 export interface BreadcrumbSegment {
   data: DataJSON;

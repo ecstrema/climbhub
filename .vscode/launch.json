@@ -16,7 +16,7 @@
       "name": "Generate static climbing data",
       "skipFiles": ["<node_internals>/**"],
       "program": "src/main.ts",
-      "cwd": "${workspaceFolder}/packages/climbing-data-gen/"
+      "cwd": "${workspaceFolder}/packages/@climbhub/climbing-data-gen/"
     },
     {
       "type": "node",

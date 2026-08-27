@@ -18,14 +18,14 @@
     type Scale,
     allRouteScales,
     type ScaleId,
-  } from "holy-grade";
+  } from "@climbhub/holy-grade";
   import type { FromCurrent } from "./providers/types";
 
   const user = getOsmUser();
 
   const osmButton = $derived.by(() => {
     switch (user.loggedIn) {
-      case null:
+      case undefined:
         return {
           action: () => {},
           label: "OSM loading",

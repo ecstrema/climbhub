@@ -1,7 +1,7 @@
 import { createContext } from "svelte";
 
 import type { FromCurrent } from "./types";
-import type { RouteScaleId, BoulderScaleId } from "holy-grade";
+import type { RouteScaleId, BoulderScaleId } from "@climbhub/holy-grade";
 
 export const [getPreferredRouteGradingScale, setPreferredRouteGradingScale] =
   createContext<FromCurrent<RouteScaleId | "local">>();

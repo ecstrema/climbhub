@@ -37,8 +37,10 @@
     if (!rootElement) return;
 
     let previousWidth = 0;
-    const ro = new ResizeObserver((e) => {
-      const w = e[0].contentRect.width;
+    const ro = new ResizeObserver((entry) => {
+      const w = entry[0]?.contentRect.width;
+      if (!w) return;
+
       const widthChanged = w !== previousWidth;
       previousWidth = w;
       if (widthChanged) {

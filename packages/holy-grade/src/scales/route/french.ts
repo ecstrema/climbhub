@@ -46,7 +46,7 @@ const extendedGradeNormalizationMapping: Record<string, string> = {
 };
 
 const normalizer = normalizeFromGradeMappings(gradeMapping, extendedGradeNormalizationMapping);
-export const french: Scale = {
+export const french: Scale<"French"> = {
   id: "French",
   name: "French Scale",
   description: "Now the most common scale in the world, born in France.",

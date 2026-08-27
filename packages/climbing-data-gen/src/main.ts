@@ -21,7 +21,10 @@ import { OSM_DATA_FILE, OUT_DIR } from "./config.ts";
 import { downloadOSMData } from "./download.ts";
 import { generateStaticAPI } from "./static-api-generator.ts";
 
-import { HIERARCHY_INDEX, OUTPUT_DIR as REVERSE_GEOCODING_DATA_DIR } from "reverse-geocoding-data";
+import {
+  HIERARCHY_INDEX,
+  OUTPUT_DIR as REVERSE_GEOCODING_DATA_DIR,
+} from "@climbhub/reverse-geocoding-data";
 
 // first, delete the output directory if it exists
 if (existsSync(OUT_DIR)) {

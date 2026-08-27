@@ -27,7 +27,7 @@ const gradeMapping: GradeMapping = {
 
 const normalizer = normalizeFromGradeMappings(gradeMapping);
 
-export const hueco: Scale = {
+export const hueco: Scale<"Hueco"> = {
   id: "Hueco",
   name: "Hueco Scale - V Scale",
   description: "A bouldering grade system used primarily in North America.",

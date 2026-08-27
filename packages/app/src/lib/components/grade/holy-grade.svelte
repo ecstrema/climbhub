@@ -3,25 +3,27 @@
   import type { Tags } from "osm-api";
   import { mode } from "mode-watcher";
   import { getPreferredRouteGradingScale } from "@/shell/providers/settings.svelte";
-  import { allScalesMap, convertGrade } from "holy-grade";
+  import { allScalesMap, convertGrade } from "@climbhub/holy-grade";
   import { getColorFromGrade } from "./helpers";
 
   const {
     tags,
     grade,
+    convert = true,
     class: className = "",
   }: {
     grade?: Grade;
     tags?: Tags;
     class?: string;
+    convert?: boolean;
   } = $props();
 
   const computedGrade: Grade = $derived(
-    grade || (tags && getGrade(tags)) || { v: "no grade provided", scale: "unknown" },
+    grade || (tags && getGrade(tags)?.v) || { v: "no grade provided", scale: "unknown" },
   );
 
   const scale = $derived.by(() => {
-    if (!computedGrade || computedGrade.scale === "unknown") return null;
+    if (!computedGrade || computedGrade.scale === "unknown") return;
     return allScalesMap[computedGrade.scale];
   });
 
@@ -32,7 +34,7 @@
   });
 
   const color = $derived.by(() => {
-    if (!computedGrade || computedGrade.scale === "unknown") return null;
+    if (!computedGrade || computedGrade.scale === "unknown") return;
 
     return getColorFromGrade(computedGrade.v, computedGrade.scale, mode.current === "dark");
   });
@@ -41,7 +43,7 @@
     return getPreferredRouteGradingScale().current;
   });
 
-  const convertedGrade = $derived.by(() => {
+  const convertedGrade: string | undefined = $derived.by(() => {
     if (
       !computedGrade ||
       !scale ||
@@ -50,14 +52,16 @@
       preferredGradeScale === "local" ||
       preferredGradeScale === computedGrade.scale
     )
-      return null;
+      return;
+
+    if (!convert) return computedGrade.v;
 
     return (
       convertGrade(
         computedGrade.v,
         allScalesMap[computedGrade.scale],
         allScalesMap[preferredGradeScale],
-      ) ?? null
+      ) ?? undefined
     );
   });
 </script>

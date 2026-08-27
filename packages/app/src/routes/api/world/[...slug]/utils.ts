@@ -1,7 +1,7 @@
 import { readFile, writeFile } from "fs/promises";
 import { join } from "path";
 
-import { OUT_DIR as OUT_GEN_DIR } from "climbing-data-gen";
+import { OUT_DIR as OUT_GEN_DIR } from "@climbhub/climbing-data-gen";
 
 export function jsonRawBuffer(body: NonSharedBuffer) {
   return new Response(body, {

@@ -58,4 +58,4 @@ Additionnally, if a query with `multiple: true` is not referenced by any other q
 
 ## Usage
 
-See `packages/climbing-data-gen`.
+See `packages/@climbhub/climbing-data-gen`.

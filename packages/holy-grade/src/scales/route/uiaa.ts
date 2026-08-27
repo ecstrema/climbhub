@@ -72,7 +72,7 @@ const extendedGradeNormalizationMapping = {
 
 const normalizer = normalizeFromGradeMappings(gradeMapping, extendedGradeNormalizationMapping);
 
-export const uiaa: Scale = {
+export const uiaa: Scale<"UIAA"> = {
   id: "UIAA",
   name: "International Climbing and Mountaineering Federation (UIAA) Scale",
   description: "The UIAA scale is used in Germany, Austria and Switzerland among others.",

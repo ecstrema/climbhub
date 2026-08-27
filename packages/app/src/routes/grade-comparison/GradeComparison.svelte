@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { allRouteScales, getGradeFromReference, type RouteScaleId } from "holy-grade";
+  import { allRouteScales, getGradeFromReference, type RouteScaleId } from "@climbhub/holy-grade";
   import { Chart, Layer, Axis, Point, AnnotationLine } from "layerchart/svg";
   import { scalePoint } from "d3-scale";
   import { mode } from "mode-watcher";
@@ -15,11 +15,11 @@
     }));
   });
 
-  let selectedReference: number | null = $state(null);
-  const selectedData: Record<RouteScaleId, string | null> = $derived.by(() => {
-    const s = {} as Record<RouteScaleId, string | null>;
+  let selectedReference: number | undefined = $state();
+  const selectedData: Record<RouteScaleId, string | undefined> = $derived.by(() => {
+    const s = {} as Record<RouteScaleId, string | undefined>;
     for (const scale of allRouteScales) {
-      s[scale.id] = selectedReference ? getGradeFromReference(selectedReference, scale) : null;
+      s[scale.id] = selectedReference ? getGradeFromReference(selectedReference, scale) : undefined;
     }
     return s;
   });
@@ -40,14 +40,14 @@
   >
     {#snippet children({ context })}
       {@const selectedReferenceFromPosition = (yPosition: number) => {
-        return Math.round(context.yScale.invert?.(yPosition - padding.top) || null);
+        return Math.round(context.yScale.invert?.(yPosition - padding.top) || undefined);
       }}
       <Layer
         onpointermove={(e) => (selectedReference = selectedReferenceFromPosition(e.offsetY))}
-        onpointerleave={() => (selectedReference = null)}
+        onpointerleave={() => (selectedReference = undefined)}
         onclick={(e) => (selectedReference = selectedReferenceFromPosition(e.offsetY))}
       >
-        {#if selectedReference !== null}
+        {#if selectedReference !== undefined}
           <AnnotationLine y={selectedReference} opacity={0.5} />
         {/if}
         <Axis placement="top" rule label="Scale" />
