@@ -12,8 +12,8 @@ export interface AreaStats {
   totalRoutes: number;
 }
 
-export interface DataTree {
+export interface DataTree<Feature extends DataJSON = DataJSON> {
   children?: Record<string, DataTree>;
-  own: DataJSON;
+  feature: Feature;
   stats?: AreaStats;
 }

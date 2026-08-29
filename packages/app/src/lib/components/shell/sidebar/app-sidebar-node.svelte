@@ -52,7 +52,7 @@
   let statsPending = $state(false);
 
   const getStats = async () => {
-    if (item.stats || statsPending || item.own.type === "node") return;
+    if (item.stats || statsPending || item.feature.type === "node") return;
     statsPending = true;
 
     const res = await fetch(resolve("/api/world/[...slug]/stats.json", { slug }));
@@ -72,13 +72,13 @@
   const link = $derived.by(() => {
     return resolve("/world/[...slug]", { slug });
   });
-  const name = $derived(getName(item.own));
+  const name = $derived(getName(item.feature));
 </script>
 
-{#if item.own.type === "node"}
+{#if item.feature.type === "node"}
   <Sidebar.MenuButton isActive={isCurrentPage} class="data-[active=true]:bg-accent">
     <a href={link} class="truncate w-full">
-      <HolyGrade class="text-xs font-semibold" tags={item.own.tags} />
+      <HolyGrade class="text-xs font-semibold" tags={item.feature.tags} />
       <span>{name || "No name"}</span>
     </a>
   </Sidebar.MenuButton>

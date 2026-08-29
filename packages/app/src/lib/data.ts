@@ -1,5 +1,5 @@
 import type { DataJSONRecord } from "./types";
-import { getNameOSM, processOSM, type ProcessedOSMData } from "./osm-tags";
+import { featureToTypeOSM, getNameOSM } from "./osm-tags";
 import type { DataJSON } from "@climbhub/climbing-data-gen";
 
 /** Folders use .name, OSM elements usually store their name in .tags.name */
@@ -15,26 +15,16 @@ export function dataTreeFromJsonRecord(data: DataJSONRecord) {
     Object.entries(data).map(([key, val]) => [
       key,
       {
-        own: val,
+        feature: val,
       },
     ]),
   );
 }
 
-export interface GeographicData {
-  type: "geographic";
-  name: string;
-}
+export function featureToType(
+  feature: DataJSON,
+): "geographic" | "route" | "area" | "gym" | undefined {
+  if (feature.type === "geographic") return "geographic";
 
-export type ProcessedData = GeographicData | ProcessedOSMData;
-
-export function process(element: DataJSON): ProcessedData | undefined {
-  if (element.type === "geographic") {
-    return {
-      type: "geographic",
-      name: element.name,
-    };
-  }
-
-  return processOSM(element);
+  return featureToTypeOSM(feature);
 }

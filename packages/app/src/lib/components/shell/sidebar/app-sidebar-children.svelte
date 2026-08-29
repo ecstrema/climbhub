@@ -14,19 +14,19 @@
   const orderedChildren: string[] | undefined = $derived.by(() => {
     if (!item.children) return;
 
-    if (item.own.type !== "relation") return Object.keys(item.children);
+    if (item.feature.type !== "relation") return Object.keys(item.children);
 
     const mapIdToItem: Record<string, string> = {};
     for (const [slug, data] of Object.entries(item.children)) {
-      if (data.own.type === "geographic") {
+      if (data.feature.type === "geographic") {
         console.error("Geographic folder inside of relation");
         continue;
       }
-      mapIdToItem[`${data.own.type}-${data.own.id}`] = slug;
+      mapIdToItem[`${data.feature.type}-${data.feature.id}`] = slug;
     }
 
     const ordered: string[] = [];
-    for (const member of item.own.members) {
+    for (const member of item.feature.members) {
       const i = mapIdToItem[`${member.type}-${member.ref}`];
       if (i) {
         ordered.push(i);

@@ -1,11 +1,18 @@
 <script lang="ts">
-  import { getProcessedData } from "@/shell/providers/app-data.svelte";
+  import type { DataTree } from "$lib/types";
   import ChildrenTable from "./children-table.svelte";
-  const data = $derived(getProcessedData().current);
+  import type { GeographicFolderElement } from "@climbhub/climbing-data-gen";
+
+  const {
+    item = $bindable(),
+  }: {
+    item: DataTree<GeographicFolderElement>;
+  } = $props();
 </script>
 
 <h1 class="text-2xl font-semibold">
-  {data?.name || "No Name"}
+  {item.feature.name || "No Name"}
+  <!-- TODO: add an icon to indicate that no name has been given to this. It is an error and should be fixed directly in the code -->
 </h1>
 
-<ChildrenTable />
+<ChildrenTable bind:children={item.children} />

@@ -2,9 +2,9 @@
   import { getName } from "$lib/data";
   import { getCurrentNode } from "@/shell/providers";
 
-  const name: string | undefined = $derived(getName(getCurrentNode().current.own));
+  const name: string | undefined = $derived(getName(getCurrentNode().current?.feature));
 </script>
 
 <svelte:head>
-  <title>Climbhub {name ? ` - ${name}` : ""}</title>
+  <title>Climbhub{name ? ` - ${name}` : ""}</title>
 </svelte:head>

@@ -17,7 +17,7 @@
   <Sidebar.Content>
     <Sidebar.Group>
       <Sidebar.GroupLabel>
-        <a href={resolve("/world")}>{getName(tree.current.own)}</a>
+        <a href={resolve("/world")}>{getName(tree.current.feature)}</a>
       </Sidebar.GroupLabel>
       <Sidebar.GroupContent>
         <Sidebar.Menu>

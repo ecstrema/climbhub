@@ -3,7 +3,7 @@ import type { DataJSONRecord } from "$lib/types";
 import type { LayoutLoad } from "./$types";
 
 // TODO: return immediate data with
-//  own: DataJSON,
+//  feature: DataJSON,
 // and the rest as streaming data:
 //  elements: Promise<DataJSONRecord>
 export const load: LayoutLoad<{

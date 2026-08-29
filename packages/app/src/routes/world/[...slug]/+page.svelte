@@ -1,21 +1,24 @@
 <script lang="ts">
-  import Component404 from "./component404.svelte";
+  import ComponentParseFailed from "./component-parse-failed.svelte";
   import GeographicPage from "./geographic-page.svelte";
   import AreaPage from "./area-page.svelte";
   import RoutePage from "./route-page.svelte";
-  import { getProcessedData } from "@/shell/providers/app-data.svelte";
+  import { getCurrentNode } from "@/shell/providers/app-data.svelte";
+  import type { GeographicFolderElement } from "@climbhub/climbing-data-gen";
+  import type { DataTree } from "$lib/types";
+  import { featureToType } from "$lib/data";
+  import type { OsmFeature } from "osm-api";
 
-  const data = $derived(getProcessedData().current);
+  let item = $derived(getCurrentNode().current);
+  const itemType = $derived(featureToType(item.feature));
 </script>
 
-{#if data}
-  {#if data.type === "geographic"}
-    <GeographicPage />
-  {:else if data.type === "area"}
-    <AreaPage />
-  {:else if data.type === "route"}
-    <RoutePage />
-  {/if}
-{:else}
-  <Component404 />
+{#if !itemType}
+  <ComponentParseFailed bind:feature={item.feature} />
+{:else if itemType === "geographic"}
+  <GeographicPage bind:item={item as DataTree<GeographicFolderElement>} />
+{:else if itemType === "area"}
+  <AreaPage bind:item={item as DataTree<OsmFeature>} />
+{:else if itemType === "route"}
+  <RoutePage bind:item={item as DataTree<OsmFeature>} />
 {/if}

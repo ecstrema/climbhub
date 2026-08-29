@@ -1,8 +1,7 @@
 <script lang="ts">
   import type { BreadcrumbSegment, DataJSONRecord, DataTree } from "$lib/types";
   import type { Snippet } from "svelte";
-  import { setBreadcrumbs, setCurrentNode, setProcessedData, setTree } from "./app-data.svelte";
-  import { process } from "$lib/data";
+  import { setBreadcrumbs, setCurrentNode, setTree } from "./app-data.svelte";
 
   const {
     children,
@@ -27,12 +26,12 @@
 
   const breadcrumbs: BreadcrumbSegment[] = $derived.by(() => {
     return segments.map((slug) => {
-      return { slug, data: elements[slug] };
+      return { slug, data: elements[slug]! };
     });
   });
 
   let tree: DataTree = $state({
-    own: { type: "geographic", name: "World" },
+    feature: { type: "geographic", name: "World" },
   });
 
   const parentMap: Record<string, DataTree> = {
@@ -65,7 +64,7 @@
       if (!parent.children) {
         parent.children = {};
       }
-      parent.children[slug] = { own: data };
+      parent.children[slug] = { feature: data };
 
       // We NEED to get it back from parent.children, because that gives us back the proxy, and not the raw object. This is important for reactivity.
       parentMap[slug] = parent.children[slug];
@@ -93,14 +92,6 @@
     set current(t) {
       console.error("do not set the elements tree");
       tree = t;
-    },
-  });
-
-  const processedData = $derived(process(currentNode.own));
-
-  setProcessedData({
-    get current() {
-      return processedData;
     },
   });
 </script>

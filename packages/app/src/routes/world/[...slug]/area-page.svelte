@@ -1,23 +1,28 @@
 <script lang="ts">
-  import { resolve } from "$app/paths";
-  import { getName } from "$lib/data";
   import EditableDescription from "@/editable/editable-description.svelte";
   import EditableName from "@/editable/editable-name.svelte";
-  import { getCurrentNode } from "@/shell/providers";
-  import * as Table from "@/ui/table";
   import ChildrenTable from "./children-table.svelte";
-  import EditableTags from "../../../lib/components/editable/editable-tags.svelte";
+  import EditableTags from "@/editable/editable-tags.svelte";
+  import type { OsmFeature } from "osm-api";
+  import type { DataTree } from "$lib/types";
 
-  const currentNodeProvider = $derived(getCurrentNode().current);
-  const currentNode = $derived(currentNodeProvider.own);
+  const {
+    item = $bindable(),
+  }: {
+    item: DataTree<OsmFeature>;
+  } = $props();
+
+  let feature = $derived(item.feature);
+
+  let tags = $derived.by(() => feature.tags || {});
 </script>
 
-<EditableName />
-<EditableDescription />
+<EditableName bind:tags />
+<EditableDescription bind:tags />
 
-{#if currentNodeProvider.stats?.totalRoutes}
-  <p>{currentNodeProvider.stats?.totalRoutes}</p>
+{#if item.stats?.totalRoutes}
+  <p>{item.stats.totalRoutes} routes in total</p>
 {/if}
 
-<ChildrenTable />
-<EditableTags />
+<ChildrenTable bind:children={item.children} />
+<EditableTags bind:feature />

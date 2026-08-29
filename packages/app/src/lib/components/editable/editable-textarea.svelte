@@ -2,14 +2,7 @@
   import { cn } from "$lib/utils.js";
   import type { HTMLTextareaAttributes } from "svelte/elements";
 
-  let {
-    value = $bindable(),
-    class: className,
-    ...props
-  }: {
-    value?: string;
-    class?: string;
-  } & HTMLTextareaAttributes = $props();
+  let { value = $bindable(), class: className, ...props }: HTMLTextareaAttributes = $props();
 </script>
 
 <textarea

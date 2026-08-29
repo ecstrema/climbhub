@@ -1,15 +1,12 @@
 <script lang="ts">
-  import { getCurrentNode } from "@/shell/providers";
-  import EditableTextarea from "./editable-textarea.svelte";
+  import EditableTag from "./editable-tag.svelte";
+  import type { Tags } from "osm-api";
 
-  const node = $derived(getCurrentNode().current.own);
+  let {
+    tags = $bindable(),
+  }: {
+    tags: Tags;
+  } = $props();
 </script>
 
-{#if node.type !== "geographic" && node.tags}
-  <EditableTextarea
-    bind:value={node.tags.description}
-    placeholder="Enter description..."
-    class="text-sm"
-    maxlength={255}
-  />
-{/if}
+<EditableTag source="description" bind:tags placeholder="Enter description..." class="text-sm" />

@@ -38,7 +38,7 @@ export function allowMultipleValues(values: Set<string>): (value: string) => boo
 }
 
 export function getNameOSM(tags: Tags): string | undefined {
-  return tags.name || undefined;
+  return tags.name;
 }
 
 const YDSValidator = allowFromNormalize(yds.normalize);
@@ -57,7 +57,7 @@ const processedGrades: ProcessedTags = {
   "climbing:grade:fontainebleau": FBValidator,
 };
 
-export function scaleIdToTag(s: ScaleId): string | undefined {
+export function scaleIdToTag(s: ScaleId): OsmApi.Keys["keys"] | undefined {
   switch (s) {
     case "FB":
       return "climbing:grade:fb";
@@ -152,70 +152,70 @@ export type Grade = {
 export type ProcessingError = "GradeParsingError" | "GradeMissingScaleSpecifier";
 
 /** We add the source tag to the processed value, so we can bind to it and modify the right value. */
-export type WithSourceTag<T> = { v: T; source: string };
+export type WithSourceTag<T> = { v: T; source: OsmApi.Keys["keys"] };
 
-export interface RouteNode {
-  type: "route";
-  grade?: WithSourceTag<Grade>;
-  name?: string;
-  description?: string;
-  coordinates?: Coordinates;
-}
+export function featureToTypeOSM(feature: OsmFeature): "route" | "area" | "gym" | undefined {
+  if (!feature.tags) return;
 
-export interface AreaNode {
-  type: "area";
-  name?: string;
-  description?: string;
-  coordinates?: Coordinates;
-}
-
-export type ProcessedOSMData = RouteNode | AreaNode;
-
-export function processOSM(element: OsmFeature): ProcessedOSMData | undefined {
-  const tags = element.tags;
-  if (!tags) {
-    return;
+  const tags = feature.tags;
+  if (["route_bottom", "route_top"].includes(tags.climbing || "")) {
+    return "route";
   }
 
-  const name = getNameOSM(tags);
-  const description = getDescription(tags);
-  const grade = getGrade(tags);
-  const coordinates = getCoordinates(element);
-
-  if (element.type === "node") {
-    if (tags.climbing === "route_bottom" || tags.climbing === "route_top") {
-      const v: RouteNode = {
-        type: "route",
-      };
-
-      if (grade) v.grade = grade;
-      if (description) v.description = description;
-      if (name) v.name = name;
-      if (coordinates) v.coordinates = coordinates;
-
-      return v;
-    }
+  if (["area", "route"].includes(tags.climbing || "")) {
+    return "area";
   }
 
-  if (element.type === "way") {
-    // TODO: where are the ways?
-    return;
-  }
-
-  if (element.type === "relation") {
-    if (tags.climbing === "area" || tags.climbing === "crag") {
-      const v: AreaNode = {
-        type: "area",
-      };
-
-      if (name) v.name = name;
-      if (description) v.description = description;
-      if (coordinates) v.coordinates = coordinates;
-
-      return v;
-    }
+  if (tags.amenity === "sports_centre" && tags.sport === "climbing") {
+    return "gym";
   }
 }
+
+// export function processOSM(element: OsmFeature): ProcessedOSMData | undefined {
+//   const tags = element.tags;
+//   if (!tags) {
+//     return;
+//   }
+
+//   const name = getNameOSM(tags);
+//   const description = getDescription(tags);
+//   const grade = getGrade(tags);
+//   const coordinates = getCoordinates(element);
+
+//   if (element.type === "node") {
+//     if (tags.climbing === "route_bottom" || tags.climbing === "route_top") {
+//       const v: RouteNode = {
+//         type: "route",
+//       };
+
+//       if (grade) v.grade = grade;
+//       if (description) v.description = description;
+//       if (name) v.name = name;
+//       if (coordinates) v.coordinates = coordinates;
+
+//       return v;
+//     }
+//   }
+
+//   if (element.type === "way") {
+//     // TODO: where are the ways?
+//     return;
+//   }
+
+//   if (element.type === "relation") {
+//     if (tags.climbing === "area" || tags.climbing === "crag") {
+//       const v: AreaNode = {
+//         type: "area",
+//       };
+
+//       if (name) v.name = name;
+//       if (description) v.description = description;
+//       if (coordinates) v.coordinates = coordinates;
+
+//       return v;
+//     }
+//   }
+// }
 
 export const sharedProcessedTags: ProcessedTags = {
   sport: allowSingleValue("climbing"),
