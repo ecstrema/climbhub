@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { BreadcrumbSegment, DataJSONRecord, DataTree } from "$lib/types";
-  import type { Snippet } from "svelte";
+  import { untrack, type Snippet } from "svelte";
   import { setBreadcrumbs, setCurrentNode, setTree } from "./app-data.svelte";
 
   const {
@@ -48,27 +48,29 @@
     if (!elements) {
       return;
     }
-    // We need to sort the slugs to ensure that parents are processed before children. This way, we can always find the parent in the parentMap when processing a child.
-    const sortedEntries = Object.entries(elements)
-      .filter(([slug, _d]) => !parentMap[slug]) // only process slugs that are not already in the parentMap
-      .sort(([a, _a], [b, _b]) => a.split("/").length - b.split("/").length);
-    for (const [slug, data] of sortedEntries) {
-      // get the parent slug by removing the last segment of the current slug
-      const parentSlug = slug.split("/").slice(0, -1).join("/");
-      const parent = parentMap[parentSlug];
-      if (!parent) {
-        console.warn(`Parent not found for slug: ${slug}`);
-        continue;
-      }
+    untrack(() => {
+      // We need to sort the slugs to ensure that parents are processed before children. This way, we can always find the parent in the parentMap when processing a child.
+      const sortedEntries = Object.entries(elements)
+        .filter(([slug, _d]) => !parentMap[slug]) // only process slugs that are not already in the parentMap
+        .sort(([a, _a], [b, _b]) => a.split("/").length - b.split("/").length);
+      for (const [slug, data] of sortedEntries) {
+        // get the parent slug by removing the last segment of the current slug
+        const parentSlug = slug.split("/").slice(0, -1).join("/");
+        const parent = parentMap[parentSlug];
+        if (!parent) {
+          console.warn(`Parent not found for slug: ${slug}`);
+          continue;
+        }
 
-      if (!parent.children) {
-        parent.children = {};
-      }
-      parent.children[slug] = { feature: data };
+        if (!parent.children) {
+          parent.children = {};
+        }
+        parent.children[slug] = { feature: data };
 
-      // We NEED to get it back from parent.children, because that gives us back the proxy, and not the raw object. This is important for reactivity.
-      parentMap[slug] = parent.children[slug];
-    }
+        // We NEED to get it back from parent.children, because that gives us back the proxy, and not the raw object. This is important for reactivity.
+        parentMap[slug] = parent.children[slug];
+      }
+    });
   }
 
   const currentNode: DataTree = $derived.by(

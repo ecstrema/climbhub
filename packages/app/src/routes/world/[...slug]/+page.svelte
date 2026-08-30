@@ -9,6 +9,12 @@
   import type { DataTree } from "$lib/types";
   import { featureToType } from "$lib/data";
   import type { OsmFeature } from "osm-api";
+  import { resolve } from "$app/paths";
+  import type { PageProps } from "./$types";
+
+  let { params }: PageProps = $props();
+
+  console.count("rendering world/[...slug]/+page.svelte");
 
   let item = $derived(getCurrentNode().current);
   const itemType = $derived(featureToType(item.feature));
@@ -27,3 +33,12 @@
 {:else}
   <ComponentParseFailed bind:feature={item.feature} />
 {/if}
+
+<!-- TODO: We need this else sveltekit complains that some endpoints are never used. -->
+<a class="hidden" href={resolve("/api/world/[...slug]/deep.json", { slug: params.slug })}>
+  Download
+</a>
+<a class="hidden" href={resolve("/api/world/[...slug]/stats.json", { slug: params.slug })}>
+  Stats
+</a>
+<a class="hidden" href={resolve("/api/world/[...slug]/data.json", { slug: params.slug })}> Data </a>
