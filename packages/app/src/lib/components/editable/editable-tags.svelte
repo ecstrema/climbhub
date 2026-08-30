@@ -2,7 +2,8 @@
   import * as Table from "@/ui/table";
   import EditableTextarea from "./editable-textarea.svelte";
   import { featureToTypeOSM, processedTags } from "$lib/osm-tags";
-  import type { OsmFeature } from "osm-api";
+  import type { OsmFeature, Tags } from "osm-api";
+  import { cn } from "$lib/utils";
 
   const {
     feature = $bindable(),
@@ -53,41 +54,28 @@
       </Table.Row>
     </Table.Header>
     <Table.Body class="font-medium">
-      {#if unknownTags.length > 0}
-        <Table.Row class="font-bold text-center border-b-2 h-12">
-          <Table.Cell colspan={2}>Unknown tags</Table.Cell>
-        </Table.Row>
-      {/if}
-      {#each unknownTags as key (key)}
-        <Table.Row>
-          <Table.Cell>{key}</Table.Cell>
-          <Table.Cell><EditableTextarea bind:value={tags[key]} /></Table.Cell>
-        </Table.Row>
-      {/each}
-
-      {#if invalidTags.length > 0}
-        <Table.Row class="font-bold text-destructive text-center border-b-2 h-12">
-          <Table.Cell colspan={2}>Invalid tags</Table.Cell>
-        </Table.Row>
-      {/if}
-      {#each invalidTags as key (key)}
-        <Table.Row class="text-destructive">
-          <Table.Cell>{key}</Table.Cell>
-          <Table.Cell><EditableTextarea bind:value={tags[key]} /></Table.Cell>
-        </Table.Row>
-      {/each}
-
-      {#if knownTags.length > 0}
-        <Table.Row class="font-bold text-muted-foreground text-center border-b-2 h-12">
-          <Table.Cell colspan={2}>known tags</Table.Cell>
-        </Table.Row>
-      {/if}
-      {#each knownTags as key (key)}
-        <Table.Row class="text-muted-foreground">
-          <Table.Cell>{key}</Table.Cell>
-          <Table.Cell><EditableTextarea bind:value={tags[key]} /></Table.Cell>
-        </Table.Row>
-      {/each}
+      {@render showTags(unknownTags, "Unknown tags", "")}
+      {@render showTags(invalidTags, "Invalid tags", "text-destructive")}
+      {@render showTags(knownTags, "Known tags", "text-muted-foreground")}
     </Table.Body>
   </Table.Root>
 {/if}
+
+{#snippet showTags(specialTags: OsmApi.Keys["keys"][], title: string, className: string)}
+  {#if specialTags.length > 0}
+    <Table.Row
+      class={cn(
+        "font-bold text-center border-b-3 [border-bottom-style:double] border-b-muted-foreground h-12",
+        className,
+      )}
+    >
+      <Table.Cell colspan={2}>{title}</Table.Cell>
+    </Table.Row>
+  {/if}
+  {#each specialTags as key (key)}
+    <Table.Row class={className}>
+      <Table.Cell>{key}</Table.Cell>
+      <Table.Cell><EditableTextarea bind:value={tags[key]} /></Table.Cell>
+    </Table.Row>
+  {/each}
+{/snippet}
