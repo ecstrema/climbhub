@@ -3,7 +3,7 @@
   import ChildrenTable from "./children-table.svelte";
   import type { GeographicFolderElement } from "@climbhub/climbing-data-gen";
 
-  const {
+  let {
     item = $bindable(),
   }: {
     item: DataTree<GeographicFolderElement>;
@@ -15,4 +15,4 @@
   <!-- TODO: add an icon to indicate that no name has been given to this. It is an error and should be fixed directly in the code -->
 </h1>
 
-<ChildrenTable bind:children={item.children} />
+<ChildrenTable bind:item />

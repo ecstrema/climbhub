@@ -6,7 +6,7 @@
   import type { OsmFeature } from "osm-api";
   import type { DataTree } from "$lib/types";
 
-  const {
+  let {
     item = $bindable(),
   }: {
     item: DataTree<OsmFeature>;
@@ -24,5 +24,5 @@
   <p>{item.stats.totalRoutes} routes in total</p>
 {/if}
 
-<ChildrenTable bind:children={item.children} />
+<ChildrenTable bind:item />
 <EditableTags bind:feature />

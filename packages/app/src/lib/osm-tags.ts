@@ -5,6 +5,8 @@ import {
   allScalesMap,
   fb,
   french,
+  getReference,
+  getScaleFromId,
   uiaa,
   yds,
   type Scale,
@@ -188,8 +190,20 @@ export const processedTags: Record<OSMClimbingFeatureType, ProcessedTags> = {
   area: {
     ...sharedProcessedTags,
     climbing: allowMultipleValues(new Set(["crag", "area"])),
+    type: allowSingleValue("site"),
   },
   gym: {
     ...sharedProcessedTags,
   },
 };
+
+export function getGradeReference(tags: Tags): number | undefined {
+  const grade = getGrade(tags)?.v;
+  if (!grade || grade.scale === "unknown") return;
+
+  const scale = getScaleFromId(grade.scale);
+  if (!scale) return;
+
+  const reference = getReference(grade.v, scale);
+  return reference;
+}

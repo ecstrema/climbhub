@@ -18,6 +18,7 @@ declare global {
         | "amenity"
         | "leisure"
         | "name"
+        | "type"
         | "description";
     }
   }
