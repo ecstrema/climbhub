@@ -45,7 +45,7 @@
 {#if knownTags.length > 0 || invalidTags.length > 0 || unknownTags.length > 0}
   <h2 class="text-lg font-semibold">OpenStreetMap Data</h2>
 
-  <Table.Root>
+  <Table.Root class="max-w-96">
     <Table.Header>
       <Table.Row>
         <Table.Head>Tag</Table.Head>
@@ -53,14 +53,20 @@
       </Table.Row>
     </Table.Header>
     <Table.Body class="font-medium">
+      {#if unknownTags.length > 0}
+        <Table.Row class="font-bold text-center border-b-2 h-12">
+          <Table.Cell colspan={2}>Unknown tags</Table.Cell>
+        </Table.Row>
+      {/if}
       {#each unknownTags as key (key)}
         <Table.Row>
           <Table.Cell>{key}</Table.Cell>
           <Table.Cell><EditableTextarea bind:value={tags[key]} /></Table.Cell>
         </Table.Row>
       {/each}
+
       {#if invalidTags.length > 0}
-        <Table.Row class="font-bold text-destructive">
+        <Table.Row class="font-bold text-destructive text-center border-b-2 h-12">
           <Table.Cell colspan={2}>Invalid tags</Table.Cell>
         </Table.Row>
       {/if}
@@ -70,8 +76,9 @@
           <Table.Cell><EditableTextarea bind:value={tags[key]} /></Table.Cell>
         </Table.Row>
       {/each}
+
       {#if knownTags.length > 0}
-        <Table.Row class="font-bold text-muted-foreground">
+        <Table.Row class="font-bold text-muted-foreground text-center border-b-2 h-12">
           <Table.Cell colspan={2}>known tags</Table.Cell>
         </Table.Row>
       {/if}
