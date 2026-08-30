@@ -40,7 +40,7 @@
   {#if item.children?.[slug]}
     <AppSidebarNode bind:item={item.children[slug]} {breadcrumbs} {slug} />
   {:else}
-    Could not get child
+    Failed to get children
   {/if}
 {:else}
   No children

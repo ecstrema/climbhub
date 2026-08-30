@@ -3,13 +3,18 @@
   import * as Collapsible from "@/ui/collapsible/index.js";
   import * as Sidebar from "@/ui/sidebar/index.js";
   import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
+  import EarthIcon from "@lucide/svelte/icons/earth";
+  import CircleQuestionMarkIcon from "@lucide/svelte/icons/circle-question-mark";
+  import BuildingIcon from "@lucide/svelte/icons/building";
   import type { AreaStats, BreadcrumbSegment, DataJSONRecord, DataTree } from "$lib/types";
 
-  import { getName, dataTreeFromJsonRecord } from "$lib/data";
+  import { getName, dataTreeFromJsonRecord, featureToType } from "$lib/data";
   import { Skeleton } from "@/ui/skeleton";
   import AppSidebarChildren from "./app-sidebar-children.svelte";
   import HolyGrade from "@/grade/holy-grade.svelte";
   import { onMount } from "svelte";
+  import { getGrade } from "$lib/osm-tags";
+  import type { OsmFeature } from "osm-api";
 
   let {
     slug,
@@ -73,14 +78,27 @@
     return resolve("/world/[...slug]", { slug });
   });
   const name = $derived(getName(item.feature));
+
+  const itemType = $derived(featureToType(item.feature));
 </script>
 
-{#if item.feature.type === "node"}
-  <Sidebar.MenuButton isActive={isCurrentPage} class="data-[active=true]:bg-accent">
-    <a href={link} class="truncate w-full">
-      <HolyGrade class="text-xs font-semibold" tags={item.feature.tags} />
-      <span>{name || "No name"}</span>
-    </a>
+{#if itemType === "route" || itemType === "gym"}
+  <Sidebar.MenuButton
+    isActive={isCurrentPage}
+    href={link}
+    class="data-[active=true]:bg-accent truncate w-full"
+  >
+    {#if itemType === "route"}
+      {@const grade = getGrade((item.feature as OsmFeature).tags || {})}
+      {#if grade}
+        <HolyGrade class="text-xs font-semibold" grade={grade.v} />
+      {:else}
+        <CircleQuestionMarkIcon class="text-destructive" />
+      {/if}
+    {:else if itemType === "gym"}
+      <BuildingIcon />
+    {/if}
+    <span>{name || "No name"}</span>
   </Sidebar.MenuButton>
 {:else}
   <Sidebar.MenuItem>
@@ -93,6 +111,10 @@
         {#snippet child({ props })}
           <Sidebar.MenuButton {...props}>
             <ChevronRightIcon class="transition-transform" />
+            {#if itemType === "geographic"}
+              <EarthIcon />
+            {/if}
+
             <a href={link} class="truncate grow">{name || "No name"}</a>
             {#if item.stats}
               <span class="text-muted-foreground">{item.stats.totalRoutes}</span>

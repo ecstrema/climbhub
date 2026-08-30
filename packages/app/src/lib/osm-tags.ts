@@ -166,7 +166,7 @@ export function featureToTypeOSM(feature: OsmFeature): "route" | "area" | "gym" 
     return "area";
   }
 
-  if (tags.amenity === "sports_centre" && tags.sport === "climbing") {
+  if (tags.leisure === "sports_centre" && tags.sport === "climbing") {
     return "gym";
   }
 }

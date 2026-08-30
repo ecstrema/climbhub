@@ -20,7 +20,9 @@
   let coordinates = $derived(getCoordinates(item.feature));
   let grade = $derived(getGrade(tags));
 
-  function addGrade() {}
+  function addGrade() {
+    tags["climbing:grade:yds_class"] = "5.10a";
+  }
 </script>
 
 <div class="flex gap-2 items-baseline">

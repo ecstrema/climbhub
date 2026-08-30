@@ -1,36 +1,29 @@
 <script lang="ts">
-  import { getGrade, type Grade } from "$lib/osm-tags";
-  import type { Tags } from "osm-api";
+  import { type Grade } from "$lib/osm-tags";
   import { mode } from "mode-watcher";
   import { getPreferredRouteGradingScale } from "@/shell/providers/settings.svelte";
   import { allScalesMap, convertGrade } from "@climbhub/holy-grade";
   import { getColorFromGrade } from "./helpers";
 
   const {
-    tags,
     grade,
     convert = true,
     class: className = "",
   }: {
     grade?: Grade;
-    tags?: Tags;
     class?: string;
     convert?: boolean;
   } = $props();
 
-  const computedGrade: Grade = $derived(
-    grade || (tags && getGrade(tags)?.v) || { v: "no grade provided", scale: "unknown" },
-  );
-
   const scale = $derived.by(() => {
-    if (!computedGrade || computedGrade.scale === "unknown") return;
-    return allScalesMap[computedGrade.scale];
+    if (!grade || grade.scale === "unknown") return;
+    return allScalesMap[grade.scale];
   });
 
   const color = $derived.by(() => {
-    if (!computedGrade || computedGrade.scale === "unknown") return;
+    if (!grade || grade.scale === "unknown") return;
 
-    return getColorFromGrade(computedGrade.v, computedGrade.scale, mode.current === "dark");
+    return getColorFromGrade(grade.v, grade.scale, mode.current === "dark");
   });
 
   const preferredGradeScale = $derived.by(() => {
@@ -39,33 +32,30 @@
 
   const convertedGrade: string | undefined = $derived.by(() => {
     if (
-      !computedGrade ||
+      !grade ||
       !scale ||
-      computedGrade.scale === "unknown" ||
+      grade.scale === "unknown" ||
       !preferredGradeScale ||
       preferredGradeScale === "local" ||
-      preferredGradeScale === computedGrade.scale
+      preferredGradeScale === grade.scale
     )
       return;
 
-    if (!convert) return computedGrade.v;
+    if (!convert) return grade.v;
 
     return (
-      convertGrade(
-        computedGrade.v,
-        allScalesMap[computedGrade.scale],
-        allScalesMap[preferredGradeScale],
-      ) ?? undefined
+      convertGrade(grade.v, allScalesMap[grade.scale], allScalesMap[preferredGradeScale]) ??
+      undefined
     );
   });
 </script>
 
-{#if computedGrade}
+{#if grade}
   <span class={className} style={`color: ${color || "currentColor"};`}>
     {#if convertedGrade}
       {convertedGrade}
     {:else}
-      {computedGrade.v}
+      {grade.v}
     {/if}
   </span>
 {/if}

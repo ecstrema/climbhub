@@ -2,13 +2,13 @@
   import EditableTags from "@/editable/editable-tags.svelte";
   import type { DataJSON } from "@climbhub/climbing-data-gen";
 
-  console.error("parsing failed for current element");
-
   let {
     feature = $bindable(),
   }: {
     feature: DataJSON;
   } = $props();
+
+  console.error("parsing failed for current element", feature);
 </script>
 
 Failed to analyze this element.

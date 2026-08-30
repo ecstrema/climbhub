@@ -16,6 +16,7 @@ declare global {
         | "climbing:grade:hueco"
         | "climbing:grade:vscale"
         | "amenity"
+        | "leisure"
         | "name"
         | "description";
     }

@@ -2,6 +2,7 @@
   import ComponentParseFailed from "./component-parse-failed.svelte";
   import GeographicPage from "./geographic-page.svelte";
   import AreaPage from "./area-page.svelte";
+  import GymPage from "./gym-page.svelte";
   import RoutePage from "./route-page.svelte";
   import { getCurrentNode } from "@/shell/providers/app-data.svelte";
   import type { GeographicFolderElement } from "@climbhub/climbing-data-gen";
@@ -21,4 +22,8 @@
   <AreaPage bind:item={item as DataTree<OsmFeature>} />
 {:else if itemType === "route"}
   <RoutePage bind:item={item as DataTree<OsmFeature>} />
+{:else if itemType === "gym"}
+  <GymPage bind:item={item as DataTree<OsmFeature>} />
+{:else}
+  <ComponentParseFailed bind:feature={item.feature} />
 {/if}
