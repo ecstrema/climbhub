@@ -1,8 +1,8 @@
 <script lang="ts">
   import * as Table from "@/ui/table";
   import EditableTextarea from "./editable-textarea.svelte";
-  import { processedTags } from "$lib/osm-tags";
-  import type { OsmFeature, Tags } from "osm-api";
+  import { featureToTypeOSM, processedTags } from "$lib/osm-tags";
+  import type { OsmFeature } from "osm-api";
 
   const {
     feature = $bindable(),
@@ -13,10 +13,16 @@
   const tags = $derived.by(() => feature.tags || {});
 
   const { knownTags, invalidTags, unknownTags } = $derived.by(() => {
-    const processedTagsForElement = processedTags[feature.type];
     const knownTags: OsmApi.Keys["keys"][] = [];
     const unknownTags: OsmApi.Keys["keys"][] = [];
     const invalidTags: OsmApi.Keys["keys"][] = [];
+
+    const featureType = featureToTypeOSM(feature);
+    if (!featureType) {
+      return { knownTags, invalidTags, unknownTags: Object.keys(tags) as OsmApi.Keys["keys"][] };
+    }
+
+    const processedTagsForElement = processedTags[featureType];
 
     for (let k of Object.keys(tags)) {
       const key = k as OsmApi.Keys["keys"];
@@ -53,6 +59,11 @@
           <Table.Cell><EditableTextarea bind:value={tags[key]} /></Table.Cell>
         </Table.Row>
       {/each}
+      {#if invalidTags.length > 0}
+        <Table.Row class="font-bold text-destructive">
+          <Table.Cell colspan={2}>Invalid tags</Table.Cell>
+        </Table.Row>
+      {/if}
       {#each invalidTags as key (key)}
         <Table.Row class="text-destructive">
           <Table.Cell>{key}</Table.Cell>
