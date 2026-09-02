@@ -6,9 +6,9 @@
       "name": "climbhub",
       "devDependencies": {
         "@climbhub/types": "workspace:*",
-        "@types/node": "catalog:",
+        "@types/node": "^24.13.3",
         "oxfmt": "^0.60.0",
-        "oxlint": "^1.76.0",
+        "oxlint": "^1.81.0",
       },
     },
     "packages/app": {
@@ -27,7 +27,7 @@
         "@climbhub/types": "workspace:*",
         "@fontsource-variable/inter": "^5.3.0",
         "@internationalized/date": "^3.12.2",
-        "@lucide/svelte": "^1.27.0",
+        "@lucide/svelte": "^1.39.0",
         "@sveltejs/adapter-static": "^3.0.10",
         "@sveltejs/kit": "^2.70.2",
         "@sveltejs/vite-plugin-svelte": "^7.2.0",
@@ -177,7 +177,7 @@
 
     "@layerstack/utils": ["@layerstack/utils@2.0.0-next.18", "", { "dependencies": { "d3-array": "^3.2.4", "d3-time": "^3.1.0", "d3-time-format": "^4.1.0" } }, "sha512-EYILHpfBRYMMEahajInu9C2AXQom5IcAEdtCeucD3QIl/fdDgRbtzn6/8QW9ewumfyNZetdUvitOksmI1+gZYQ=="],
 
-    "@lucide/svelte": ["@lucide/svelte@1.27.0", "", { "peerDependencies": { "svelte": "^5" } }, "sha512-qzNBHdqy/MKp2qxuy/DcYELuep6h19fjo+4ech8fZsS4GtZeBtg5jgCTRQvLvwhppt0mhRN6qt8Nt8rPb/J4Ag=="],
+    "@lucide/svelte": ["@lucide/svelte@1.39.0", "", { "peerDependencies": { "svelte": "^5" } }, "sha512-jCgA/RqDv9uWHs4DiIUef4kpf5TfLl9y8OMGrh+W4aQTCOscT4X2BX14ta65J+5ooslrN1bXXiO9AaeAOHAcPA=="],
 
     "@mapbox/geojson-rewind": ["@mapbox/geojson-rewind@0.5.2", "", { "dependencies": { "get-stream": "^6.0.1", "minimist": "^1.2.6" }, "bin": { "geojson-rewind": "geojson-rewind" } }, "sha512-tJaT+RbYGJYStt7wI3cq4Nl4SXxG8W7JDG5DMJu97V25RnbNg3QtQtf+KD+VLjNpWKYsRvXDNmNrBgEETr1ifA=="],
 
