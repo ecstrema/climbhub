@@ -3,21 +3,23 @@
   import OSMProvider from "./osm-provider.svelte";
   import AppDataProvider from "./app-data-provider.svelte";
   import GradeProvider from "./settings-provider.svelte";
-  import type { DataJSONRecord } from "$lib/types";
+  import type { DataJSONRecord, DataTree } from "$lib/types";
 
   const {
     children,
     slug,
-    elements,
+    currentItem,
+    parents,
   }: {
     children: Snippet;
     slug: string | undefined;
-    elements: DataJSONRecord;
+    currentItem: DataTree;
+    parents: DataJSONRecord;
   } = $props();
 </script>
 
 <OSMProvider>
-  <AppDataProvider {slug} {elements}>
+  <AppDataProvider {slug} {currentItem} {parents}>
     <GradeProvider>
       {@render children?.()}
     </GradeProvider>

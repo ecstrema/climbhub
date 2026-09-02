@@ -11,11 +11,12 @@
 
   import type { LayoutProps } from "./$types";
   import Head from "@/shell/head.svelte";
+  import type { LayoutLoadType } from "./+layout";
 
-  const { children, data, params }: WithChildren<LayoutProps> = $props();
+  const { children, params, data }: WithChildren<LayoutProps> & { data: LayoutLoadType } = $props();
 </script>
 
-<AppProvider slug={params.slug} elements={data.elements}>
+<AppProvider slug={params.slug} currentItem={data.currentItem} parents={data.parents}>
   <Head />
   <Sidebar.Provider>
     <AppSidebar />

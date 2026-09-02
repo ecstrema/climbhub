@@ -3,10 +3,9 @@ import { join } from "path";
 
 import { error, json } from "@sveltejs/kit";
 
-import type { DataJSON } from "$lib/types";
-
 import type { RequestHandler } from "./$types";
 import { rootPath } from "../utils";
+import type { DataJSON } from "@climbhub/climbing-data-gen";
 
 export const GET: RequestHandler = async ({ params }) => {
   const path = join(rootPath, params.slug, "data.json");

@@ -1,7 +1,7 @@
 import type { DataJSON } from "@climbhub/climbing-data-gen";
 
 export interface BreadcrumbSegment {
-  data: DataJSON;
+  data?: DataTree;
   slug: string;
 }
 

@@ -1,8 +1,20 @@
 import { createContext } from "svelte";
 
-import type { BreadcrumbSegment, DataTree } from "$lib/types";
+import type { BreadcrumbSegment, DataJSONRecord, DataTree } from "$lib/types";
 import type { FromCurrent } from "./types";
 
 export const [getCurrentNode, setCurrentNode] = createContext<FromCurrent<DataTree>>();
-export const [getBreadcrumbs, setBreadcrumbs] = createContext<FromCurrent<BreadcrumbSegment[]>>();
-export const [getTree, setTree] = createContext<FromCurrent<DataTree>>();
+
+// The following two could be classes instead
+export const [getBreadcrumbs, setBreadcrumbs] = createContext<{
+  slugs: string[];
+  items: BreadcrumbSegment[];
+}>();
+export const [getTree, setTree] = createContext<
+  FromCurrent<DataTree> & {
+    fetchChildren: (slug: string) => Promise<DataJSONRecord>;
+    integrateIntoTree: (elements: DataJSONRecord) => void;
+    /** Non reactive map of slugs to reactive DataTree nodes */
+    parentMap: Record<string, DataTree>;
+  }
+>();

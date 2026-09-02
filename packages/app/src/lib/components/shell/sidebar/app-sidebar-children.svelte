@@ -6,10 +6,8 @@
 
   let {
     item = $bindable(),
-    breadcrumbs,
   }: {
     item: DataTree;
-    breadcrumbs: BreadcrumbSegment[];
   } = $props();
 
   const orderedChildren = $derived.by(() => sortChildren(item));
@@ -17,7 +15,7 @@
 
 {#each orderedChildren as slug (slug)}
   {#if item.children?.[slug]}
-    <AppSidebarNode bind:item={item.children[slug]} {breadcrumbs} {slug} />
+    <AppSidebarNode bind:item={item.children[slug]} {slug} />
   {:else}
     Failed to get children
   {/if}

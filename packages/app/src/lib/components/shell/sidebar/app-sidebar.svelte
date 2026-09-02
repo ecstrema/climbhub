@@ -5,12 +5,11 @@
   import { resolve } from "$app/paths";
   import AppSidebarChildren from "./app-sidebar-children.svelte";
 
-  import { getBreadcrumbs, getTree } from "@/shell/providers";
+  import { getTree } from "@/shell/providers";
 
   let { ref = $bindable(null), ...restProps }: ComponentProps<typeof Sidebar.Root> & {} = $props();
 
   const tree = getTree();
-  const breadcrumbs = getBreadcrumbs();
 </script>
 
 <Sidebar.Root bind:ref {...restProps}>
@@ -21,7 +20,7 @@
       </Sidebar.GroupLabel>
       <Sidebar.GroupContent>
         <Sidebar.Menu>
-          <AppSidebarChildren bind:item={tree.current} breadcrumbs={breadcrumbs.current} />
+          <AppSidebarChildren bind:item={tree.current} />
         </Sidebar.Menu>
       </Sidebar.GroupContent>
     </Sidebar.Group>

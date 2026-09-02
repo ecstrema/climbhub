@@ -14,8 +14,6 @@
 
   let { params }: PageProps = $props();
 
-  console.count("rendering world/[...slug]/+page.svelte");
-
   let item = $derived(getCurrentNode().current);
   const itemType = $derived(featureToType(item.feature));
 </script>

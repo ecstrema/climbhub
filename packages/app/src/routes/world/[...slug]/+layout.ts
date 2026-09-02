@@ -1,46 +1,73 @@
 import { resolve } from "$app/paths";
-import type { DataJSONRecord } from "$lib/types";
+import type { AreaStats, DataJSONRecord, DataTree } from "$lib/types";
+import type { DataJSON } from "@climbhub/climbing-data-gen";
 import type { LayoutLoad } from "./$types";
+import { error } from "@sveltejs/kit";
+import { dataTreeFromJsonRecord } from "$lib/data";
 
-// TODO: return immediate data with
-//  feature: DataJSON,
-// and the rest as streaming data:
-//  elements: Promise<DataJSONRecord>
-export const load: LayoutLoad<{
-  elements: DataJSONRecord;
-}> = async ({ params, fetch }) => {
-  const childrenToFetch: string[] = [""];
+export interface LayoutLoadType {
+  currentItem: DataTree;
+  parents: DataJSONRecord;
+  // We can't return this here as during ssr, the promise would be awaited
+  // parentChildren: Promise<DataJSONRecord>;
+}
 
-  if (!params.slug) {
-    return {
-      elements: await fetchAllChildren(childrenToFetch),
-    };
-  }
-
-  let acc: string[] = [];
-  const segments = params.slug.split("/").map((segment) => {
-    acc.push(segment);
-    return acc.join("/");
-  });
-  childrenToFetch.push(...segments);
+export const load: LayoutLoad<LayoutLoadType> = async ({ params, fetch }) => {
+  const slugs = getSlugs(params.slug || "");
 
   return {
-    elements: await fetchAllChildren(childrenToFetch),
+    currentItem: {
+      feature: await fetchData(params.slug),
+      children: dataTreeFromJsonRecord(await fetchChildren(params.slug)),
+      stats: await fetchStats(params.slug),
+    },
+    parents: await getParents(slugs),
   };
 
-  async function fetchAllChildren(slugs: string[]): Promise<DataJSONRecord> {
-    const results = await Promise.all(slugs.map(fetchChildren));
-    const own = childrenToFetch.pop()!;
-    const ownData = await fetchChildren(own);
-    return Object.assign({ ...ownData }, ...results);
+  async function getParents(breadcrumbSlugs: string[]): Promise<DataJSONRecord> {
+    const parents: DataJSONRecord = {};
+    for (const slug of breadcrumbSlugs) {
+      parents[slug] = await fetchData(slug);
+    }
+    return parents;
+  }
+
+  /** Does not include the current slug */
+  function getSlugs(slug: string): string[] {
+    const slugs = [];
+    let acc: string = "";
+    for (const char of slug) {
+      if (char === "/") {
+        slugs.push(acc);
+      }
+      acc += char;
+    }
+    return slugs;
   }
 
   async function fetchChildren(slug: string): Promise<DataJSONRecord> {
     const res = await fetch(resolve("/api/world/[...slug]/children.json", { slug }));
     if (!res.ok) {
-      console.log(`Failed to fetch data for slug: ${slug}`, res.status, res.statusText);
+      console.log(`Failed to fetch children for slug: ${slug}`, res.status, res.statusText);
       return {};
     }
     return res.json() as Promise<DataJSONRecord>;
+  }
+
+  async function fetchData(slug: string): Promise<DataJSON> {
+    const res = await fetch(resolve("/api/world/[...slug]/data.json", { slug }));
+    if (!res.ok) {
+      return error(res.status, `Failed to fetch data for slug: ${slug}`);
+    }
+    return res.json() as Promise<DataJSON>;
+  }
+
+  async function fetchStats(slug: string): Promise<AreaStats | undefined> {
+    const res = await fetch(resolve("/api/world/[...slug]/stats.json", { slug }));
+    if (!res.ok) {
+      console.log(`Failed to fetch stats for slug: ${slug}`, res.status, res.statusText);
+      return undefined;
+    }
+    return res.json() as Promise<AreaStats>;
   }
 };

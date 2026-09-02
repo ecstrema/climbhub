@@ -10,7 +10,7 @@
   import { onMount, settled } from "svelte";
 
   const breadcrumbsProvider = getBreadcrumbs();
-  const breadcrumbs = $derived.by(() => breadcrumbsProvider.current);
+  const breadcrumbs = $derived.by(() => breadcrumbsProvider.items);
 
   let rootElement: HTMLElement | null = $state(null);
   let hidden = $state(0);
@@ -83,7 +83,7 @@
                       href={resolve("/world/[...slug]", { slug: breadcrumb.slug })}
                       class="size-full"
                     >
-                      {getName(breadcrumb.data)}
+                      {breadcrumb.data ? getName(breadcrumb.data.feature) : ""}
                     </a>
                   </DropdownMenu.Item>
                 {/each}
@@ -102,7 +102,7 @@
 {/if}
 
 {#snippet breadcrumbFromDataJSON(breadcrumb: BreadcrumbSegment, lastElement: BreadcrumbSegment)}
-  {@const name = getName(breadcrumb.data)}
+  {@const name = breadcrumb.data ? getName(breadcrumb.data.feature) : ""}
 
   <Breadcrumb.Item>
     {#if breadcrumb === lastElement}

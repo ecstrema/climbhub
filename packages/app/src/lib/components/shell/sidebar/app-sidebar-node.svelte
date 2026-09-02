@@ -15,20 +15,23 @@
   import { onMount } from "svelte";
   import { getGrade } from "$lib/osm-tags";
   import type { OsmFeature } from "osm-api";
+  import { getBreadcrumbs, getTree } from "../providers";
 
   let {
     slug,
     item = $bindable(),
-    breadcrumbs,
   }: {
     slug: string;
     item: DataTree;
-    breadcrumbs: BreadcrumbSegment[];
   } = $props();
 
+  const breadcrumbSlugs = $derived(getBreadcrumbs().slugs);
+  const tree = getTree();
+  const getChildren = $derived(() => tree.fetchChildren(slug));
+
   // Check if this specific node is part of the active path being viewed
-  const isActivePath = $derived(breadcrumbs.some((b) => b.slug === slug));
-  const isCurrentPage = $derived(breadcrumbs.at(-1)?.slug === slug);
+  const isActivePath = $derived(breadcrumbSlugs.some((s) => s === slug));
+  const isCurrentPage = $derived(breadcrumbSlugs.at(-1) === slug);
 
   let open = $state(false);
   $effect(() => {
@@ -38,22 +41,6 @@
   });
 
   let childrenPending = $state(false);
-
-  const getChildren = async () => {
-    if (item.children || childrenPending) return;
-
-    childrenPending = true;
-
-    const res = await fetch(resolve("/api/world/[...slug]/children.json", { slug }));
-
-    if (!res.ok) {
-      console.log("Failed to fetch children for slug", slug);
-      return;
-    }
-    item.children = dataTreeFromJsonRecord((await res.json()) as DataJSONRecord);
-    childrenPending = false;
-  };
-
   let statsPending = $state(false);
 
   const getStats = async () => {
@@ -128,7 +115,7 @@
           {#if childrenPending}
             <Skeleton class="h-8 mt-2" />
           {:else}
-            <AppSidebarChildren bind:item {breadcrumbs} />
+            <AppSidebarChildren bind:item />
           {/if}
         </Sidebar.MenuSub>
       </Collapsible.Content>
