@@ -4,10 +4,10 @@
   import { setBreadcrumbs, setCurrentNode, setRefreshState, setTree } from "./app-data.svelte";
   import { browser } from "$app/env";
   import { resolve } from "$app/paths";
-  import { getFeature as getFeatureOsm, type OsmFeature } from "osm-api";
+  import { type OsmFeature } from "osm-api";
   import { untrack } from "svelte";
-  import { getStaticIdentifier } from "@climbhub/common";
   import { getOsmUser } from "./osm.svelte";
+  import { dataClient } from "$lib/data-client";
 
   const {
     children,
@@ -79,11 +79,7 @@
     // Do not fetch children if we already have them in the parentMap
     if (parentMap[slug]?.children) return;
 
-    return fetch(resolve("/api/world/[...slug]/children.json", { slug })).then(async (res) => {
-      if (!res.ok) return {};
-      const data = (await res.json()) as DataJSONRecord;
-      integrateIntoTree(data);
-    });
+    return dataClient.getChildren(slug).then((children) => integrateIntoTree(children));
   }
 
   $effect(() => {

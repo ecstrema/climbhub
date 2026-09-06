@@ -1,14 +1,15 @@
-import { resolve } from "$app/paths";
 import type { AreaStats, DataJSONRecord, DataTree } from "$lib/types";
 import type { DataJSON } from "@climbhub/climbing-data-gen";
 import type { LayoutLoad } from "./$types";
 import { error } from "@sveltejs/kit";
 import { dataTreeFromJsonRecord } from "$lib/data";
+import { dataClient } from "$lib/data-client";
 
 export interface LayoutLoadType {
   currentItem: DataTree;
   parents: DataJSONRecord;
-  // We can't return this here as during ssr, the promise would be awaited
+  // We can't return this here as during ssr, the promise would be awaited.
+  // So we fetch it in the component instead.
   // parentChildren: Promise<DataJSONRecord>;
 }
 
@@ -46,28 +47,31 @@ export const load: LayoutLoad<LayoutLoadType> = async ({ params, fetch }) => {
   }
 
   async function fetchChildren(slug: string): Promise<DataJSONRecord> {
-    const res = await fetch(resolve("/api/world/[...slug]/children.json", { slug }));
-    if (!res.ok) {
-      console.log(`Failed to fetch children for slug: ${slug}`, res.status, res.statusText);
+    try {
+      // Pass SvelteKit's fetch to the dataClient for SSR compatibility
+      return await dataClient.getChildren(slug, fetch);
+    } catch (e) {
+      console.log(`Failed to fetch children for slug: ${slug}`, e);
       return {};
     }
-    return res.json() as Promise<DataJSONRecord>;
   }
 
   async function fetchData(slug: string): Promise<DataJSON> {
-    const res = await fetch(resolve("/api/world/[...slug]/data.json", { slug }));
-    if (!res.ok) {
-      return error(res.status, `Failed to fetch data for slug: ${slug}`);
+    try {
+      // Pass SvelteKit's fetch to the dataClient for SSR compatibility
+      return (await dataClient.getNode(slug, fetch)) as DataJSON;
+    } catch {
+      error(404, `Failed to fetch data for slug: ${slug}`);
     }
-    return res.json() as Promise<DataJSON>;
   }
 
   async function fetchStats(slug: string): Promise<AreaStats | undefined> {
-    const res = await fetch(resolve("/api/world/[...slug]/stats.json", { slug }));
-    if (!res.ok) {
-      console.log(`Failed to fetch stats for slug: ${slug}`, res.status, res.statusText);
+    try {
+      // Pass SvelteKit's fetch to the dataClient for SSR compatibility
+      return await dataClient.getStats(slug, fetch);
+    } catch {
+      console.warn(`Failed to fetch stats for slug: ${slug}`);
       return undefined;
     }
-    return res.json() as Promise<AreaStats>;
   }
 };

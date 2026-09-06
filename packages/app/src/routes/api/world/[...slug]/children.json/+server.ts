@@ -6,8 +6,8 @@ import { error } from "@sveltejs/kit";
 import type { DataJSONRecord } from "$lib/types";
 
 import type { RequestHandler } from "./$types";
-import { resolve } from "$app/paths";
 import { rootPath, withCache } from "../utils";
+import { dataClient } from "$lib/data-client";
 
 export const GET: RequestHandler = async ({ params, fetch }) => {
   const path = join(rootPath, params.slug);
@@ -26,14 +26,7 @@ export const GET: RequestHandler = async ({ params, fetch }) => {
         }
 
         const slug = join(params.slug, entry.name).replaceAll("\\", "/");
-        const link = resolve("/api/world/[...slug]/data.json", { slug });
-        const res = await fetch(link);
-
-        if (!res.ok) {
-          console.error(link, res.status, res.statusText);
-        }
-
-        files[slug] = await res.json();
+        files[slug] = await dataClient.getNode(slug, fetch);
       }
     } catch (err) {
       // instance of File not found error

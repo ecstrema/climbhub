@@ -16,6 +16,7 @@
     "@climbhub/holy-grade": "workspace:*",
     "@friendofsvelte/state": "^0.2.0",
     "d3-scale": "^4.0.2",
+    "idb": "^8.0.3",
     "layerchart": "^2.1.0",
     "mode-watcher": "^1.1.0",
     "osm-api": "catalog:"

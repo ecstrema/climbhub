@@ -8,7 +8,7 @@ import {
 } from "@climbhub/common";
 
 import { asset } from "$app/paths";
-import { onlineStatus } from "./online.svelte";
+import { online } from "svelte/reactivity/window";
 import type { DataTree } from "$lib/types";
 
 // A feature change is:
@@ -173,7 +173,7 @@ export class OSMUser {
 
   refreshItem(item: DataTree<OsmFeature>) {
     // do not refresh if the user is offline, since we cannot fetch the feature from OSM
-    if (!onlineStatus.current) return;
+    if (!online.current) return;
 
     const feature = item.feature;
     const identifier = getStaticIdentifier(feature.type, feature.id);

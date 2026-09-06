@@ -1,26 +1,16 @@
 import { join } from "path";
 
-import { error } from "@sveltejs/kit";
-
-import type { AreaStats, DataJSONRecord } from "$lib/types";
+import type { AreaStats } from "$lib/types";
 
 import type { RequestHandler } from "./$types";
-import { resolve } from "$app/paths";
 import { rootPath, withCache } from "../utils";
+import { dataClient } from "$lib/data-client";
 
 export const GET: RequestHandler = async ({ params, fetch }) => {
   const path = join(rootPath, params.slug);
 
   return withCache(join(path, "stats.json"), async () => {
-    const childrenRes = await fetch(
-      resolve("/api/world/[...slug]/children.json", { slug: params.slug }),
-    );
-
-    if (!childrenRes.ok) {
-      error(404, "Not Found");
-    }
-
-    const children: DataJSONRecord = await childrenRes.json();
+    const children = dataClient.getChildren(params.slug, fetch);
 
     const allStats = await Promise.all(
       Object.entries(children).map(async ([childSlug, child]): Promise<AreaStats> => {
@@ -36,14 +26,8 @@ export const GET: RequestHandler = async ({ params, fetch }) => {
             totalRoutes: 0,
           };
         }
-        const res = await fetch(resolve("/api/world/[...slug]/stats.json", { slug: childSlug }));
-        if (!res.ok) {
-          console.error("Could not get stats for child", childSlug);
-          return {
-            totalRoutes: 0,
-          };
-        }
-        return await res.json();
+
+        return (await dataClient.getStats(childSlug, fetch)) ?? { totalRoutes: 0 };
       }),
     );
 

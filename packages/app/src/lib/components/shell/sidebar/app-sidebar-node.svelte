@@ -6,16 +6,17 @@
   import EarthIcon from "@lucide/svelte/icons/earth";
   import CircleQuestionMarkIcon from "@lucide/svelte/icons/circle-question-mark";
   import BuildingIcon from "@lucide/svelte/icons/building";
-  import type { AreaStats, BreadcrumbSegment, DataJSONRecord, DataTree } from "$lib/types";
+  import type { AreaStats, DataTree } from "$lib/types";
 
-  import { getName, dataTreeFromJsonRecord, featureToType } from "$lib/data";
+  import { getName, featureToType } from "$lib/data";
   import { Skeleton } from "@/ui/skeleton";
   import AppSidebarChildren from "./app-sidebar-children.svelte";
   import HolyGrade from "@/grade/holy-grade.svelte";
   import { onMount } from "svelte";
   import { getGrade } from "$lib/osm-tags";
   import type { OsmFeature } from "osm-api";
-  import { getBreadcrumbs, getTree } from "../providers";
+  import { getBreadcrumbs, getCurrentNode, getTree } from "../providers";
+  import { dataClient } from "$lib/data-client";
 
   let {
     slug,
@@ -29,9 +30,10 @@
   const tree = getTree();
   const getChildren = $derived(() => tree.fetchChildren(slug));
 
+  const currentNode = $derived(getCurrentNode().current);
+  const isCurrentPage = $derived(currentNode === item);
   // Check if this specific node is part of the active path being viewed
-  const isActivePath = $derived(breadcrumbSlugs.some((s) => s === slug));
-  const isCurrentPage = $derived(breadcrumbSlugs.at(-1) === slug);
+  const isActivePath = $derived(isCurrentPage || breadcrumbSlugs.some((s) => s === slug));
 
   let open = $state(false);
   $effect(() => {
@@ -53,14 +55,7 @@
     if (item.stats || statsPending || item.feature.type === "node") return;
     statsPending = true;
 
-    const res = await fetch(resolve("/api/world/[...slug]/stats.json", { slug }));
-
-    if (!res.ok) {
-      console.log("Failed to fetch stats for slug", slug);
-      return;
-    }
-
-    item.stats = (await res.json()) as AreaStats;
+    item.stats = await dataClient.getStats(slug);
 
     statsPending = false;
   };
@@ -73,10 +68,20 @@
   const name = $derived(getName(item.feature));
 
   const itemType = $derived(featureToType(item.feature));
+
+  let ref = $state<HTMLElement | null>(null);
+
+  $effect(() => {
+    if (isCurrentPage && ref) {
+      ref.scrollIntoView({ block: "nearest" });
+      console.log("Scrolling into view", ref, slug);
+    }
+  });
 </script>
 
 {#if itemType === "route" || itemType === "gym"}
   <Sidebar.MenuButton
+    bind:ref={ref as HTMLButtonElement}
     isActive={isCurrentPage}
     href={link}
     class="data-[active=true]:bg-accent truncate w-full"
@@ -94,7 +99,7 @@
     <span>{name || "No name"}</span>
   </Sidebar.MenuButton>
 {:else}
-  <Sidebar.MenuItem>
+  <Sidebar.MenuItem bind:ref={ref as HTMLLIElement}>
     <Collapsible.Root
       {open}
       onmouseenter={getChildren}

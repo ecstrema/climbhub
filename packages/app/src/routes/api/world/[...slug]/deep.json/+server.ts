@@ -6,8 +6,8 @@ import { error } from "@sveltejs/kit";
 import type { DataJSONRecord } from "$lib/types";
 
 import type { RequestHandler } from "./$types";
-import { resolve } from "$app/paths";
 import { withCache, rootPath } from "../utils";
+import { dataClient } from "$lib/data-client";
 
 /**
  * The deep endpoint returns all grandchildren, grandgrandchildren, etc. Every subchild that is not a direct child.
@@ -33,14 +33,7 @@ export const GET: RequestHandler = async ({ params, fetch }) => {
         }
 
         const slug = join(entry.parentPath.slice(rootPath.length + 1)).replaceAll("\\", "/");
-        const link = resolve("/api/world/[...slug]/data.json", { slug });
-        const res = await fetch(link);
-
-        if (!res.ok) {
-          console.error(link, res.status, res.statusText);
-        }
-
-        files[slug] = await res.json();
+        files[slug] = await dataClient.getNode(slug, fetch);
       }
     } catch (err) {
       if (err instanceof Error) {
