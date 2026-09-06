@@ -5,11 +5,30 @@
   import * as Dialog from "@/ui/dialog";
   import { getNameOSM } from "$lib/osm-tags";
 
+  import { Progress } from "@/ui/progress";
+
   const osmUser = getOsmUser();
 
   let open = $state(false);
   let comment = $state("");
   let error = $state<string>();
+
+  $effect(() => {
+    if (open) {
+      // Compute an intelligent default comment
+      if (osmUser.changeCount === 1) {
+        const [id, changedFeature] = Object.entries(osmUser.changes)[0]!;
+        if (changedFeature) {
+          const name = getNameOSM(changedFeature.tags ?? {});
+          comment = `Updated ${name || "feature"} (${id})`;
+        } else {
+          comment = `Deleted feature ${id}`;
+        }
+      } else {
+        comment = `${osmUser.changeCount} features modified`;
+      }
+    }
+  });
 
   async function submit() {
     error = undefined;
@@ -96,6 +115,9 @@
           {osmUser.submitting ? "Submitting..." : "Submit changes"}
         </Button>
       </Dialog.Footer>
+      {#if osmUser.submitting}
+        <Progress class="mt-2" value={osmUser.submitting.step} max={osmUser.submitting.total} />
+      {/if}
     </Dialog.Content>
   </Dialog.Root>
 {/if}

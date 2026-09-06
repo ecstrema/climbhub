@@ -18,7 +18,7 @@ import type { DataTree } from "$lib/types";
 //   - a positive id if the feature has been modified (id hasn't changed)
 export type FeatureChanges = Record<OsmIdentifier, OsmFeature | undefined>;
 export type UploadProgress = {
-  phase: UploadPhase;
+  phase: UploadPhase | "creating_changeset";
   step: number;
   total: number;
 };
@@ -33,7 +33,7 @@ export class OSMUser {
   loggedIn: boolean | undefined = $state();
 
   changes: FeatureChanges = $state({});
-  submitting: boolean | UploadProgress = $state(false);
+  submitting: false | UploadProgress = $state(false);
   changeCount = $derived(Object.keys(this.changes).length);
   hasChanges = $derived.by(() => this.changeCount > 0);
 
@@ -108,10 +108,9 @@ export class OSMUser {
   }
 
   async submitChanges(comment: string) {
-    console.log(this.submitting, this.loggedIn, Object.keys(this.changes).length);
     if (this.submitting || !this.loggedIn || Object.keys(this.changes).length === 0) return;
 
-    this.submitting = true;
+    this.submitting = { phase: "creating_changeset", step: 0, total: 1 };
     const change: OsmChange = {
       create: [],
       modify: [],
