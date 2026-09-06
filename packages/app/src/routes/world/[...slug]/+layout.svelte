@@ -1,5 +1,5 @@
 <script lang="ts">
-  import AppTopNavigation from "../../../lib/components/shell/app-top-navigation.svelte";
+  import AppTopNavigation from "$lib/components/shell/app-top-navigation.svelte";
 
   import type { WithChildren } from "bits-ui";
 
@@ -12,6 +12,7 @@
   import type { LayoutProps } from "./$types";
   import Head from "@/shell/head.svelte";
   import type { LayoutLoadType } from "./+layout";
+  import OsmChanges from "@/shell/osm-changes.svelte";
 
   const { children, params, data }: WithChildren<LayoutProps> & { data: LayoutLoadType } = $props();
 </script>
@@ -38,4 +39,5 @@
       </div>
     </Sidebar.Inset>
   </Sidebar.Provider>
+  <OsmChanges />
 </AppProvider>

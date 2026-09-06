@@ -1,80 +1,79 @@
-import { featureToType, getName } from "$lib/data";
-import { getGrade, getGradeReference, type Grade } from "$lib/osm-tags";
+import { featureToType, getName, type ItemType } from "$lib/data";
+import { getGradeReference } from "$lib/osm-tags";
 import type { DataTree } from "$lib/types";
-import { getReference, getScaleFromId } from "@climbhub/holy-grade";
 import type { OsmFeature } from "osm-api";
+import { getStaticIdentifier, type BasicOsmType } from "@climbhub/common";
 
+export type SortedChildren = Record<ItemType | "other", string[]>;
 /** Sorts the children and gives back the ordered item slugs */
-export function sortChildren(item: DataTree): string[] | undefined {
+export function sortChildren(item: DataTree): SortedChildren | undefined {
   if (!item.children) return;
 
-  if (item.feature.type !== "relation") {
-    return Object.entries(item.children)
-      .sort(([_ka, va], [_kb, vb]) => {
-        const typeA = featureToType(va.feature);
-        const typeB = featureToType(vb.feature);
-        function typeOrder(type: string | undefined) {
-          switch (type) {
-            case "area":
-              return 0;
-            case "route":
-              return 1;
-            case "gym":
-              return 2;
-            default:
-              return 3;
-          }
-        }
+  if (item.feature.type === "relation") {
+    const idToItem = getIdToItem(item);
+    const result: SortedChildren = {
+      geographic: [],
+      route: [],
+      area: [],
+      gym: [],
+      other: [],
+    };
 
-        if (typeA !== typeB) {
-          const orderA = typeOrder(typeA);
-          const orderB = typeOrder(typeB);
-          return orderA - orderB;
-        }
-
-        // we know typeA === typeB
-        if (typeA === "area" || typeA === "geographic") {
-          const diff = (vb.stats?.totalRoutes || 0) - (va.stats?.totalRoutes || 0);
-          if (diff) return diff;
-        }
-
-        if (typeA === "route") {
-          const tagsA = (va.feature as OsmFeature).tags || {};
-          const tagsB = (vb.feature as OsmFeature).tags || {};
-
-          const refA = getGradeReference(tagsA);
-          const refB = getGradeReference(tagsB);
-
-          const diff = (refB || 0) - (refA || 0);
-          if (diff) return diff;
-        }
-
-        const nameA = getName(va.feature);
-        const nameB = getName(vb.feature);
-        if (nameA && nameB) {
-          return nameA.localeCompare(nameB);
-        }
-        return 0;
-      })
-      .map(([slug]) => slug);
-  }
-
-  // If this is a relation, we want to order the children according to the order of the members in the relation
-  const mapIdToItem: Record<string, string> = {};
-  for (const [slug, data] of Object.entries(item.children)) {
-    if (data.feature.type === "geographic") {
-      console.error("Geographic folder inside of relation");
-      continue;
+    for (const member of item.feature.members) {
+      const slug = idToItem[getStaticIdentifier(member.type as BasicOsmType, member.ref)];
+      if (slug) {
+        const child = item.children[slug]!;
+        const childType = featureToType(child.feature) ?? "other";
+        result[childType].push(slug);
+      }
     }
-    mapIdToItem[`${data.feature.type}-${data.feature.id}`] = slug;
+    return result;
   }
 
-  const ordered: string[] = [];
-  for (const member of item.feature.members) {
-    const i = mapIdToItem[`${member.type}-${member.ref}`];
-    if (i) {
-      ordered.push(i);
-    }
+  const grouped = Object.groupBy(
+    Object.entries(item.children),
+    ([, child]) => featureToType(child.feature) ?? "other",
+  );
+
+  return {
+    geographic: grouped.geographic?.sort(nameSort).map(([slug]) => slug) ?? [],
+    route: grouped.route?.sort(routeSort).map(([slug]) => slug) ?? [],
+    area: grouped.area?.sort(areaSort).map(([slug]) => slug) ?? [],
+    gym: grouped.gym?.sort(nameSort).map(([slug]) => slug) ?? [],
+    other: grouped.other?.sort(nameSort).map(([slug]) => slug) ?? [],
+  };
+
+  function nameSort([_aSlug, a]: [string, DataTree], [_bSlug, b]: [string, DataTree]) {
+    const nameA = getName(a.feature);
+    const nameB = getName(b.feature);
+    return nameA && nameB ? nameA.localeCompare(nameB) : 0;
   }
-  return ordered;
+
+  function routeSort([_aSlug, a]: [string, DataTree], [_bSlug, b]: [string, DataTree]) {
+    const tagsA = (a.feature as OsmFeature).tags || {};
+    const tagsB = (b.feature as OsmFeature).tags || {};
+    const refA = getGradeReference(tagsA);
+    const refB = getGradeReference(tagsB);
+    const diff = (refB || 0) - (refA || 0);
+    if (diff) return diff;
+    return nameSort([_aSlug, a], [_bSlug, b]);
+  }
+
+  function areaSort([_aSlug, a]: [string, DataTree], [_bSlug, b]: [string, DataTree]) {
+    const diff = (b.stats?.totalRoutes || 0) - (a.stats?.totalRoutes || 0);
+    if (diff) return diff;
+    return nameSort([_aSlug, a], [_bSlug, b]);
+  }
+
+  function getIdToItem(item: DataTree): Record<string, string> {
+    const mapIdToItem: Record<string, string> = {};
+    for (const [slug, data] of Object.entries(item.children ?? {})) {
+      if (data.feature.type === "geographic") {
+        console.error("Geographic folder inside of relation");
+        continue;
+      }
+      mapIdToItem[getStaticIdentifier(data.feature.type, data.feature.id)] = slug;
+    }
+    return mapIdToItem;
+  }
 }

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { scaleIdToTag, type Grade, type WithSourceTag } from "$lib/osm-tags";
+  import { getOsmUser } from "@/shell/providers";
   import { Button } from "@/ui/button";
   import * as DropdownMenu from "@/ui/dropdown-menu/";
   import {
@@ -9,15 +10,17 @@
     getScaleFromId,
     type ScaleId,
   } from "@climbhub/holy-grade";
-  import type { Tags } from "osm-api";
+  import type { OsmFeature, Tags } from "osm-api";
 
   const {
     grade,
-    tags = $bindable(),
+    feature,
   }: {
     grade: WithSourceTag<Grade>;
-    tags: Tags;
+    feature: OsmFeature;
   } = $props();
+
+  const osmUser = getOsmUser();
 
   const changeGradingScale: (value: string) => void = (targetScaleId) => {
     const scaleToConvertTo = getScaleFromId(targetScaleId as ScaleId);
@@ -34,9 +37,8 @@
 
     if (grade.v.scale === "unknown") {
       console.log("unknown grade scale. Deleting it and adding another.");
-      delete tags[grade.source];
-
-      tags[newGradeKey] = getGradeFromReference(50, scaleToConvertTo);
+      osmUser.deleteTag(feature, grade.source);
+      osmUser.setTag(feature, newGradeKey, getGradeFromReference(50, scaleToConvertTo));
       return;
     }
 
@@ -59,10 +61,8 @@
       return;
     }
 
-    if (Object.prototype.hasOwnProperty.call(tags, grade.source)) {
-      delete tags[grade.source];
-    }
-    tags[newGradeKey] = newGrade;
+    osmUser.deleteTag(feature, grade.source);
+    osmUser.setTag(feature, newGradeKey, newGrade);
   };
 </script>
 

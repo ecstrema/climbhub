@@ -17,9 +17,16 @@ declare global {
         | "climbing:grade:vscale"
         | "amenity"
         | "leisure"
+        | "natural" // = "cliff"
         | "name"
+        | "name:en"
+        | "name:fr"
         | "type"
-        | "description";
+        | "official_name"
+        | "description"
+        // for changesets
+        | "created_by"
+        | "comment";
     }
   }
 }

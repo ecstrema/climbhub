@@ -1,5 +1,6 @@
 <script lang="ts">
-  import type { BreadcrumbSegment, DataTree } from "$lib/types";
+  import { recordOfArrayIterator } from "$lib/iterators";
+  import type { DataTree } from "$lib/types";
 
   import AppSidebarNode from "./app-sidebar-node.svelte";
   import { sortChildren } from "./sort-children";
@@ -13,12 +14,30 @@
   const orderedChildren = $derived.by(() => sortChildren(item));
 </script>
 
-{#each orderedChildren as slug (slug)}
+{#each orderedChildren?.geographic as slug (slug)}
+  {@render showItem(slug)}
+{/each}
+
+{#each orderedChildren?.area as slug (slug)}
+  {@render showItem(slug)}
+{/each}
+
+{#each orderedChildren?.gym as slug (slug)}
+  {@render showItem(slug)}
+{/each}
+
+{#each orderedChildren?.route as slug (slug)}
+  {@render showItem(slug)}
+{/each}
+
+{#each orderedChildren?.other as slug (slug)}
+  {@render showItem(slug)}
+{/each}
+
+{#snippet showItem(slug: string)}
   {#if item.children?.[slug]}
     <AppSidebarNode bind:item={item.children[slug]} {slug} />
   {:else}
     Failed to get children
   {/if}
-{:else}
-  No children
-{/each}
+{/snippet}

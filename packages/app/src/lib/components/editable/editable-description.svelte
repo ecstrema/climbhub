@@ -1,12 +1,13 @@
 <script lang="ts">
   import EditableTag from "./editable-tag.svelte";
   import type { Tags } from "osm-api";
+  import type { OsmFeature } from "osm-api";
 
   let {
-    tags = $bindable(),
+    feature,
   }: {
-    tags: Tags;
+    feature: OsmFeature;
   } = $props();
 </script>
 
-<EditableTag source="description" bind:tags placeholder="Enter description..." class="text-sm" />
+<EditableTag tagKey="description" {feature} placeholder="Enter description..." class="text-sm" />

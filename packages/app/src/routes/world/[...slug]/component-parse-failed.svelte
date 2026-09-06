@@ -14,5 +14,5 @@
 Failed to analyze this element.
 
 {#if feature.type !== "geographic"}
-  <EditableTags bind:feature />
+  <EditableTags {feature} />
 {/if}

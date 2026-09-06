@@ -1,9 +1,13 @@
 <script lang="ts">
   import type { BreadcrumbSegment, DataJSONRecord, DataTree } from "$lib/types";
   import { type Snippet } from "svelte";
-  import { setBreadcrumbs, setCurrentNode, setTree } from "./app-data.svelte";
+  import { setBreadcrumbs, setCurrentNode, setRefreshState, setTree } from "./app-data.svelte";
   import { browser } from "$app/env";
   import { resolve } from "$app/paths";
+  import { getFeature as getFeatureOsm, type OsmFeature } from "osm-api";
+  import { untrack } from "svelte";
+  import { getStaticIdentifier } from "@climbhub/common";
+  import { getOsmUser } from "./osm.svelte";
 
   const {
     children,
@@ -40,17 +44,45 @@
   $effect(addCurrentItemToParentMap);
   addCurrentItemToParentMap();
 
+  let refreshCount = $state(0);
+  let osmRefreshComplete = $state(false);
+
+  const osmUser = getOsmUser();
+
+  // When navigating to a page, load it directly from OSM to see if it has changed.
+  $effect(() => {
+    if (!browser) return;
+    // We need this effect to rerun when the slug changes
+    const _ = slug;
+
+    if (currentItem.feature.type === "geographic") return;
+    osmRefreshComplete = false;
+    untrack(() => {
+      const generation = refreshCount;
+      refreshCount += 1;
+
+      osmUser.refreshItem(currentItemState as DataTree<OsmFeature>);
+      if (generation === refreshCount) osmRefreshComplete = true;
+    });
+  });
+
   function addCurrentItemToParentMap() {
     if (!currentItemState || parentMap[slug]) return;
     parentMap[slug] = currentItemState;
+
+    for (const [childSlug, childNode] of Object.entries(currentItemState.children || {})) {
+      parentMap[childSlug] = childNode;
+    }
   }
 
-  function fetchChildrenAndAddToTree(slug: string): Promise<DataJSONRecord> {
+  function fetchChildrenAndAddToTree(slug: string) {
+    // Do not fetch children if we already have them in the parentMap
+    if (parentMap[slug]?.children) return;
+
     return fetch(resolve("/api/world/[...slug]/children.json", { slug })).then(async (res) => {
       if (!res.ok) return {};
       const data = (await res.json()) as DataJSONRecord;
       integrateIntoTree(data);
-      return data;
     });
   }
 
@@ -132,6 +164,15 @@
     fetchChildren: fetchChildrenAndAddToTree,
     integrateIntoTree,
     parentMap,
+  });
+
+  setRefreshState({
+    get osmRefreshComplete() {
+      return osmRefreshComplete;
+    },
+    get refreshCount() {
+      return refreshCount;
+    },
   });
 </script>
 

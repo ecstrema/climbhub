@@ -4,14 +4,17 @@
   import { featureToTypeOSM, processedTags } from "$lib/osm-tags";
   import type { OsmFeature, Tags } from "osm-api";
   import { cn } from "$lib/utils";
+  import { getOsmUser } from "@/shell/providers";
 
   const {
-    feature = $bindable(),
+    feature,
   }: {
     feature: OsmFeature;
   } = $props();
 
   const tags = $derived.by(() => feature.tags || {});
+
+  const osmUser = getOsmUser();
 
   const { knownTags, invalidTags, unknownTags } = $derived.by(() => {
     const knownTags: OsmApi.Keys["keys"][] = [];
@@ -75,7 +78,11 @@
   {#each specialTags as key (key)}
     <Table.Row class={className}>
       <Table.Cell>{key}</Table.Cell>
-      <Table.Cell><EditableTextarea bind:value={tags[key]} /></Table.Cell>
+      <Table.Cell>
+        <EditableTextarea
+          bind:value={() => tags[key], (v) => osmUser.setTag(feature, key, v ?? "")}
+        />
+      </Table.Cell>
     </Table.Row>
   {/each}
 {/snippet}

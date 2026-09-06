@@ -13,16 +13,14 @@
   } = $props();
 
   let feature = $derived(item.feature);
-
-  let tags = $derived.by(() => feature.tags || {});
 </script>
 
-<EditableName bind:tags />
-<EditableDescription bind:tags />
+<EditableName {feature} />
+<EditableDescription {feature} />
 
 {#if item.stats?.totalRoutes}
   <p>{item.stats.totalRoutes} routes in total</p>
 {/if}
 
 <ChildrenTable bind:item />
-<EditableTags bind:feature />
+<EditableTags {feature} />

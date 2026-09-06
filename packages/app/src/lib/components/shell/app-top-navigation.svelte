@@ -12,6 +12,12 @@
   const breadcrumbsProvider = getBreadcrumbs();
   const breadcrumbs = $derived.by(() => breadcrumbsProvider.items);
 
+  $effect(() => {
+    if (breadcrumbs.length > 0) {
+      recomputeHiddenCount();
+    }
+  });
+
   let rootElement: HTMLElement | null = $state(null);
   let hidden = $state(0);
 

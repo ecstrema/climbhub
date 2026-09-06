@@ -32,7 +32,7 @@
     "fmt:check": "oxfmt --check"
   },
   "devDependencies": {
-    "@climbhub/types": "workspace:*",
+    "@climbhub/common": "workspace:*",
     "@types/node": "^24.13.3",
     "oxfmt": "^0.60.0",
     "oxlint": "^1.81.0"

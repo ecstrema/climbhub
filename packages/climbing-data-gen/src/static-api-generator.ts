@@ -5,7 +5,8 @@ import { join, dirname } from "path";
 import { ReverseGeolocator } from "./reverse-geolocation.ts";
 import type { Coordinates, DataJSON, GeographicFolderElement, OverpassRequest } from "./types.ts";
 import { ensureDirExists, slugify } from "@climbhub/reverse-geocoding-data";
-import { OsmFeature } from "osm-api";
+import type { OsmFeature } from "osm-api";
+import { getStaticIdentifier } from "@climbhub/common";
 
 export type StaticApiGeneratorOptions = {
   outApiDirectory: string;
@@ -36,7 +37,7 @@ function readOsmData(osmDataFile: string): Map<string, OsmFeature> {
   // Index all elements
   const osmElementsMap = new Map<string, OsmFeature>();
   for (const el of rawData.elements) {
-    osmElementsMap.set(`${el.type}:${el.id}`, el);
+    osmElementsMap.set(getStaticIdentifier(el.type, el.id), el);
   }
 
   return osmElementsMap;
@@ -47,16 +48,16 @@ function getRootOsmDataNodes(allElements: Map<string, OsmFeature>): OsmFeature[]
   const osmParentSet = new Set<string>();
   for (const el of allElements.values()) {
     if (el.type === "way" && el.nodes) {
-      el.nodes.forEach((n: number) => osmParentSet.add(`node:${n}`));
+      el.nodes.forEach((n: number) => osmParentSet.add(getStaticIdentifier("node", n)));
     }
     if (el.type === "relation" && el.members) {
-      el.members.forEach((m) => osmParentSet.add(`${m.type}:${m.ref}`));
+      el.members.forEach((m) => osmParentSet.add(getStaticIdentifier(m.type, m.ref)));
     }
   }
 
   // Process only root elements (Areas/Crags that aren't inside another relation)
   const rootElements = Array.from(allElements.values()).filter(
-    (el) => !osmParentSet.has(`${el.type}:${el.id}`),
+    (el) => !osmParentSet.has(getStaticIdentifier(el.type, el.id)),
   );
 
   // Recursively add children to parents
@@ -66,14 +67,14 @@ function getRootOsmDataNodes(allElements: Map<string, OsmFeature>): OsmFeature[]
 function* iterateOsmFeaturesChildren(element: OsmFeature, allElements: Map<string, OsmFeature>) {
   if (element.type === "way" && element.nodes) {
     for (const nodeId of element.nodes) {
-      const child = allElements.get(`node:${nodeId}`);
+      const child = allElements.get(getStaticIdentifier("node", nodeId));
       if (child) {
         yield child;
       }
     }
   } else if (element.type === "relation" && element.members) {
     for (const member of element.members) {
-      const child = allElements.get(`${member.type}:${member.ref}`);
+      const child = allElements.get(getStaticIdentifier(member.type, member.ref));
       if (child) {
         yield child;
       }
@@ -108,12 +109,14 @@ function getRepresentativeCoordinates(
 
   // TODO: compute center
   if (element.type === "way" && element.nodes?.length > 0) {
-    const child = allElements.get(`node:${element.nodes[0]}`);
+    const child = allElements.get(getStaticIdentifier("node", element.nodes[0]!));
     if (child) return getRepresentativeCoordinates(child, allElements);
   }
   if (element.type === "relation" && element.members?.length > 0) {
     if (!element.members[0]) return;
-    const child = allElements.get(`${element.members[0].type}:${element.members[0].ref}`);
+    const child = allElements.get(
+      getStaticIdentifier(element.members[0].type, element.members[0].ref),
+    );
     if (child) return getRepresentativeCoordinates(child, allElements);
   }
 }

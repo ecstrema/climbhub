@@ -10,7 +10,7 @@
     }
   },
   "devDependencies": {
-    "@climbhub/types": "workspace:*",
+    "@climbhub/common": "workspace:*",
     "@types/bun": "catalog:",
     "typescript": "catalog:"
   }

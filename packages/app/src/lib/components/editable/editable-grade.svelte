@@ -2,20 +2,21 @@
   import type { Grade, WithSourceTag } from "$lib/osm-tags";
   import HolyGrade from "@/grade/holy-grade.svelte";
   import {
+    getOsmUser,
     getPreferredBoulderGradingScale,
     getPreferredRouteGradingScale,
   } from "@/shell/providers";
   import { Button } from "@/ui/button";
   import * as DropdownMenu from "@/ui/dropdown-menu/";
   import { allScalesMap } from "@climbhub/holy-grade";
-  import type { Tags } from "osm-api";
+  import type { OsmFeature, Tags } from "osm-api";
 
   const {
     grade,
-    tags = $bindable(),
+    feature,
   }: {
     grade: WithSourceTag<Grade>;
-    tags: Tags;
+    feature: OsmFeature;
   } = $props();
 
   const scale = $derived.by(() => {
@@ -23,6 +24,12 @@
 
     return allScalesMap[grade.v.scale];
   });
+
+  const tags = $derived(feature.tags || {});
+
+  const osmUser = getOsmUser();
+
+  const gradeTagKey = $derived(grade.source || "climbing:grade:yds_class");
 </script>
 
 <DropdownMenu.Root>
@@ -38,7 +45,9 @@
       Change Grade
       <!-- TODO: add an information on hover about not seeing all grades -->
     </DropdownMenu.Label>
-    <DropdownMenu.RadioGroup bind:value={tags[grade.source || "climbing:grade:yds"]}>
+    <DropdownMenu.RadioGroup
+      bind:value={() => tags[gradeTagKey], (v) => osmUser.setTag(feature, gradeTagKey, v ?? "")}
+    >
       {@const sortedGradeMapping = Object.entries(scale?.gradeMapping ?? {})
         .sort(([_a, a], [_b, b]) => a - b)
         .map(([k, _]) => k)}

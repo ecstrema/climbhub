@@ -21,7 +21,7 @@
     "osmtogeojson": "catalog:"
   },
   "devDependencies": {
-    "@climbhub/types": "workspace:*",
+    "@climbhub/common": "workspace:*",
     "@types/bun": "catalog:",
     "@types/geojson": "catalog:",
     "@types/js-yaml": "catalog:",

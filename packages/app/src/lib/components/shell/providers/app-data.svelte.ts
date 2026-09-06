@@ -12,9 +12,14 @@ export const [getBreadcrumbs, setBreadcrumbs] = createContext<{
 }>();
 export const [getTree, setTree] = createContext<
   FromCurrent<DataTree> & {
-    fetchChildren: (slug: string) => Promise<DataJSONRecord>;
+    fetchChildren: (slug: string) => void;
     integrateIntoTree: (elements: DataJSONRecord) => void;
     /** Non reactive map of slugs to reactive DataTree nodes */
     parentMap: Record<string, DataTree>;
   }
 >();
+
+export const [getRefreshState, setRefreshState] = createContext<{
+  refreshCount: number;
+  osmRefreshComplete: boolean;
+}>();

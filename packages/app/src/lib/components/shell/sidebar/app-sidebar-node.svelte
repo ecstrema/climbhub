@@ -40,6 +40,12 @@
     }
   });
 
+  $effect(() => {
+    if (open) {
+      getChildren();
+    }
+  });
+
   let childrenPending = $state(false);
   let statsPending = $state(false);
 
