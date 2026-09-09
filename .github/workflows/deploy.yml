@@ -31,7 +31,7 @@ jobs:
 
       - run: bun install --frozen-lockfile
       - run: bun run build:reverse-geocoding-data
-      - run: bun run build:@climbhub/climbing-data-gen
+      - run: bun run build:climbing-data-gen
       - run: bun run build
 
       - name: Upload Artifacts

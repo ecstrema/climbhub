@@ -3,6 +3,7 @@
   import * as DropdownMenu from "@/ui/dropdown-menu";
   import { Button } from "@/ui/button";
   import * as Tooltip from "@/ui/tooltip/index.js";
+  import { Tooltip as BitsUiTooltip } from "bits-ui";
 
   import { setMode, userPrefersMode } from "mode-watcher";
 
@@ -53,6 +54,8 @@
   function getExampleBoulderGrades(scale: Scale) {
     return exampleBoulderGrades.map((g) => convertGrade(g, french, scale)).join(", ");
   }
+
+  const tooltipInfo = BitsUiTooltip.createTether<Scale>();
 </script>
 
 <DropdownMenu.Root>
@@ -111,22 +114,25 @@
   <DropdownMenu.SubContent>
     <DropdownMenu.RadioGroup bind:value={preferredScale.current}>
       <DropdownMenu.RadioItem value="local">Local</DropdownMenu.RadioItem>
-      {#each scales as s}
-        <DropdownMenu.RadioItem value={s.id}>
-          <Tooltip.Root>
-            <Tooltip.Trigger>
-              <div class="w-full">{s.id}</div>
+      <Tooltip.Root tether={tooltipInfo}>
+        {#snippet children({ payload })}
+          {@const p = payload as Scale | null}
+          {#each scales as s}
+            <Tooltip.Trigger payload={s}>
+              {#snippet child({ props })}
+                <DropdownMenu.RadioItem value={s.id} {...props}>
+                  {s.id}
+                </DropdownMenu.RadioItem>
+              {/snippet}
             </Tooltip.Trigger>
-            <Tooltip.Content side="left" align="center">
-              <div class="prose prose-sm">
-                <h3>{s.name}</h3>
-                <p>{s.description}</p>
-                <p class="italic">Examples: {getExampleGrades(s)}</p>
-              </div>
-            </Tooltip.Content>
-          </Tooltip.Root>
-        </DropdownMenu.RadioItem>
-      {/each}
+          {/each}
+          <Tooltip.Content side="left" align="center" class="block">
+            <h3 class="font-bold text-base text-pretty">{p?.name}</h3>
+            <p class="my-1">{p?.description}</p>
+            <i>Examples: {p ? getExampleGrades(p) : ""}</i>
+          </Tooltip.Content>
+        {/snippet}
+      </Tooltip.Root>
     </DropdownMenu.RadioGroup>
   </DropdownMenu.SubContent>
 {/snippet}
