@@ -107,6 +107,16 @@ export class OSMUser {
     this.changes[getStaticIdentifier(feature.type, feature.id)] = undefined;
   }
 
+  removeChange(feature: OsmFeature) {
+    const identifier = getStaticIdentifier(feature.type, feature.id);
+    // TODO: this should actually revert the change, not just ignore it.
+    if (identifier in this.changes) {
+      delete this.changes[identifier];
+    } else {
+      console.warn("Cannot remove change for feature", feature, "since it doesn't exist in changes", this.changes);
+    }
+  }
+
   async submitChanges(comment: string) {
     if (this.submitting || !this.loggedIn || Object.keys(this.changes).length === 0) return;
 

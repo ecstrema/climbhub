@@ -1,5 +1,6 @@
 <script lang="ts">
   import UploadIcon from "@lucide/svelte/icons/upload";
+  import DeleteIcon from "@lucide/svelte/icons/delete";
   import { getOsmUser } from "./providers";
   import { Button } from "@/ui/button";
   import * as Dialog from "@/ui/dialog";
@@ -67,29 +68,14 @@
             <li>
               <strong>{id}</strong>
               <span> - {getNameOSM(changedFeature.tags ?? {}) || "Unnamed feature"}</span>
-              <!-- <pre>{JSON.stringify(changedFeature, undefined, 2)}</pre> -->
-              <!-- {#if changedFeature.addedTags.length > 0}
-                <div>
-                  Added tags: {changedFeature.addedTags
-                    .map(([key, value]) => `${key}=${value}`)
-                    .join(", ")}
-                </div>
-              {/if}
-              {#if changedFeature.changedTags.length > 0}
-                <div>
-                  Changed tags: {changedFeature.changedTags
-                    .map(([key, oldValue, newValue]) => `${key}: ${oldValue} -> ${newValue}`)
-                    .join(", ")}
-                </div>
-              {/if}
-              {#if changedFeature.deletedTags.length > 0}
-                <div>
-                  Deleted tags: {changedFeature.deletedTags
-                    .map(([key, value]) => `${key}=${value}`)
-                    .join(", ")}
-                </div>
-              {/if}
-              {#if changedFeature.relationOrderChanged}<div>Relation member order changed</div>{/if} -->
+              <Button
+                variant="ghost"
+                size="icon"
+                class="ml-2 p-1"
+                onclick={() => osmUser.removeChange(changedFeature)}
+              >
+                <DeleteIcon />
+              </Button>
             </li>
           {:else}
             <span>Feature {id} was delete</span>
