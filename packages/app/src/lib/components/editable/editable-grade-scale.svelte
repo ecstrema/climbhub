@@ -65,7 +65,7 @@
 </script>
 
 <DropdownMenu.Root>
-  <DropdownMenu.Trigger>
+  <DropdownMenu.Trigger disabled={!osmUser.loggedIn}>
     {#snippet child({ props })}
       <Button {...props} variant="ghost">
         <span class="font-light text-xs text-muted-foreground">

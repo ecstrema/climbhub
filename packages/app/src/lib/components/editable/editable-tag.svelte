@@ -1,7 +1,7 @@
 <script lang="ts">
   import { osmUser } from "@/shell/providers";
   import EditableTextarea from "./editable-textarea.svelte";
-  import type { OsmFeature, Tags } from "osm-api";
+  import type { OsmFeature } from "osm-api";
   import type { ComponentProps } from "svelte";
 
   const {
