@@ -16,7 +16,6 @@
   import { getGrade } from "$lib/osm-tags";
   import type { OsmFeature } from "osm-api";
   import { getBreadcrumbs, getCurrentNode, getTree } from "../providers";
-  import { dataClient } from "$lib/data-client";
 
   let {
     slug,
@@ -28,7 +27,6 @@
 
   const breadcrumbSlugs = $derived(getBreadcrumbs().slugs);
   const tree = getTree();
-  const getChildren = $derived(() => tree.fetchChildren(slug));
 
   const currentNode = $derived(getCurrentNode().current);
   const isCurrentPage = $derived(currentNode === item);
@@ -44,23 +42,11 @@
 
   $effect(() => {
     if (open) {
-      getChildren();
+      tree.fetchChildren(slug);
     }
   });
 
-  let childrenPending = $state(false);
-  let statsPending = $state(false);
-
-  const getStats = async () => {
-    if (item.stats || statsPending || item.feature.type === "node") return;
-    statsPending = true;
-
-    item.stats = await dataClient.getStats(slug);
-
-    statsPending = false;
-  };
-
-  onMount(getStats);
+  onMount(() => tree.fetchStats(slug));
 
   const link = $derived.by(() => {
     return resolve("/world/[...slug]", { slug });
@@ -102,7 +88,7 @@
   <Sidebar.MenuItem bind:ref={ref as HTMLLIElement}>
     <Collapsible.Root
       {open}
-      onmouseenter={getChildren}
+      onmouseenter={() => tree.fetchChildren(slug)}
       class="group/collapsible [&[data-state=open]>button>svg:first-child]:rotate-90 w-full"
     >
       <Collapsible.Trigger>
@@ -123,11 +109,7 @@
 
       <Collapsible.Content>
         <Sidebar.MenuSub>
-          {#if childrenPending}
-            <Skeleton class="h-8 mt-2" />
-          {:else}
-            <AppSidebarChildren bind:item />
-          {/if}
+          <AppSidebarChildren bind:item />
         </Sidebar.MenuSub>
       </Collapsible.Content>
     </Collapsible.Root>

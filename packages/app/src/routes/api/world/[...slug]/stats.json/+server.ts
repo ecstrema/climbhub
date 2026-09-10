@@ -9,8 +9,8 @@ import { dataClient } from "$lib/data-client";
 export const GET: RequestHandler = async ({ params, fetch }) => {
   const path = join(rootPath, params.slug);
 
-  return withCache(join(path, "stats.json"), async () => {
-    const children = dataClient.getChildren(params.slug, fetch);
+  const res = await withCache(join(path, "stats.json"), async () => {
+    const children = await dataClient.getChildren(params.slug, fetch);
 
     const allStats = await Promise.all(
       Object.entries(children).map(async ([childSlug, child]): Promise<AreaStats> => {
@@ -41,6 +41,8 @@ export const GET: RequestHandler = async ({ params, fetch }) => {
       { totalRoutes: 0 },
     );
   });
+
+  return res;
 };
 
 export const prerender = true;
