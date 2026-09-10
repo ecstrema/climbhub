@@ -2,8 +2,7 @@
   import type { BreadcrumbSegment, DataJSONRecord, DataTree } from "$lib/types";
   import { type Snippet } from "svelte";
   import { setBreadcrumbs, setCurrentNode, setRefreshState, setTree } from "./app-data.svelte";
-  import { browser } from "$app/env";
-  import { resolve } from "$app/paths";
+  import { browser } from "$app/environment";
   import { type OsmFeature } from "osm-api";
   import { untrack } from "svelte";
   import { getOsmUser } from "./osm.svelte";
@@ -38,11 +37,53 @@
   integrateIntoTree(parents);
   $effect(() => integrateIntoTree(parents));
 
-  // svelte-ignore state_referenced_locally
-  const currentItemState = $state(currentItem);
+  // Sync currentItem into the tree directly on navigation
+  $effect(() => {
+    // Read dependencies outside untrack so the effect re-runs on navigation
+    const currentSlug = slug;
+    const incomingItem = currentItem;
+    const parentSlug = segments.at(-1) || "";
 
-  $effect(addCurrentItemToParentMap);
-  addCurrentItemToParentMap();
+    untrack(() => {
+      const parent = parentMap[parentSlug];
+
+      if (parent) {
+        parent.children ??= {};
+
+        if (parent.children[currentSlug]) {
+          // Merge detailed data into lightweight placeholder
+          parent.children[currentSlug].feature = incomingItem.feature;
+          parent.children[currentSlug].stats = incomingItem.stats;
+          parent.children[currentSlug].children = incomingItem.children;
+          parent.children[currentSlug].childrenFetched = true;
+        } else {
+          // Insert the raw object directly into the reactive tree
+          parent.children[currentSlug] = {
+            ...incomingItem,
+            childrenFetched: true,
+          };
+        }
+
+        // Extract the newly created proxy back into the lookup map
+        parentMap[currentSlug] = parent.children[currentSlug];
+      } else {
+        // Root fallback
+        tree.feature = incomingItem.feature;
+        tree.stats = incomingItem.stats;
+        tree.children = incomingItem.children;
+        tree.childrenFetched = true;
+        parentMap[currentSlug] = tree;
+      }
+
+      // Ensure new children are registered in the map as proxies
+      const activeProxy = parentMap[currentSlug];
+      if (activeProxy.children) {
+        for (const [childSlug, childNode] of Object.entries(activeProxy.children)) {
+          parentMap[childSlug] = childNode;
+        }
+      }
+    });
+  });
 
   let refreshCount = $state(0);
   let osmRefreshComplete = $state(false);
@@ -57,29 +98,32 @@
 
     if (currentItem.feature.type === "geographic") return;
     osmRefreshComplete = false;
+
     untrack(() => {
       const generation = refreshCount;
       refreshCount += 1;
 
-      osmUser.refreshItem(currentItemState as DataTree<OsmFeature>);
+      // Pass the correctly proxied item to the refresh function
+      const proxyItem = parentMap[slug];
+      if (proxyItem) {
+        osmUser.refreshItem(proxyItem as DataTree<OsmFeature>);
+      }
+
       if (generation === refreshCount) osmRefreshComplete = true;
     });
   });
 
-  function addCurrentItemToParentMap() {
-    if (!currentItemState || parentMap[slug]) return;
-    parentMap[slug] = currentItemState;
+  async function fetchChildrenAndAddToTree(targetSlug: string): Promise<void> {
+    const node = parentMap[targetSlug];
+    // Abort if children are already marked as fetched
+    if (node?.childrenFetched) return;
 
-    for (const [childSlug, childNode] of Object.entries(currentItemState.children || {})) {
-      parentMap[childSlug] = childNode;
+    const childrenData = await dataClient.getChildren(targetSlug);
+    integrateIntoTree(childrenData);
+
+    if (parentMap[targetSlug]) {
+      parentMap[targetSlug].childrenFetched = true;
     }
-  }
-
-  function fetchChildrenAndAddToTree(slug: string) {
-    // Do not fetch children if we already have them in the parentMap
-    if (parentMap[slug]?.children) return;
-
-    return dataClient.getChildren(slug).then((children) => integrateIntoTree(children));
   }
 
   $effect(() => {
@@ -88,11 +132,8 @@
 
     // Include the root ("") so we get top-level items in the sidebar
     const slugsToFetch = ["", ...segments];
-
     for (const s of slugsToFetch) {
-      if (!parentMap[s]?.children) {
-        fetchChildrenAndAddToTree(s);
-      }
+      fetchChildrenAndAddToTree(s);
     }
   });
 
@@ -100,36 +141,28 @@
     // We need to sort the slugs to ensure that parents are processed before children. This way, we can always find the parent in the parentMap when processing a child.
     const sortedEntries = Object.entries(elements)
       .filter(([slug, _d]) => !parentMap[slug]) // only process slugs that are not already in the parentMap: they have already been added
-      .map(([slug, data]) => {
-        const splitted = slug.split("/");
+      .map(([childSlug, data]) => {
+        const splitted = childSlug.split("/");
         const depth = splitted.length;
-        const parentSlug = slug.slice(0, -splitted[splitted.length - 1]!.length - 1);
-        return [slug, data, depth, parentSlug] as const;
+        const parentSlug = childSlug.slice(0, -splitted[splitted.length - 1]!.length - 1);
+        return [childSlug, data, depth, parentSlug] as const;
       })
       .sort(([_ka, _va, depthA], [_kb, _vb, depthB]) => depthA - depthB);
 
-    for (const [slug, data, _depth, parentSlug] of sortedEntries) {
-      // get the parent slug by removing the last segment of the current slug
+    for (const [childSlug, data, _depth, parentSlug] of sortedEntries) {
       const parent = parentMap[parentSlug];
-      if (!parent) {
-        console.warn(`Parent not found for slug: ${slug}`);
-        continue;
-      }
+      if (!parent) continue;
 
-      if (!parent.children) {
-        parent.children = {};
-      }
-      parent.children[slug] = { feature: data };
+      if (!parent.children) parent.children = {};
 
+      parent.children[childSlug] = { feature: data };
       // We NEED to get it back from parent.children, because that gives us back the proxy, and not the raw object. This is important for reactivity.
-      parentMap[slug] = parent.children[slug];
+      parentMap[childSlug] = parent.children[childSlug];
     }
   }
 
   const breadcrumbItems: BreadcrumbSegment[] = $derived.by(() => {
-    return segments.map((slug) => {
-      return { slug, data: parentMap[slug] };
-    });
+    return segments.map((slug) => ({ slug, data: parentMap[slug] }));
   });
 
   setCurrentNode({
@@ -142,6 +175,7 @@
       return d;
     },
   });
+
   setBreadcrumbs({
     get slugs() {
       return segments;
@@ -150,6 +184,7 @@
       return breadcrumbItems;
     },
   });
+
   setTree({
     get current() {
       return tree;

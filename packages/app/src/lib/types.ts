@@ -13,6 +13,7 @@ export interface AreaStats {
 }
 
 export interface DataTree<Feature extends DataJSON = DataJSON> {
+  childrenFetched?: true;
   children?: Record<string, DataTree>;
   feature: Feature;
   stats?: AreaStats;
