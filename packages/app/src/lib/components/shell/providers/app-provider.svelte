@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
-  import OSMProvider from "./osm-provider.svelte";
   import AppDataProvider from "./app-data-provider.svelte";
   import GradeProvider from "./settings-provider.svelte";
   import type { DataJSONRecord, DataTree } from "$lib/types";
@@ -9,19 +8,17 @@
     children,
     slug,
     currentItem,
-    parents,
+    additionalDataJSON,
   }: {
     children: Snippet;
     slug: string | undefined;
     currentItem: DataTree;
-    parents: DataJSONRecord;
+    additionalDataJSON: DataJSONRecord;
   } = $props();
 </script>
 
-<OSMProvider>
-  <AppDataProvider {slug} {currentItem} {parents}>
-    <GradeProvider>
-      {@render children?.()}
-    </GradeProvider>
-  </AppDataProvider>
-</OSMProvider>
+<AppDataProvider {slug} {currentItem} {additionalDataJSON}>
+  <GradeProvider>
+    {@render children?.()}
+  </GradeProvider>
+</AppDataProvider>

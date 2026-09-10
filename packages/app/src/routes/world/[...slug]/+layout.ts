@@ -4,17 +4,18 @@ import type { LayoutLoad } from "./$types";
 import { error } from "@sveltejs/kit";
 import { dataTreeFromJsonRecord } from "$lib/data";
 import { dataClient } from "$lib/data-client";
+import { getParentSlugs } from "$lib/slug";
 
 export interface LayoutLoadType {
   currentItem: DataTree;
   parents: DataJSONRecord;
-  // We can't return this here as during ssr, the promise would be awaited.
+  // We can't return this here as during ssr, the promise would be awaited, and we would create big html files.
   // So we fetch it in the component instead.
   // parentChildren: Promise<DataJSONRecord>;
 }
 
 export const load: LayoutLoad<LayoutLoadType> = async ({ params, fetch }) => {
-  const slugs = getSlugs(params.slug || "");
+  const slugs = getParentSlugs(params.slug || "");
 
   return {
     currentItem: {
@@ -31,19 +32,6 @@ export const load: LayoutLoad<LayoutLoadType> = async ({ params, fetch }) => {
       parents[slug] = await fetchData(slug);
     }
     return parents;
-  }
-
-  /** Does not include the current slug */
-  function getSlugs(slug: string): string[] {
-    const slugs = [];
-    let acc: string = "";
-    for (const char of slug) {
-      if (char === "/") {
-        slugs.push(acc);
-      }
-      acc += char;
-    }
-    return slugs;
   }
 
   async function fetchChildren(slug: string): Promise<DataJSONRecord> {

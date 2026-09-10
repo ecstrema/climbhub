@@ -4,7 +4,7 @@
   import { featureToTypeOSM, processedTags } from "$lib/osm-tags";
   import type { OsmFeature, Tags } from "osm-api";
   import { cn } from "$lib/utils";
-  import { getOsmUser } from "@/shell/providers";
+  import { osmUser } from "@/shell/providers";
 
   const {
     feature,
@@ -13,8 +13,6 @@
   } = $props();
 
   const tags = $derived.by(() => feature.tags || {});
-
-  const osmUser = getOsmUser();
 
   const { knownTags, invalidTags, unknownTags } = $derived.by(() => {
     const knownTags: OsmApi.Keys["keys"][] = [];

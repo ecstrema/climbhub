@@ -8,7 +8,7 @@
   import type { OsmFeature } from "osm-api";
   import { getCoordinates, getGrade } from "$lib/osm-tags";
   import Button from "@/ui/button/button.svelte";
-  import { getOsmUser } from "@/shell/providers";
+  import { osmUser } from "@/shell/providers";
 
   let {
     item = $bindable(),
@@ -20,7 +20,6 @@
 
   let coordinates = $derived(getCoordinates(item.feature));
   let grade = $derived(feature.tags ? getGrade(feature.tags) : undefined);
-  const osmUser = getOsmUser();
 
   function addGrade() {
     osmUser.setTag(item.feature, "climbing:grade:yds_class", "5.10a");

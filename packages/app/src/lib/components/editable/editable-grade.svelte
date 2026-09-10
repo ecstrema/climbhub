@@ -2,7 +2,7 @@
   import type { Grade, WithSourceTag } from "$lib/osm-tags";
   import HolyGrade from "@/grade/holy-grade.svelte";
   import {
-    getOsmUser,
+    osmUser,
     getPreferredBoulderGradingScale,
     getPreferredRouteGradingScale,
   } from "@/shell/providers";
@@ -26,8 +26,6 @@
   });
 
   const tags = $derived(feature.tags || {});
-
-  const osmUser = getOsmUser();
 
   const gradeTagKey = $derived(grade.source || "climbing:grade:yds_class");
 </script>

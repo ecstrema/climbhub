@@ -8,7 +8,7 @@
   import { setMode, userPrefersMode } from "mode-watcher";
 
   import {
-    getOsmUser,
+    osmUser,
     getPreferredRouteGradingScale,
     getPreferredBoulderGradingScale,
   } from "@/shell/providers";
@@ -22,10 +22,8 @@
   } from "@climbhub/holy-grade";
   import type { FromCurrent } from "./providers/types";
 
-  const user = getOsmUser();
-
   const osmButton = $derived.by(() => {
-    switch (user.loggedIn) {
+    switch (osmUser.loggedIn) {
       case undefined:
         return {
           action: () => {},
@@ -33,12 +31,12 @@
         };
       case true:
         return {
-          action: () => user.logout(),
+          action: () => osmUser.logout(),
           label: "Logout OSM",
         };
       case false:
         return {
-          action: () => user.login(),
+          action: () => osmUser.login(),
           label: "Login with OSM",
         };
     }

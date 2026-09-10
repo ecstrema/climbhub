@@ -10,6 +10,7 @@ import {
 import { asset } from "$app/paths";
 import { online } from "svelte/reactivity/window";
 import type { DataTree } from "$lib/types";
+import { browser } from "$app/env";
 
 // A feature change is:
 // - `undefined` if the feature has been deleted
@@ -40,7 +41,9 @@ export class OSMUser {
   refreshedFeatureStates: Record<OsmIdentifier, RefreshedFeature | "pending"> = $state({});
 
   constructor() {
-    onMount(() => {
+    // In theory, we would need to clean up the effect when the component is destroyed, but since this is a singleton it will live for the lifetime of the app, so we don't need to clean it up. If we ever make this a non-singleton, we should add a cleanup function here.
+    // const cleanup = $effect,root(() => {
+    $effect.root(() => {
       this.loggedIn = isLoggedIn();
 
       // // See note on beforeunload on mdn: https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event#usage_notes
@@ -60,6 +63,7 @@ export class OSMUser {
   }
 
   login() {
+    if (!browser || this.loggedIn) return;
     login({
       mode: "popup",
       clientId: "PhOrL2FCMUtJ5v3WrOAfVh5qdI5CIzQ6Wsf_YVpBNtg",
@@ -71,6 +75,7 @@ export class OSMUser {
   }
 
   logout() {
+    if (!browser) return;
     logout();
     this.loggedIn = isLoggedIn();
   }
@@ -110,15 +115,20 @@ export class OSMUser {
   removeChange(feature: OsmFeature) {
     const identifier = getStaticIdentifier(feature.type, feature.id);
     // TODO: this should actually revert the change, not just ignore it.
-    if (identifier in this.changes) {
+    if (Object.hasOwn(this.changes, identifier)) {
       delete this.changes[identifier];
     } else {
-      console.warn("Cannot remove change for feature", feature, "since it doesn't exist in changes", this.changes);
+      console.warn(
+        "Cannot remove change for feature",
+        feature,
+        "since it doesn't exist in changes",
+        this.changes,
+      );
     }
   }
 
   async submitChanges(comment: string) {
-    if (this.submitting || !this.loggedIn || Object.keys(this.changes).length === 0) return;
+    if (!browser || this.submitting || !this.loggedIn || Object.keys(this.changes).length === 0) return;
 
     this.submitting = { phase: "creating_changeset", step: 0, total: 1 };
     const change: OsmChange = {
@@ -183,7 +193,7 @@ export class OSMUser {
 
   refreshItem(item: DataTree<OsmFeature>) {
     // do not refresh if the user is offline, since we cannot fetch the feature from OSM
-    if (!online.current) return;
+    if (!browser || !online.current) return;
 
     const feature = item.feature;
     const identifier = getStaticIdentifier(feature.type, feature.id);
@@ -224,4 +234,4 @@ export class OSMUser {
   }
 }
 
-export const [getOsmUser, setOsmUser] = createContext<OSMUser>();
+export const osmUser = new OSMUser();

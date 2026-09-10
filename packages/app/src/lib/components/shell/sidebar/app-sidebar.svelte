@@ -16,11 +16,11 @@
   <Sidebar.Content>
     <Sidebar.Group>
       <Sidebar.GroupLabel>
-        <a href={resolve("/world")}>{getName(tree.current.feature)}</a>
+        <a href={resolve("/world")}>{getName(tree.root.feature)}</a>
       </Sidebar.GroupLabel>
       <Sidebar.GroupContent>
         <Sidebar.Menu>
-          <AppSidebarChildren bind:item={tree.current} />
+          <AppSidebarChildren bind:item={tree.root} />
         </Sidebar.Menu>
       </Sidebar.GroupContent>
     </Sidebar.Group>

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getOsmUser } from "@/shell/providers";
+  import { osmUser } from "@/shell/providers";
   import EditableTextarea from "./editable-textarea.svelte";
   import type { OsmFeature, Tags } from "osm-api";
   import type { ComponentProps } from "svelte";
@@ -14,7 +14,6 @@
   } & ComponentProps<typeof EditableTextarea> = $props();
 
   const tags = $derived(feature.tags ?? {});
-  const osmUser = getOsmUser();
 </script>
 
 <EditableTextarea

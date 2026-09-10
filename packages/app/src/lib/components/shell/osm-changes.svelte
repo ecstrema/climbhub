@@ -1,14 +1,12 @@
 <script lang="ts">
   import UploadIcon from "@lucide/svelte/icons/upload";
   import DeleteIcon from "@lucide/svelte/icons/delete";
-  import { getOsmUser } from "./providers";
+  import { osmUser } from "./providers";
   import { Button } from "@/ui/button";
   import * as Dialog from "@/ui/dialog";
   import { getNameOSM } from "$lib/osm-tags";
 
   import { Progress } from "@/ui/progress";
-
-  const osmUser = getOsmUser();
 
   let open = $state(false);
   let comment = $state("");

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { scaleIdToTag, type Grade, type WithSourceTag } from "$lib/osm-tags";
-  import { getOsmUser } from "@/shell/providers";
+  import { osmUser } from "@/shell/providers";
   import { Button } from "@/ui/button";
   import * as DropdownMenu from "@/ui/dropdown-menu/";
   import {
@@ -19,8 +19,6 @@
     grade: WithSourceTag<Grade>;
     feature: OsmFeature;
   } = $props();
-
-  const osmUser = getOsmUser();
 
   const changeGradingScale: (value: string) => void = (targetScaleId) => {
     const scaleToConvertTo = getScaleFromId(targetScaleId as ScaleId);

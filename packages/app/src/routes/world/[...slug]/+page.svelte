@@ -11,7 +11,7 @@
   import type { OsmFeature } from "osm-api";
   import { resolve } from "$app/paths";
   import type { PageProps } from "./$types";
-  import { getOsmUser } from "@/shell/providers";
+  import { osmUser } from "@/shell/providers";
   import OsmMissingFeature from "@/shell/osm-missing-feature.svelte";
   import { getStaticIdentifier } from "@climbhub/common";
 
@@ -19,8 +19,6 @@
 
   let item = $derived(getCurrentNode().current);
   const itemType = $derived(featureToType(item.feature));
-
-  const osmUser = getOsmUser();
 
   const isFeatureDeletedUpstream = $derived.by(() => {
     if (item.feature.type === "geographic") return false;
