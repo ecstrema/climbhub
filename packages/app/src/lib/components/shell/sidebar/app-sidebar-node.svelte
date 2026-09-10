@@ -55,8 +55,7 @@
 
   $effect(() => {
     if (isCurrentPage && ref) {
-      ref.scrollIntoView({ block: "nearest" });
-      console.log("Scrolling into view", ref, slug);
+      ref.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
     }
   });
 </script>
@@ -81,15 +80,15 @@
     <span>{name || "No name"}</span>
   </Sidebar.MenuButton>
 {:else}
-  <Sidebar.MenuItem bind:ref={ref as HTMLLIElement}>
-    <Collapsible.Root
-      {open}
-      onmouseenter={() => tree.fetchChildren(slug)}
-      class="group/collapsible [&[data-state=open]>button>svg:first-child]:rotate-90 w-full"
-    >
-      <Collapsible.Trigger>
-        {#snippet child({ props })}
-          <Sidebar.MenuButton {...props}>
+  <Collapsible.Root
+    {open}
+    onmouseenter={() => tree.fetchChildren(slug)}
+    class="group/collapsible [&[data-state=open]>button>svg:first-child]:rotate-90 w-full"
+  >
+    <Collapsible.Trigger>
+      {#snippet child({ props })}
+        <Sidebar.MenuItem bind:ref={ref as HTMLLIElement} {...props}>
+          <Sidebar.MenuButton>
             <ChevronRightIcon class="transition-transform" />
             {#if itemType === "geographic"}
               <EarthIcon />
@@ -100,14 +99,14 @@
               <span class="text-muted-foreground">{item.stats.totalRoutes}</span>
             {/if}
           </Sidebar.MenuButton>
-        {/snippet}
-      </Collapsible.Trigger>
+        </Sidebar.MenuItem>
+      {/snippet}
+    </Collapsible.Trigger>
 
-      <Collapsible.Content>
-        <Sidebar.MenuSub>
-          <AppSidebarChildren bind:item />
-        </Sidebar.MenuSub>
-      </Collapsible.Content>
-    </Collapsible.Root>
-  </Sidebar.MenuItem>
+    <Collapsible.Content>
+      <Sidebar.MenuSub>
+        <AppSidebarChildren bind:item />
+      </Sidebar.MenuSub>
+    </Collapsible.Content>
+  </Collapsible.Root>
 {/if}
