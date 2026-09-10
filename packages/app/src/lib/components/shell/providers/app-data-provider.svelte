@@ -72,7 +72,7 @@
 
   setCurrentNode({
     get current() {
-      return currentItem;
+      return appDataTree.parentMap[slug] || currentItem;
     },
   });
 

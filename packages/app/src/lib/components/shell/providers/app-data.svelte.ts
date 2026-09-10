@@ -1,4 +1,4 @@
-import { createContext } from "svelte";
+import { createContext, tick } from "svelte";
 
 import type { BreadcrumbSegment, DataJSONRecord, DataTree } from "$lib/types";
 import type { FromCurrent } from "./types";
@@ -45,7 +45,15 @@ export class AppDataTree {
     parent.children ??= {};
     parent.children[slug] = element;
     // Get back reactive proxy
-    this.parentMap[slug] = parent.children[slug];
+    const reactiveNode = parent.children[slug];
+    this.parentMap[slug] = reactiveNode;
+
+    // integrate the children of the element into the parentMap as well
+    if (element.children) {
+      for (const [childSlug, childElement] of Object.entries(reactiveNode.children!)) {
+        this.parentMap[childSlug] = childElement;
+      }
+    }
   }
 
   /**
@@ -103,11 +111,11 @@ export class AppDataTree {
   }
 
   async fetchStats(targetSlug: string): Promise<void> {
-    const node = this.parentMap[targetSlug];
-    if (!node) return;
-
     const stats = await dataClient.getStats(targetSlug);
-    if (stats) {
+
+    await tick();
+    const node = this.parentMap[targetSlug];
+    if (node && stats) {
       node.stats = stats;
     }
   }

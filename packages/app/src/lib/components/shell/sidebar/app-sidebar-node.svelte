@@ -35,15 +35,11 @@
 
   let open = $state(false);
   $effect(() => {
-    if (isActivePath) {
-      open = true;
-    }
+    if (isActivePath || isCurrentPage) open = true;
   });
 
   $effect(() => {
-    if (open) {
-      tree.fetchChildren(slug);
-    }
+    if (open) tree.fetchChildren(slug);
   });
 
   onMount(() => tree.fetchStats(slug));
