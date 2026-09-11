@@ -7,18 +7,18 @@
   const {
     children,
   }: {
-    children: Snippet;
+    children: Snippet<[any]>;
   } = $props();
 </script>
 
 {#if osmUser.loggedIn}
-  {@render children()}
+  {@render children({})}
 {:else}
   <Tooltip.Root>
     <Tooltip.Trigger>
-      <div class="flex gap-2 items-baseline">
-        {@render children()}
-      </div>
+      {#snippet child({ props })}
+        {@render children(props)}
+      {/snippet}
     </Tooltip.Trigger>
     <Tooltip.Content>
       <p class="text-sm">

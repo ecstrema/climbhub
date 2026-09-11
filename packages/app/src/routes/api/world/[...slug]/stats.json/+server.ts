@@ -5,6 +5,7 @@ import type { AreaStats } from "$lib/types";
 import type { RequestHandler } from "./$types";
 import { rootPath, withCache } from "../utils";
 import { dataClient } from "$lib/data-client";
+import { featureToType } from "$lib/data";
 
 export const GET: RequestHandler = async ({ params, fetch }) => {
   const path = join(rootPath, params.slug);
@@ -14,16 +15,10 @@ export const GET: RequestHandler = async ({ params, fetch }) => {
 
     const allStats = await Promise.all(
       Object.entries(children).map(async ([childSlug, child]): Promise<AreaStats> => {
-        if (child.type === "node") {
-          // TODO: moulinettes only have a route_top
-          if (child.tags && child.tags.climbing === "route_bottom") {
-            return {
-              totalRoutes: 1,
-            };
-          }
-          if (child.tags) console.warn("ignored node with tags", child.tags);
+        const t = featureToType(child);
+        if (t === "route") {
           return {
-            totalRoutes: 0,
+            totalRoutes: 1,
           };
         }
 

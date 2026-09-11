@@ -5,7 +5,7 @@
   import type { OsmFeature } from "osm-api";
   import EditableTooltip from "./editable-tooltip.svelte";
   import { Button } from "@/ui/button";
-    import { osmUser } from "@/shell/providers";
+  import { osmUser } from "@/shell/providers";
 
   const {
     grade,
@@ -22,10 +22,16 @@
 </script>
 
 <EditableTooltip>
-  {#if grade}
-    <EditableGradeValue {feature} {grade} />
-    <EditableGradeScale {feature} {grade} />
-  {:else}
-    <Button class="text-muted-foreground" onclick={addGrade} variant="outline">Add Grade</Button>
-  {/if}
+  {#snippet children(props)}
+    {#if grade}
+      <div class="flex gap-2 items-center" {...props}>
+        <EditableGradeValue {feature} {grade} />
+        <EditableGradeScale {feature} {grade} />
+      </div>
+    {:else}
+      <Button class="text-muted-foreground" onclick={addGrade} variant="outline" {...props}>
+        Add Grade
+      </Button>
+    {/if}
+  {/snippet}
 </EditableTooltip>

@@ -8,12 +8,15 @@
 </script>
 
 <EditableTooltip>
-  <textarea
-    class={cn(
-      "bg-none border-none p-0 m-0 outline-none appearance-none focus:outline-accent-foreground field-sizing-content resize-none",
-      className,
-    )}
-    bind:value
-    disabled={!osmUser.loggedIn}
-    {...props}></textarea>
+  {#snippet children(tooltipProps)}
+    <textarea
+      class={cn(
+        "bg-none border-none p-0 m-0 outline-none appearance-none focus:outline-accent-foreground field-sizing-content resize-none self-start",
+        className,
+      )}
+      bind:value
+      disabled={!osmUser.loggedIn}
+      {...tooltipProps}
+      {...props}></textarea>
+  {/snippet}
 </EditableTooltip>
