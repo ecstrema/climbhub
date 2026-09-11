@@ -1,6 +1,8 @@
-/** Does not include the current slug, _nor the root "" slug_. */
+/** Does not include the current slug. */
 export function getParentSlugs(slug: string): string[] {
-  const slugs = [];
+  if (slug === "") return [];
+
+  const slugs = [""];
   let acc: string = "";
   for (const char of slug) {
     if (char === "/") {

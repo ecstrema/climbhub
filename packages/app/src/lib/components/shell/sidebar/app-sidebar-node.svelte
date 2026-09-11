@@ -6,7 +6,7 @@
   import EarthIcon from "@lucide/svelte/icons/earth";
   import CircleQuestionMarkIcon from "@lucide/svelte/icons/circle-question-mark";
   import BuildingIcon from "@lucide/svelte/icons/building";
-  import type { AreaStats, DataTree } from "$lib/types";
+  import type { DataTree } from "$lib/types";
 
   import { getName, featureToType } from "$lib/data";
   import { Skeleton } from "@/ui/skeleton";
@@ -15,7 +15,8 @@
   import { onMount } from "svelte";
   import { getGrade } from "$lib/osm-tags";
   import type { OsmFeature } from "osm-api";
-  import { getBreadcrumbs, getCurrentNode, getTree } from "../providers";
+  import { getBreadcrumbs, getTree } from "../providers";
+  import { page } from "$app/state";
 
   let {
     slug,
@@ -28,8 +29,7 @@
   const breadcrumbSlugs = $derived(getBreadcrumbs().slugs);
   const tree = getTree();
 
-  const currentNode = $derived(getCurrentNode().current);
-  const isCurrentPage = $derived(currentNode === item);
+  const isCurrentPage = $derived((page.params.slug ?? "") === slug);
   // Check if this specific node is part of the active path being viewed
   const isActivePath = $derived(isCurrentPage || breadcrumbSlugs.some((s) => s === slug));
 

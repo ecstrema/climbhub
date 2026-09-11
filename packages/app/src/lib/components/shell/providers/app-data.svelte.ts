@@ -21,19 +21,29 @@ export const [getRefreshState, setRefreshState] = createContext<{
 }>();
 
 export class AppDataTree {
-  root: DataTree = $state({
-    feature: { type: "geographic", name: "World" },
-  });
+  root: DataTree = $state(undefined as unknown as DataTree);
 
-  parentMap: Record<string, DataTree> = {
-    // svelte-ignore state_referenced_locally we can ignore this, because we should never be setting tree.
-    // In fact, the only place we set it is below, in setTree().
-    // If we don't add a setter in setTree, we get a svelte warning of binding to a non reactive property.
-    "": this.root,
-  };
+  parentMap: Record<string, DataTree> = {};
+
+  constructor(root: DataTree) {
+    this.root = root;
+    this.parentMap[""] = root;
+  }
 
   integrateNodeIntoTree(element: DataTree, slug: string) {
-    if (Object.hasOwn(this.parentMap, slug)) return;
+    const integrateChildren = (children: Record<string, DataTree>) => {
+      // integrate the children of the element into the parentMap as well
+      if (element.children) {
+        for (const [childSlug, childElement] of Object.entries(children)) {
+          this.parentMap[childSlug] = childElement;
+        }
+      }
+    };
+
+    if (Object.hasOwn(this.parentMap, slug)) {
+      integrateChildren(element.children || {});
+      return;
+    }
 
     const parentSlug = getParentSlug(slug);
     const parent = this.parentMap[parentSlug];
@@ -48,12 +58,7 @@ export class AppDataTree {
     const reactiveNode = parent.children[slug];
     this.parentMap[slug] = reactiveNode;
 
-    // integrate the children of the element into the parentMap as well
-    if (element.children) {
-      for (const [childSlug, childElement] of Object.entries(reactiveNode.children!)) {
-        this.parentMap[childSlug] = childElement;
-      }
-    }
+    integrateChildren(reactiveNode.children || {});
   }
 
   /**

@@ -15,13 +15,14 @@ export interface LayoutLoadType {
 }
 
 export const load: LayoutLoad<LayoutLoadType> = async ({ params, fetch }) => {
-  const slugs = getParentSlugs(params.slug || "");
+  const slug = params.slug ?? "";
+  const slugs = getParentSlugs(slug);
 
   return {
     currentItem: {
-      feature: await fetchData(params.slug),
-      children: dataTreeFromJsonRecord(await fetchChildren(params.slug)),
-      stats: await fetchStats(params.slug),
+      feature: await fetchData(slug),
+      children: dataTreeFromJsonRecord(await fetchChildren(slug)),
+      stats: await fetchStats(slug),
     },
     parents: await getParents(slugs),
   };

@@ -4,17 +4,28 @@
   import type { Grade, WithSourceTag } from "$lib/osm-tags";
   import type { OsmFeature } from "osm-api";
   import EditableTooltip from "./editable-tooltip.svelte";
+  import { Button } from "@/ui/button";
+    import { osmUser } from "@/shell/providers";
 
   const {
     grade,
     feature,
   }: {
-    grade: WithSourceTag<Grade>;
+    grade: WithSourceTag<Grade> | undefined;
     feature: OsmFeature;
   } = $props();
+
+  function addGrade() {
+    // TODO: use current grade scale from the local area's settings.
+    osmUser.setTag(feature, "climbing:grade:yds_class", "5.10a");
+  }
 </script>
 
 <EditableTooltip>
-  <EditableGradeValue {feature} {grade} />
-  <EditableGradeScale {feature} {grade} />
+  {#if grade}
+    <EditableGradeValue {feature} {grade} />
+    <EditableGradeScale {feature} {grade} />
+  {:else}
+    <Button class="text-muted-foreground" onclick={addGrade} variant="outline">Add Grade</Button>
+  {/if}
 </EditableTooltip>

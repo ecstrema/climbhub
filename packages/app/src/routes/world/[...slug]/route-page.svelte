@@ -8,7 +8,6 @@
   import { getCoordinates, getGrade, type WithSourceTag, type Grade } from "$lib/osm-tags";
   import Button from "@/ui/button/button.svelte";
   import { osmUser } from "@/shell/providers";
-  import * as Tooltip from "@/ui/tooltip";
 
   let {
     item = $bindable(),
@@ -20,19 +19,11 @@
 
   let coordinates = $derived(getCoordinates(item.feature));
   let grade = $derived(feature.tags ? getGrade(feature.tags) : undefined);
-
-  function addGrade() {
-    osmUser.setTag(item.feature, "climbing:grade:yds_class", "5.10a");
-  }
 </script>
 
 <div class="flex gap-2 items-baseline">
   <EditableName {feature} />
-  {#if grade}
-    <EditableGrade {feature} {grade} />
-  {:else}
-    <Button class="text-muted-foreground" onclick={addGrade} variant="outline">Add Grade</Button>
-  {/if}
+  <EditableGrade {feature} {grade} />
 </div>
 
 {#if coordinates}

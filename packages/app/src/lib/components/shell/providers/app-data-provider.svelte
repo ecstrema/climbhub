@@ -12,7 +12,7 @@
   import { type OsmFeature } from "osm-api";
   import { untrack } from "svelte";
   import { osmUser } from "./osm.svelte";
-    import { getParentSlugs } from "$lib/slug";
+  import { getParentSlugs } from "$lib/slug";
 
   const {
     children,
@@ -26,19 +26,25 @@
     additionalDataJSON: DataJSONRecord;
   } = $props();
 
-  const appDataTree = new AppDataTree();
+  // svelte-ignore state_referenced_locally
+  const appDataTree = new AppDataTree(slug === "" ? currentItem : { feature: additionalDataJSON[""]! });
 
-  // Reusing the segments from the parents object works because key instertion order is preseserved since ES2015.
-  const slugSegments: string[] = $derived.by(() => ["", ...getParentSlugs(slug)]);
+  const slugSegments: string[] = $derived.by(() => getParentSlugs(slug));
 
   // svelte-ignore state_referenced_locally
-  $effect.pre(() => appDataTree.integrateElementsIntoTree(additionalDataJSON));
-  $effect.pre(() => {
-    const c = $state.snapshot(currentItem);
+  // We need to integrate the data outside of the effect to ensure that the data is available for the initial render. This is important for SSR and hydration.
+  appDataTree.integrateElementsIntoTree(additionalDataJSON);
+  $effect(() => appDataTree.integrateElementsIntoTree(additionalDataJSON));
+
+  const integrateSelfIntoTree = () => {
+    const c = currentItem;
     untrack(() => {
       appDataTree.integrateNodeIntoTree(c, slug);
     });
-  });
+  };
+
+  integrateSelfIntoTree();
+  $effect(() => integrateSelfIntoTree());
 
   let refreshCount = $state(0);
   let osmRefreshComplete = $state(false);
