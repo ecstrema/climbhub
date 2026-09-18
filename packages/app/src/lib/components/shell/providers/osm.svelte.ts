@@ -1,6 +1,5 @@
-import type { OsmFeature, OsmChange, UploadPhase, UploadResult, OsmFeatureType } from "osm-api";
+import type { OsmFeature, OsmChange, UploadPhase, UploadResult, OsmFeatureType, OsmWay, OsmRelation, OsmNode } from "osm-api";
 import { isLoggedIn, login, logout, uploadChangeset, getFeature as getFeatureOsm } from "osm-api";
-import { createContext, onMount } from "svelte";
 import {
   getStaticIdentifier,
   getTypeAndIdFromStaticIdentifier,
@@ -44,7 +43,7 @@ export class OSMUser {
     // In theory, we would need to clean up the effect when the component is destroyed, but since this is a singleton it will live for the lifetime of the app, so we don't need to clean it up. If we ever make this a non-singleton, we should add a cleanup function here.
     // const cleanup = $effect,root(() => {
     $effect.root(() => {
-      this.loggedIn = isLoggedIn();
+      this.loggedIn = online.current && isLoggedIn();
 
       // // See note on beforeunload on mdn: https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event#usage_notes
       // // > In Firefox, beforeunload is not compatible with the back/forward cache (bfcache):
@@ -70,14 +69,14 @@ export class OSMUser {
       redirectUrl: `${window.location.origin}${asset("/osm-login.html")}`,
       scopes: ["read_prefs", "write_api"],
     }).then(() => {
-      this.loggedIn = isLoggedIn();
+      this.loggedIn = online.current && isLoggedIn();
     });
   }
 
   logout() {
     if (!browser) return;
     logout();
-    this.loggedIn = isLoggedIn();
+    this.loggedIn = online.current && isLoggedIn();
   }
 
   setTag(feature: OsmFeature, tagKey: OsmApi.Keys["keys"], newValue: string) {
@@ -125,6 +124,56 @@ export class OSMUser {
         this.changes,
       );
     }
+  }
+
+  createArea(parent: DataTree<OsmRelation | OsmWay>, parentSlug: string) {
+    // Stub. Does nothing yet. Will have to be moved.
+  }
+
+
+  createRoute(parent: DataTree<OsmRelation | OsmWay>, parentSlug: string) {
+    const newRoute: OsmNode = {
+      type: "node",
+      id: -Date.now(),
+      version: 0,
+      tags: {
+        sport: "climbing",
+        climbing: "route_bottom",
+        name: "New Route",
+      },
+      changeset: 0,
+      lat: 0,
+      lon: 0,
+      timestamp: "-1",
+      uid: -1,
+      user: "",
+    };
+
+    parent.children ??= {};
+    const key = `${parentSlug}/${crypto.randomUUID()}`;
+    parent.children[key] = {
+      feature: newRoute,
+      children: {},
+      childrenFetched: true,
+    };
+
+    const parentFeature = parent.feature;
+
+    if (parentFeature.type === "relation") {
+      parentFeature.members ??= [];
+      parentFeature.members.unshift({
+        type: "node",
+        ref: newRoute.id,
+        role: "",
+      });
+    }
+
+    if (parentFeature.type === "way") {
+      parentFeature.nodes ??= [];
+      parentFeature.nodes.unshift(newRoute.id);
+    }
+
+    this.changes[getStaticIdentifier(newRoute.type, newRoute.id)] = newRoute;
   }
 
   async submitChanges(comment: string) {

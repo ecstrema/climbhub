@@ -6,7 +6,7 @@ import { error } from "@sveltejs/kit";
 import type { DataJSONRecord } from "$lib/types";
 
 import type { RequestHandler } from "./$types";
-import { withCache, rootPath } from "../utils";
+import { withCache, rootPath, withErrorHandler } from "../utils";
 import { dataClient } from "$lib/data-client";
 
 /**
@@ -17,10 +17,10 @@ export const GET: RequestHandler = async ({ params, fetch }) => {
   const path = join(rootPath, params.slug);
   const deepPath = join(path, "deep.json");
 
-  return withCache(deepPath, async () => {
-    const files: DataJSONRecord = {};
+  return withErrorHandler(() =>
+    withCache(deepPath, async () => {
+      const files: DataJSONRecord = {};
 
-    try {
       // Get all data.json except those that are in children.json. That is, those in deep subdirectories, not those 1 directory deep.
       const entries = await readdir(path, { withFileTypes: true, recursive: true });
       for (const entry of entries) {
@@ -33,16 +33,12 @@ export const GET: RequestHandler = async ({ params, fetch }) => {
         }
 
         const slug = join(entry.parentPath.slice(rootPath.length + 1)).replaceAll("\\", "/");
-        files[slug] = await dataClient.getNode(slug, fetch);
+        const node = await dataClient.getNode(slug, fetch);
+        if (node) files[slug] = node;
       }
-    } catch (err) {
-      if (err instanceof Error) {
-        error(404, err.message);
-      }
-      throw err;
-    }
-    return files;
-  });
+      return files;
+    }),
+  );
 };
 
 export const prerender = true;

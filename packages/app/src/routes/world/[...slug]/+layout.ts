@@ -8,7 +8,7 @@ import { getParentSlugs } from "$lib/slug";
 
 export interface LayoutLoadType {
   currentItem: DataTree;
-  parents: DataJSONRecord;
+  additionalData: DataJSONRecord;
   // We can't return this here as during ssr, the promise would be awaited, and we would create big html files.
   // So we fetch it in the component instead.
   // parentChildren: Promise<DataJSONRecord>;
@@ -18,39 +18,63 @@ export const load: LayoutLoad<LayoutLoadType> = async ({ params, fetch }) => {
   const slug = params.slug ?? "";
   const slugs = getParentSlugs(slug);
 
-  return {
-    currentItem: {
-      feature: await fetchData(slug),
-      children: dataTreeFromJsonRecord(await fetchChildren(slug)),
-      stats: await fetchStats(slug),
-    },
-    parents: await getParents(slugs),
+  // Start all fetching at the same time
+  const promises = {
+    self: fetchData(slug),
+    children: fetchChildren(slug),
+    stats: fetchStats(slug),
+    parents: getParents(slugs),
   };
+
+  const self = await promises.self;
+  if (!self) {
+    return error(404, `Could not find item ${slug}`);
+  }
+
+  const result: LayoutLoadType = {
+    currentItem: {
+      feature: self,
+    },
+    additionalData: await promises.parents,
+  };
+
+  const stats = await promises.stats;
+  if (stats) result.currentItem.stats = stats;
+
+  const children = await promises.children;
+  if (children) {
+    result.currentItem.children = dataTreeFromJsonRecord(children);
+    result.currentItem.childrenFetched = true;
+  }
+
+  return result;
 
   async function getParents(breadcrumbSlugs: string[]): Promise<DataJSONRecord> {
     const parents: DataJSONRecord = {};
     for (const slug of breadcrumbSlugs) {
-      parents[slug] = await fetchData(slug);
+      const parent = await fetchData(slug);
+      if (parent) parents[slug] = parent;
     }
     return parents;
   }
 
-  async function fetchChildren(slug: string): Promise<DataJSONRecord> {
+  async function fetchChildren(slug: string): Promise<DataJSONRecord | undefined> {
     try {
       // Pass SvelteKit's fetch to the dataClient for SSR compatibility
       return await dataClient.getChildren(slug, fetch);
     } catch (e) {
       console.log(`Failed to fetch children for slug: ${slug}`, e);
-      return {};
+      return undefined;
     }
   }
 
-  async function fetchData(slug: string): Promise<DataJSON> {
+  async function fetchData(slug: string): Promise<DataJSON | undefined> {
     try {
       // Pass SvelteKit's fetch to the dataClient for SSR compatibility
-      return (await dataClient.getNode(slug, fetch)) as DataJSON;
+      return await dataClient.getNode(slug, fetch);
     } catch {
-      error(404, `Failed to fetch data for slug: ${slug}`);
+      console.warn(`Failed to fetch data for slug: ${slug}`);
+      return undefined;
     }
   }
 

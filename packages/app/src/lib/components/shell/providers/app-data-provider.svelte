@@ -26,7 +26,7 @@
     additionalDataJSON: DataJSONRecord;
   } = $props();
 
-  // svelte-ignore state_referenced_locally
+  // svelte-ignore state_referenced_locally: We need to get the root "World" slug, which is is either the current item if slug is "", or the grandest parent of the current item if slug.
   const appDataTree = new AppDataTree(slug === "" ? currentItem : { feature: additionalDataJSON[""]! });
 
   const slugSegments: string[] = $derived.by(() => getParentSlugs(slug));
@@ -38,9 +38,7 @@
 
   const integrateSelfIntoTree = () => {
     const c = currentItem;
-    untrack(() => {
-      appDataTree.integrateNodeIntoTree(c, slug);
-    });
+    untrack(() => appDataTree.integrateNodeIntoTree(c, slug));
   };
 
   integrateSelfIntoTree();

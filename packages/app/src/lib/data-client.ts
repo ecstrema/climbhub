@@ -4,10 +4,13 @@ import type { OsmFeature } from "osm-api";
 import type { DataJSONRecord } from "$lib/types";
 import { resolve } from "$app/paths";
 import type { AreaStats } from "$lib/types";
+import type { DataJSON } from "@climbhub/climbing-data-gen";
+import { getParentSlug } from "./slug";
 
 export interface CachedElement {
   slug: string;
-  data: OsmFeature;
+  parentSlug?: string;
+  data: DataJSON;
   /** Indicates when the children were last fetched */
   childrenFetchedAt?: number;
   modifiedAt: number;
@@ -28,7 +31,7 @@ interface ClimbDataDB extends DBSchema {
   elements: {
     key: string;
     value: CachedElement;
-    indexes: { modifiedAt: number };
+    indexes: { modifiedAt: number; parentSlug?: string };
   };
   stats: {
     key: string;
@@ -43,8 +46,9 @@ if (browser) {
   dbPromise = openDB<ClimbDataDB>("ClimbDataDB", 1, {
     upgrade(db, oldVersion) {
       if (oldVersion < 1) {
-        const store = db.createObjectStore("elements", { keyPath: "slug" });
-        store.createIndex("modifiedAt", "modifiedAt");
+        const elementStore = db.createObjectStore("elements", { keyPath: "slug" });
+        elementStore.createIndex("modifiedAt", "modifiedAt");
+        elementStore.createIndex("parentSlug", "parentSlug");
         const statsStore = db.createObjectStore("stats", { keyPath: "slug" });
         statsStore.createIndex("modifiedAt", "modifiedAt");
       }
@@ -55,41 +59,41 @@ if (browser) {
 class DataClient {
   private inFlightRequests = new Map<string, Promise<any>>();
 
-  async getNode(slug: string, customFetch: typeof fetch = globalThis.fetch): Promise<OsmFeature> {
+  async getNode(
+    slug: string,
+    customFetch: typeof fetch = globalThis.fetch,
+  ): Promise<DataJSON | undefined> {
     const requestKey = `node-${slug}`;
     if (this.inFlightRequests.has(requestKey)) {
       return this.inFlightRequests.get(requestKey)!;
     }
 
-    if (browser && dbPromise) {
-      const db = await dbPromise;
-      const cached = await db.get("elements", slug);
-      if (cached) return cached.data;
-    }
-
     const promise = (async () => {
+      if (browser && dbPromise) {
+        const db = await dbPromise;
+        const cached = await db.get("elements", slug);
+        if (cached) return cached.data;
+      }
+
       const res = await customFetch(resolve("/api/world/[...slug]/data.json", { slug }));
 
       if (!res.ok) {
         console.error(`Failed to fetch data for ${slug}`);
-        return {
-          type: "node",
-          id: 0,
-          changeset: 0,
-          timestamp: "",
-          version: 0,
-          user: "",
-          uid: 0,
-          lat: 0,
-          lon: 0,
-        } satisfies OsmFeature;
+        return;
       }
 
-      const data: OsmFeature = await res.json();
+      const data: DataJSON = await res.json();
 
       if (browser && dbPromise) {
         const db = await dbPromise;
-        await db.put("elements", { slug, data, modifiedAt: Date.now() });
+        const parentSlug = getParentSlug(slug);
+        const o: CachedElement = {
+          slug,
+          data,
+          modifiedAt: Date.now(),
+        };
+        if (parentSlug !== undefined) o.parentSlug = parentSlug;
+        await db.put("elements", o);
       }
 
       return data;
@@ -106,22 +110,23 @@ class DataClient {
   async getChildren(
     slug: string,
     customFetch: typeof fetch = globalThis.fetch,
-  ): Promise<DataJSONRecord> {
+  ): Promise<DataJSONRecord | undefined> {
     const requestKey = `children-${slug}`;
     if (this.inFlightRequests.has(requestKey)) {
       return this.inFlightRequests.get(requestKey)!;
     }
 
-    // Check if the children are already cached and up-to-date
-    if (browser && dbPromise) {
-      const db = await dbPromise;
-      const cached = await db.get("elements", slug);
-      if (cached && cached.childrenFetchedAt) {
-        return this.getCachedChildren(slug, db);
+    const promise = (async () => {
+      if (browser && dbPromise) {
+        const db = await dbPromise;
+        const cached = await db.get("elements", slug);
+        if (cached?.childrenFetchedAt) {
+          return this.getCachedChildren(slug, db);
+        }
       }
-    }
 
-    const promise = this.fetchAndCacheChildren(slug, customFetch);
+      return await this.fetchAndCacheChildren(slug, customFetch);
+    })();
 
     this.inFlightRequests.set(requestKey, promise);
     try {
@@ -133,56 +138,64 @@ class DataClient {
 
   private async getCachedChildren(slug: string, db: IDBPDatabase<ClimbDataDB>): Promise<DataJSONRecord> {
     const tx = db.transaction("elements", "readonly");
-    const store = tx.objectStore("elements");
-    const children: DataJSONRecord = {};
-
-    const prefix = `${slug}/`;
-    // Create a boundary capturing everything starting with the prefix, this avoids the O(n) search, and uses the B-tree to get O(logN + K) (jumping to the first matching key and then iterating over the next K matching keys)
-    // The "\uffff" character is the last character in the Unicode range, so this effectively captures all keys that start with the prefix.
-    const range = IDBKeyRange.bound(prefix, prefix + "\uffff");
-
-    // The cursor will now only iterate over the matching range
-    for await (const cursor of store.iterate(range)) {
-      const childSlug = cursor.value.slug.slice(prefix.length);
-      children[childSlug] = cursor.value.data;
-    }
-
-    return children;
+    const parentIndex = tx.store.index("parentSlug");
+    const children = await parentIndex.getAll(slug);
+    return Object.fromEntries(children.map((child) => [child.slug, child.data]));
   }
 
-  private async fetchAndCacheChildren(slug: string, customFetch: typeof fetch): Promise<DataJSONRecord> {
+  private async fetchAndCacheChildren(
+    slug: string,
+    customFetch: typeof fetch,
+  ): Promise<DataJSONRecord | undefined> {
     const res = await customFetch(resolve("/api/world/[...slug]/children.json", { slug }));
 
     if (!res.ok) {
       console.error(`Failed to fetch children for ${slug}`);
-      return {};
+      return undefined;
     }
 
     const records: DataJSONRecord = await res.json();
 
-    if (browser && dbPromise) {
-      const db = await dbPromise;
-      // Use a single transaction for bulk inserts to maximize performance
-      const tx = db.transaction("elements", "readwrite");
-      const store = tx.objectStore("elements");
+    (async () => {
+      if (browser && dbPromise) {
+        const db = await dbPromise;
+        const tx = db.transaction("elements", "readwrite");
+        const store = tx.objectStore("elements");
 
-      const promises: Promise<unknown>[] = [];
-      for (const [childSlug, data] of Object.entries(records)) {
-        const existing = await store.get(childSlug);
-        const o: CachedElement = {
-          slug: childSlug,
-          data: data as OsmFeature,
-          modifiedAt: Date.now(),
-        };
-        if (existing?.childrenFetchedAt) {
-          o.childrenFetchedAt = existing.childrenFetchedAt;
+        const promises: Promise<void>[] = [];
+        for (const [childSlug, data] of Object.entries(records)) {
+          promises.push(
+            (async () => {
+              const existing = await store.get(childSlug);
+              const o: CachedElement = {
+                slug: childSlug,
+                data: data as OsmFeature,
+                modifiedAt: Date.now(),
+              };
+              if (slug !== undefined) o.parentSlug = slug;
+
+              if (existing?.childrenFetchedAt) {
+                o.childrenFetchedAt = existing.childrenFetchedAt;
+              }
+              await store.put(o);
+            })(),
+          );
         }
-        promises.push(store.put(o));
-      }
 
-      await Promise.all(promises);
-      await tx.done;
-    }
+        promises.push(
+          (async () => {
+            const existing = await store.get(slug);
+            if (existing) {
+              existing.childrenFetchedAt = Date.now();
+              await store.put(existing);
+            }
+          })(),
+        );
+
+        await Promise.all(promises);
+        await tx.done;
+      }
+    })().catch((err) => console.error(`Background cache failed for ${slug}:`, err));
 
     return records;
   }

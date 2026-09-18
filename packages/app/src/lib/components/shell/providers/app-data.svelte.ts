@@ -23,42 +23,62 @@ export const [getRefreshState, setRefreshState] = createContext<{
 export class AppDataTree {
   root: DataTree = $state(undefined as unknown as DataTree);
 
+  /** Non-reactive map of slugs to their reactive DataTree */
   parentMap: Record<string, DataTree> = {};
 
   constructor(root: DataTree) {
     this.root = root;
-    this.parentMap[""] = root;
+    this.parentMap[""] = this.root;
   }
 
-  integrateNodeIntoTree(element: DataTree, slug: string) {
-    const integrateChildren = (children: Record<string, DataTree>) => {
-      // integrate the children of the element into the parentMap as well
-      if (element.children) {
-        for (const [childSlug, childElement] of Object.entries(children)) {
-          this.parentMap[childSlug] = childElement;
-        }
+  /**
+   * Add an existing DataTree node into the tree.
+   *
+   * To prevent recomputing the parent slug, it can be passed as the third argument.
+   */
+  integrateNodeIntoTree(element: DataTree, slug: string, parentSlug?: string) {
+    const integrateChildren = (children: Record<string, DataTree>, parentNode: DataTree) => {
+      if (!children || Object.keys(children).length === 0) return;
+      parentNode.children ??= {};
+
+      for (const [childSlug, childElement] of Object.entries(children)) {
+        parentNode.children[childSlug] = this.parentMap[childSlug] || childElement;
+        this.parentMap[childSlug] = parentNode.children[childSlug];
       }
     };
 
+    const integrateSelf = (element: DataTree, slug: string, parentSlug?: string) => {
+      const actualParentSlug = parentSlug ?? getParentSlug(slug);
+      // This is root, it has no parent
+      if (actualParentSlug === undefined) {
+        console.log(`Parent slug not found for ${slug}. Parent slug: ${actualParentSlug}`);
+        return this.parentMap[""]!;
+      }
+
+      const parent = this.parentMap[actualParentSlug];
+      if (!parent) {
+        console.log(`Parent not found for slug ${slug}. Parent slug: ${actualParentSlug}`);
+        return this.parentMap[""]!;
+      }
+
+      parent.children ??= {};
+      parent.children[slug] = element;
+      // Get back reactive proxy
+      const reactiveSelf = parent.children[slug];
+      this.parentMap[slug] = reactiveSelf;
+
+      return reactiveSelf;
+    };
+
     if (Object.hasOwn(this.parentMap, slug)) {
-      integrateChildren(element.children || {});
+      // Fetch the existing proxy from the map
+      const existingNode = this.parentMap[slug]!;
+      integrateChildren(element.children || {}, existingNode);
       return;
     }
 
-    const parentSlug = getParentSlug(slug);
-    const parent = this.parentMap[parentSlug];
-    if (!parent) {
-      console.log(`Parent not found for slug ${slug}. Parent slug: ${parentSlug}`);
-      return;
-    }
-
-    parent.children ??= {};
-    parent.children[slug] = element;
-    // Get back reactive proxy
-    const reactiveNode = parent.children[slug];
-    this.parentMap[slug] = reactiveNode;
-
-    integrateChildren(reactiveNode.children || {});
+    const reactiveNode = integrateSelf(element, slug, parentSlug);
+    integrateChildren(reactiveNode.children || {}, reactiveNode);
   }
 
   /**
@@ -99,9 +119,10 @@ export class AppDataTree {
     // Abort if children are already marked as fetched
     if (!node || node.childrenFetched) return;
 
-    node.children ??= {};
-
     const childrenData = await dataClient.getChildren(targetSlug);
+    if (!childrenData) return;
+
+    node.children ??= {};
     for (const [childSlug, data] of Object.entries(childrenData)) {
       if (!node.children[childSlug]) {
         // Use existing node if it was partially loaded, otherwise create a new one

@@ -17,6 +17,7 @@
   import type { OsmFeature } from "osm-api";
   import { getBreadcrumbs, getTree } from "../providers";
   import { page } from "$app/state";
+  import clsx from "clsx";
 
   let {
     slug,
@@ -80,16 +81,12 @@
     <span>{name || "No name"}</span>
   </Sidebar.MenuButton>
 {:else}
-  <Collapsible.Root
-    {open}
-    onmouseenter={() => tree.fetchChildren(slug)}
-    class="group/collapsible [&[data-state=open]>button>svg:first-child]:rotate-90 w-full"
-  >
+  <Collapsible.Root bind:open onmouseenter={() => tree.fetchChildren(slug)} class="w-full">
     <Collapsible.Trigger>
       {#snippet child({ props })}
         <Sidebar.MenuItem bind:ref={ref as HTMLLIElement} {...props}>
           <Sidebar.MenuButton>
-            <ChevronRightIcon class="transition-transform" />
+            <ChevronRightIcon class={clsx("transition-transform", open && "rotate-90")} />
             {#if itemType === "geographic"}
               <EarthIcon />
             {/if}
@@ -105,7 +102,7 @@
 
     <Collapsible.Content>
       <Sidebar.MenuSub>
-        <AppSidebarChildren bind:item />
+        <AppSidebarChildren bind:item {slug} />
       </Sidebar.MenuSub>
     </Collapsible.Content>
   </Collapsible.Root>
