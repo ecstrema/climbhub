@@ -139,7 +139,6 @@ export class AppDataTree {
   async fetchStats(targetSlug: string): Promise<void> {
     const stats = await dataClient.getStats(targetSlug);
 
-    await tick();
     const node = this.parentMap[targetSlug];
     if (node && stats) {
       node.stats = stats;
