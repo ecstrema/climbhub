@@ -20,7 +20,7 @@
       </Sidebar.GroupLabel>
       <Sidebar.GroupContent>
         <Sidebar.Menu>
-          <AppSidebarChildren bind:item={tree.root} />
+          <AppSidebarChildren bind:item={tree.root} slug={""} />
         </Sidebar.Menu>
       </Sidebar.GroupContent>
     </Sidebar.Group>
