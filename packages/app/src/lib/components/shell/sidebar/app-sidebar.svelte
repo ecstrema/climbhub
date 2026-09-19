@@ -1,5 +1,5 @@
 <script lang="ts">
-  import * as Sidebar from "@/ui/sidebar/index.js";
+  import * as Sidebar from "@/ui/sidebar";
   import type { ComponentProps } from "svelte";
   import { getName } from "$lib/data";
   import { resolve } from "$app/paths";

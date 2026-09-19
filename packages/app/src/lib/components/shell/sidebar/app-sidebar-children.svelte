@@ -1,5 +1,4 @@
 <script lang="ts">
-
   import type { DataTree } from "$lib/types";
   import { Button } from "@/ui/button";
   import { osmUser } from "../providers";
@@ -21,13 +20,6 @@
 
   const itemType = $derived(featureToType(item.feature));
 </script>
-
-{#if osmUser.loggedIn && itemType === "area"}
-  <div class="flex gap-2 self-end">
-    <Button variant="outline" size="xs" class="font-normal" onclick={() => osmUser.createRoute(item as DataTree<OsmWay | OsmRelation>, slug)}>Add Route</Button>
-    <Button variant="outline" size="xs" class="font-normal" onclick={() => osmUser.createArea(item as DataTree<OsmWay | OsmRelation>, slug)}>Add Sector</Button>
-  </div>
-{/if}
 
 {#each orderedChildren?.geographic as slug (slug)}
   {@render showItem(slug)}
@@ -51,6 +43,27 @@
 
 {#if Object.keys(item.children ?? {}).length === 0}
   <span class="px-4 py-2 text-muted-foreground">No children</span>
+
+  {#if osmUser.loggedIn && itemType === "area"}
+    <div class="flex gap-2 self-end">
+      <Button
+        variant="outline"
+        size="xs"
+        class="font-normal"
+        onclick={() => osmUser.createRoute(item as DataTree<OsmWay | OsmRelation>, slug)}
+      >
+        Add Route
+      </Button>
+      <Button
+        variant="outline"
+        size="xs"
+        class="font-normal"
+        onclick={() => osmUser.createArea(item as DataTree<OsmWay | OsmRelation>, slug)}
+      >
+        Add Sector
+      </Button>
+    </div>
+  {/if}
 {/if}
 
 {#snippet showItem(slug: string)}

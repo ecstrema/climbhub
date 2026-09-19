@@ -2,7 +2,7 @@
   import SettingsIcon from "@lucide/svelte/icons/settings";
   import * as DropdownMenu from "@/ui/dropdown-menu";
   import { Button } from "@/ui/button";
-  import * as Tooltip from "@/ui/tooltip/index.js";
+  import * as Tooltip from "@/ui/tooltip";
   import { Tooltip as BitsUiTooltip } from "bits-ui";
 
   import { setMode, userPrefersMode } from "mode-watcher";
