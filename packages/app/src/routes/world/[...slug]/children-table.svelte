@@ -4,7 +4,7 @@
   import { getGrade } from "$lib/osm-tags";
   import type { DataTree } from "$lib/types";
   import HolyGrade from "@/grade/holy-grade.svelte";
-  import { sortChildren } from "@/shell/sidebar/sort-children";
+  import { sortChildren } from "@/shell/sidebar/utils";
   import * as Table from "@/ui/table";
   import type { OsmFeature } from "osm-api";
   import CircleQuestionMarkIcon from "@lucide/svelte/icons/circle-question-mark";
@@ -28,7 +28,7 @@
   <Table.Body>
     {#if allChildren}
       {#each [...allChildren?.geographic, ...allChildren?.area] as slug (slug)}
-        {@const child = itemChildren[slug]!}
+        {const child = itemChildren[slug]!}
         <Table.Row>
           <Table.Cell class="font-medium underline underline-offset-2">
             <a href={resolve("/world/[...slug]", { slug })}>
@@ -45,7 +45,7 @@
         </Table.Row>
       {/each}
       {#each allChildren?.gym as slug (slug)}
-        {@const child = itemChildren[slug]!}
+        {const child = itemChildren[slug]!}
         <Table.Row>
           <Table.Cell class="font-medium underline underline-offset-2 ">
             <a href={resolve("/world/[...slug]", { slug })} class="flex gap-1 items-center">
@@ -56,7 +56,7 @@
         </Table.Row>
       {/each}
       {#each allChildren?.route as slug (slug)}
-        {@const child = itemChildren[slug]!}
+        {const child = itemChildren[slug]!}
         {const grade = getGrade((child.feature as OsmFeature).tags || {})}
         <Table.Row>
           <Table.Cell>
@@ -77,7 +77,7 @@
         </Table.Row>
       {/each}
       {#each allChildren.other as slug (slug)}
-        {@const child = itemChildren[slug]!}
+        {const child = itemChildren[slug]!}
         <Table.Row>
           <Table.Cell class="font-medium underline underline-offset-2">
             <a href={resolve("/world/[...slug]", { slug })}>

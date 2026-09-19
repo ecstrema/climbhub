@@ -114,7 +114,7 @@
       <DropdownMenu.RadioItem value="local">Local</DropdownMenu.RadioItem>
       <Tooltip.Root tether={tooltipInfo}>
         {#snippet children({ payload })}
-          {@const p = payload as Scale | null}
+          {const p = payload as Scale | null}
           {#each scales as s}
             <Tooltip.Trigger payload={s}>
               {#snippet child({ props })}

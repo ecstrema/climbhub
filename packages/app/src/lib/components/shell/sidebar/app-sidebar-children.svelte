@@ -4,7 +4,7 @@
   import { osmUser } from "../providers";
 
   import AppSidebarNode from "./app-sidebar-node.svelte";
-  import { sortChildren } from "./sort-children";
+  import { getSearchFilter, sortChildren } from "./utils";
   import type { OsmRelation, OsmWay } from "osm-api";
   import { featureToType } from "$lib/data";
 
@@ -19,6 +19,8 @@
   const orderedChildren = $derived.by(() => sortChildren(item));
 
   const itemType = $derived(featureToType(item.feature));
+
+  const searchFilter = getSearchFilter();
 </script>
 
 {#each orderedChildren?.geographic as slug (slug)}
@@ -67,7 +69,8 @@
 {/if}
 
 {#snippet showItem(slug: string)}
-  {#if item.children?.[slug]}
-    <AppSidebarNode bind:item={item.children[slug]} {slug} />
+  {let child = item.children?.[slug]}
+  {#if child && searchFilter.current(child)}
+    <AppSidebarNode bind:item={child} {slug} />
   {/if}
 {/snippet}

@@ -46,7 +46,7 @@
     <DropdownMenu.RadioGroup
       bind:value={() => tags[gradeTagKey], (v) => osmUser.setTag(feature, gradeTagKey, v ?? "")}
     >
-      {@const sortedGradeMapping = Object.entries(scale?.gradeMapping ?? {})
+      {const sortedGradeMapping = Object.entries(scale?.gradeMapping ?? {})
         .sort(([_a, a], [_b, b]) => a - b)
         .map(([k, _]) => k)}
       {#each sortedGradeMapping as name (name)}

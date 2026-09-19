@@ -39,7 +39,7 @@
     yReverse
   >
     {#snippet children({ context })}
-      {@const selectedReferenceFromPosition = (yPosition: number) => {
+      {const selectedReferenceFromPosition = (yPosition: number) => {
         return Math.round(context.yScale.invert?.(yPosition - padding.top) || undefined);
       }}
       <Layer
@@ -56,7 +56,7 @@
         {#each data as d, i (i)}
           <Point {d}>
             {#snippet children({ x, y })}
-              {@const selected = selectedData[d.id] === d.grade}
+              {const selected = selectedData[d.id] === d.grade}
               <circle
                 cx={x}
                 cy={y}
