@@ -24,6 +24,10 @@
       return getName(d.feature)?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false;
     }
     // recursively check children for matches
+    // TODO: this is far from optimal. We should use a bottom-up approach or single pass filtering instead.
+    // In fact, this currently only shows the items that have been added to tree. So it completely ignores the download items that have not been shown in this session.
+    // Instead, we should query the db for all items matching our key.
+    // If we want proper search, we will probably need to add a dependency on a minimal search engine, like lunr, fuse or minisearch or flexsearch.
     if (d.children) {
       return Object.values(d.children).some((child) => searchFilter(child));
     }
