@@ -3,7 +3,7 @@
   import { Chart, Layer, Axis, Point, AnnotationLine } from "layerchart/svg";
   import { scalePoint } from "d3-scale";
   import { mode } from "mode-watcher";
-  import { getColorFromGrade } from "@/grade/helpers";
+  import { getColorFromGrade } from "$lib/data/network/grade";
 
   // Transform the nested objects into a flat "tidy" array of data points
   const data = allRouteScales.flatMap((scale) => {

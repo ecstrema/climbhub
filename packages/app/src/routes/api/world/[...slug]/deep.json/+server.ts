@@ -7,7 +7,7 @@ import type { DataJSONRecord } from "$lib/types";
 
 import type { RequestHandler } from "./$types";
 import { withCache, rootPath, withErrorHandler } from "../utils";
-import { dataClient } from "$lib/data-client";
+import { dataClient } from "$lib/data/network/data-client";
 
 /**
  * The deep endpoint returns all grandchildren, grandgrandchildren, etc. Every subchild that is not a direct child.

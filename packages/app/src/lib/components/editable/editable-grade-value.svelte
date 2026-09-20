@@ -1,11 +1,8 @@
 <script lang="ts">
-  import type { Grade, WithSourceTag } from "$lib/osm-tags";
+    import { getAppState } from "$lib/data/app-state";
+  import type { WithSourceTag } from "$lib/data/parse/osm-tags";
+  import type { Grade } from "$lib/types";
   import HolyGrade from "@/grade/holy-grade.svelte";
-  import {
-    osmUser,
-    getPreferredBoulderGradingScale,
-    getPreferredRouteGradingScale,
-  } from "@/shell/providers";
   import { Button } from "@/ui/button";
   import * as DropdownMenu from "@/ui/dropdown-menu/";
   import { allScalesMap } from "@climbhub/holy-grade";
@@ -14,10 +11,14 @@
   const {
     grade,
     feature,
+    featureSlug,
   }: {
     grade: WithSourceTag<Grade>;
     feature: OsmFeature;
+    featureSlug: string;
   } = $props();
+
+  const appState = getAppState();
 
   const scale = $derived.by(() => {
     if (!grade || grade.v.scale === "unknown") return;
@@ -31,7 +32,7 @@
 </script>
 
 <DropdownMenu.Root>
-  <DropdownMenu.Trigger disabled={!osmUser.loggedIn}>
+  <DropdownMenu.Trigger disabled={!appState.osmUser.loggedIn}>
     {#snippet child({ props })}
       <Button {...props} variant="ghost">
         <HolyGrade class="font-semibold text-sm" grade={grade?.v} />
@@ -44,7 +45,7 @@
       <!-- TODO: add an information on hover about not seeing all grades -->
     </DropdownMenu.Label>
     <DropdownMenu.RadioGroup
-      bind:value={() => tags[gradeTagKey], (v) => osmUser.setTag(feature, gradeTagKey, v ?? "")}
+      bind:value={() => tags[gradeTagKey], (v) => appState.setTag(featureSlug, gradeTagKey, v)}
     >
       {const sortedGradeMapping = Object.entries(scale?.gradeMapping ?? {})
         .sort(([_a, a], [_b, b]) => a - b)

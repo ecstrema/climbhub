@@ -3,14 +3,14 @@
   import * as DropdownMenu from "@/ui/dropdown-menu";
   import { Button } from "@/ui/button";
 
-  import { getName } from "$lib/data";
+  import { getName } from "$lib/data/parse/data";
   import { resolve } from "$app/paths";
   import type { BreadcrumbSegment } from "$lib/types";
-  import { getBreadcrumbs } from "@/shell/providers";
   import { onMount, settled } from "svelte";
+  import { getAppState } from "$lib/data/app-state";
 
-  const breadcrumbsProvider = getBreadcrumbs();
-  const breadcrumbs = $derived.by(() => breadcrumbsProvider.items);
+  const appState = getAppState();
+  const breadcrumbs = $derived.by(() => appState.breadcrumbs.items);
 
   $effect(() => {
     if (breadcrumbs.length > 0) {
@@ -85,10 +85,7 @@
               <DropdownMenu.Group>
                 {#each ellipsisItems as breadcrumb (breadcrumb.slug)}
                   <DropdownMenu.Item>
-                    <a
-                      href={resolve("/world/[...slug]", { slug: breadcrumb.slug })}
-                      class="size-full"
-                    >
+                    <a href={resolve("/world/[...slug]", { slug: breadcrumb.slug })} class="size-full">
                       {breadcrumb.data ? getName(breadcrumb.data.feature) : ""}
                     </a>
                   </DropdownMenu.Item>

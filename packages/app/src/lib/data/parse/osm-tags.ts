@@ -13,6 +13,7 @@ import {
   type ScaleId,
 } from "@climbhub/holy-grade";
 import type { Tags } from "osm-api";
+import type { Grade } from "$lib/types";
 
 export type ProcessedTags = Partial<Record<OsmApi.Keys["keys"], (value: string) => boolean>>;
 
@@ -145,11 +146,6 @@ export function getCoordinates(element: OsmFeature): Coordinates | undefined {
     return { lon: element.geometry[0].lon, lat: element.geometry[0].lat };
   }
 }
-
-export type Grade = {
-  v: string;
-  scale: ScaleId | "unknown";
-};
 
 export type ProcessingError = "GradeParsingError" | "GradeMissingScaleSpecifier";
 

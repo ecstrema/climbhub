@@ -4,9 +4,17 @@
 
   let {
     feature,
+    featureSlug,
   }: {
     feature: OsmFeature;
+    featureSlug: string;
   } = $props();
 </script>
 
-<EditableTag tagKey="name" {feature} placeholder="Enter Name..." class="text-2xl font-semibold" />
+<EditableTag
+  tagKey="name"
+  {feature}
+  {featureSlug}
+  placeholder="Enter Name..."
+  class="text-2xl font-semibold"
+/>

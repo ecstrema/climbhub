@@ -5,14 +5,14 @@
   import EditableGrade from "@/editable/editable-grade.svelte";
   import type { DataTree } from "$lib/types";
   import type { OsmFeature } from "osm-api";
-  import { getCoordinates, getGrade, type WithSourceTag, type Grade } from "$lib/osm-tags";
-  import Button from "@/ui/button/button.svelte";
-  import { osmUser } from "@/shell/providers";
+  import { getCoordinates, getGrade } from "$lib/data/parse/osm-tags";
 
   let {
     item = $bindable(),
+    slug,
   }: {
     item: DataTree<OsmFeature>;
+    slug: string;
   } = $props();
 
   const feature = $derived(item.feature);
@@ -22,14 +22,14 @@
 </script>
 
 <div class="flex gap-2 items-baseline">
-  <EditableName {feature} />
-  <EditableGrade {feature} {grade} />
+  <EditableName {feature} featureSlug={slug} />
+  <EditableGrade {feature} {grade} featureSlug={slug} />
 </div>
 
 {#if coordinates}
   <p class="text-sm text-muted-foreground">{coordinates.lat}, {coordinates.lon}</p>
 {/if}
 
-<EditableDescription {feature} />
+<EditableDescription {feature} featureSlug={slug} />
 
-<EditableTags {feature} />
+<EditableTags {feature} featureSlug={slug} />

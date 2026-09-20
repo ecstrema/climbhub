@@ -5,7 +5,7 @@ import type { DataJSONRecord } from "$lib/types";
 
 import type { RequestHandler } from "./$types";
 import { rootPath, withCache, withErrorHandler } from "../utils";
-import { dataClient } from "$lib/data-client";
+import { dataClient } from "$lib/data/network/data-client";
 
 export const GET: RequestHandler = async ({ params, fetch }) => {
   const path = join(rootPath, params.slug);

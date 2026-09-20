@@ -4,8 +4,10 @@
 
   let {
     feature = $bindable(),
+    featureSlug,
   }: {
     feature: DataJSON;
+    featureSlug: string;
   } = $props();
 
   console.error("parsing failed for current element", feature);
@@ -14,5 +16,5 @@
 Failed to analyze this element.
 
 {#if feature.type !== "geographic"}
-  <EditableTags {feature} />
+  <EditableTags {feature} {featureSlug} />
 {/if}

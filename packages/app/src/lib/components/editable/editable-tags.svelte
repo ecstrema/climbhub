@@ -1,16 +1,20 @@
 <script lang="ts">
   import * as Table from "@/ui/table";
   import EditableTextarea from "./editable-textarea.svelte";
-  import { featureToTypeOSM, processedTags } from "$lib/osm-tags";
+  import { featureToTypeOSM, processedTags } from "$lib/data/parse/osm-tags";
   import type { OsmFeature, Tags } from "osm-api";
   import { cn } from "$lib/utils";
-  import { osmUser } from "@/shell/providers";
+  import { getAppState } from "$lib/data/app-state";
 
   const {
     feature,
+    featureSlug,
   }: {
     feature: OsmFeature;
+    featureSlug: string;
   } = $props();
+
+  const appState = getAppState();
 
   const tags = $derived.by(() => feature.tags || {});
 
@@ -77,9 +81,7 @@
     <Table.Row class={className}>
       <Table.Cell>{key}</Table.Cell>
       <Table.Cell>
-        <EditableTextarea
-          bind:value={() => tags[key], (v) => osmUser.setTag(feature, key, v ?? "")}
-        />
+        <EditableTextarea bind:value={() => tags[key], (v) => appState.setTag(featureSlug, key, v)} />
       </Table.Cell>
     </Table.Row>
   {/each}

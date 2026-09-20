@@ -6,7 +6,7 @@
   import AppSidebar from "@/shell/sidebar/app-sidebar.svelte";
   import { Separator } from "@/ui/separator";
   import * as Sidebar from "@/ui/sidebar";
-  import { AppProvider } from "@/shell/providers";
+  import AppProvider from "@/shell/providers/app-provider.svelte";
   import SettingsMenu from "@/shell/app-settings-menu.svelte";
 
   import type { LayoutProps } from "./$types";

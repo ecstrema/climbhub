@@ -2,9 +2,9 @@ import type { AreaStats, DataJSONRecord, DataTree } from "$lib/types";
 import type { DataJSON } from "@climbhub/climbing-data-gen";
 import type { LayoutLoad } from "./$types";
 import { error } from "@sveltejs/kit";
-import { dataTreeFromJsonRecord } from "$lib/data";
-import { dataClient } from "$lib/data-client";
-import { getParentSlugs } from "$lib/slug";
+import { dataClient } from "$lib/data/network/data-client";
+import { dataTreeFromJsonRecord } from "$lib/data/parse/data";
+import { getParentSlugs } from "$lib/helpers/slug";
 
 export interface LayoutLoadType {
   currentItem: DataTree;

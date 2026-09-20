@@ -4,13 +4,15 @@
   import EditableTags from "$lib/components/editable/editable-tags.svelte";
   import type { DataTree } from "$lib/types";
   import type { OsmFeature } from "osm-api";
-  import { getCoordinates } from "$lib/osm-tags";
+  import { getCoordinates } from "$lib/data/parse/osm-tags";
   import BuildingIcon from "@lucide/svelte/icons/building";
 
   let {
     item = $bindable(),
+    slug,
   }: {
     item: DataTree<OsmFeature>;
+    slug: string;
   } = $props();
 
   let coordinates = $derived(getCoordinates(item.feature));
@@ -19,13 +21,13 @@
 
 <div class="flex gap-2 items-center">
   <BuildingIcon />
-  <EditableName {feature} />
+  <EditableName {feature} featureSlug={slug} />
 </div>
 
 {#if coordinates}
   <p class="text-sm text-muted-foreground">{coordinates.lat}, {coordinates.lon}</p>
 {/if}
 
-<EditableDescription {feature} />
+<EditableDescription {feature} featureSlug={slug} />
 
-<EditableTags {feature} />
+<EditableTags {feature} featureSlug={slug} />

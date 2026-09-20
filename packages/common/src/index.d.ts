@@ -29,6 +29,12 @@ declare global {
         | "comment";
     }
   }
+
+  // See ./polyfills.ts for the implementation of these methods
+  interface Map<K, V> {
+    getOrInsert(key: K, value: V): V;
+    getOrInsertComputed(key: K, callback: (key: K) => V): V;
+  }
 }
 
 export {};

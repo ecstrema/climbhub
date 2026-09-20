@@ -1,12 +1,12 @@
 <script lang="ts">
   import type { DataTree } from "$lib/types";
   import { Button } from "@/ui/button";
-  import { osmUser } from "../providers";
 
   import AppSidebarNode from "./app-sidebar-node.svelte";
   import { getSearchFilter, sortChildren } from "./utils";
   import type { OsmRelation, OsmWay } from "osm-api";
-  import { featureToType } from "$lib/data";
+  import { featureToType } from "$lib/data/parse/data";
+  import { getAppState } from "$lib/data/app-state";
 
   let {
     item = $bindable(),
@@ -21,6 +21,8 @@
   const itemType = $derived(featureToType(item.feature));
 
   const searchFilter = getSearchFilter();
+
+  const appState = getAppState();
 </script>
 
 {#each orderedChildren?.geographic as slug (slug)}
@@ -46,13 +48,13 @@
 {#if Object.keys(item.children ?? {}).length === 0}
   <span class="px-4 py-2 text-muted-foreground">No children</span>
 
-  {#if osmUser.loggedIn && itemType === "area"}
+  {#if appState.osmUser.loggedIn && itemType === "area"}
     <div class="flex gap-2 self-end">
       <Button
         variant="outline"
         size="xs"
         class="font-normal"
-        onclick={() => osmUser.createRoute(item as DataTree<OsmWay | OsmRelation>, slug)}
+        onclick={() => appState.createRoute(item as DataTree<OsmWay | OsmRelation>, slug)}
       >
         Add Route
       </Button>
@@ -60,7 +62,7 @@
         variant="outline"
         size="xs"
         class="font-normal"
-        onclick={() => osmUser.createArea(item as DataTree<OsmWay | OsmRelation>, slug)}
+        onclick={() => appState.createArea(item as DataTree<OsmWay | OsmRelation>, slug)}
       >
         Add Sector
       </Button>

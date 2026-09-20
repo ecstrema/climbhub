@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { type Grade } from "$lib/osm-tags";
   import { mode } from "mode-watcher";
   import { getPreferredRouteGradingScale } from "@/shell/providers/settings.svelte";
   import { allScalesMap, convertGrade } from "@climbhub/holy-grade";
-  import { getColorFromGrade } from "./helpers";
+  import type { Grade } from "$lib/types";
+  import { getColorFromGrade } from "$lib/data/network/grade";
 
   const {
     grade,
@@ -44,8 +44,7 @@
     if (!convert) return grade.v;
 
     return (
-      convertGrade(grade.v, allScalesMap[grade.scale], allScalesMap[preferredGradeScale]) ??
-      undefined
+      convertGrade(grade.v, allScalesMap[grade.scale], allScalesMap[preferredGradeScale]) ?? undefined
     );
   });
 </script>

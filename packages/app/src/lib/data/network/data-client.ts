@@ -5,7 +5,7 @@ import type { DataJSONRecord } from "$lib/types";
 import { resolve } from "$app/paths";
 import type { AreaStats } from "$lib/types";
 import type { DataJSON } from "@climbhub/climbing-data-gen";
-import { getParentSlug } from "./slug";
+import { getParentSlug } from "../../helpers/slug";
 
 export interface CachedElement {
   slug: string;
@@ -56,6 +56,11 @@ if (browser) {
   });
 }
 
+/**
+ * Handles all fetch calls. Caches data so it doesn't always have to fetch.
+ *
+ * TODO: this should use sqlite-wasm instead, as it is only 1MB, and will be much faster.
+ */
 class DataClient {
   private inFlightRequests = new Map<string, Promise<any>>();
 

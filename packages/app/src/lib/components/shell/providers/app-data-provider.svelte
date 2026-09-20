@@ -1,18 +1,13 @@
 <script lang="ts">
   import type { BreadcrumbSegment, DataJSONRecord, DataTree } from "$lib/types";
   import { type Snippet } from "svelte";
-  import {
-    AppDataTree,
-    setBreadcrumbs,
-    setCurrentNode,
-    setRefreshState,
-    setTree,
-  } from "./app-data.svelte";
+  import { AppState, setAppState, type Breadcrumbs } from "$lib/data/app-state";
   import { browser } from "$app/env";
   import { type OsmFeature } from "osm-api";
   import { untrack } from "svelte";
-  import { osmUser } from "./osm.svelte";
-  import { getParentSlugs } from "$lib/slug";
+  import { getParentSlugs } from "$lib/helpers/slug";
+  import { AppDataTree } from "$lib/data/app-data-tree.svelte";
+  import type { FromCurrent } from "./types";
 
   const {
     children,
@@ -30,6 +25,26 @@
   const appDataTree = new AppDataTree(slug === "" ? currentItem : { feature: additionalDataJSON[""]! });
 
   const slugSegments: string[] = $derived.by(() => getParentSlugs(slug));
+  const breadcrumbItems: BreadcrumbSegment[] = $derived.by(() => {
+    return slugSegments.map((slug) => ({ slug, data: appDataTree.getReactiveNode(slug) }));
+  });
+
+  const breadcrumbs: Breadcrumbs = {
+    get slugs() {
+      return slugSegments;
+    },
+    get items() {
+      return breadcrumbItems;
+    },
+  };
+
+  const currentNode: FromCurrent<DataTree> = {
+    get current() {
+      return appDataTree.getReactiveNode(slug) ?? currentItem;
+    },
+  };
+
+  const appState = new AppState(appDataTree, breadcrumbs, currentNode);
 
   // svelte-ignore state_referenced_locally
   // We need to integrate the data outside of the effect to ensure that the data is available for the initial render. This is important for SSR and hydration.
@@ -44,9 +59,6 @@
   integrateSelfIntoTree();
   $effect(() => integrateSelfIntoTree());
 
-  let refreshCount = $state(0);
-  let osmRefreshComplete = $state(false);
-
   // When navigating to a page, load it directly from OSM to see if it has changed.
   $effect(() => {
     if (!browser) return;
@@ -55,50 +67,16 @@
 
     if (currentItem.feature.type === "geographic") return;
 
-    osmRefreshComplete = false;
     untrack(() => {
-      const generation = refreshCount;
-      refreshCount += 1;
-
       // Pass the correctly proxied item to the refresh function
-      const proxyItem = appDataTree.parentMap[slug];
-      if (proxyItem) {
-        osmUser.refreshItem(proxyItem as DataTree<OsmFeature>);
+      const reactiveItem = appDataTree.getReactiveNode(slug);
+      if (reactiveItem) {
+        appState.osmUser.refreshItem(reactiveItem as DataTree<OsmFeature>);
       }
-
-      if (generation === refreshCount) osmRefreshComplete = true;
     });
   });
 
-  const breadcrumbItems: BreadcrumbSegment[] = $derived.by(() => {
-    return slugSegments.map((slug) => ({ slug, data: appDataTree.parentMap[slug] }));
-  });
-
-  setCurrentNode({
-    get current() {
-      return appDataTree.parentMap[slug] || currentItem;
-    },
-  });
-
-  setBreadcrumbs({
-    get slugs() {
-      return slugSegments;
-    },
-    get items() {
-      return breadcrumbItems;
-    },
-  });
-
-  setTree(appDataTree);
-
-  setRefreshState({
-    get osmRefreshComplete() {
-      return osmRefreshComplete;
-    },
-    get refreshCount() {
-      return refreshCount;
-    },
-  });
+  setAppState(appState);
 </script>
 
 {@render children?.()}

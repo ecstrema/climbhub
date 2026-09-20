@@ -1,5 +1,5 @@
-import { featureToType, getName, type ItemType } from "$lib/data";
-import { getGradeReference } from "$lib/osm-tags";
+import { featureToType, getName, type ItemType } from "$lib/data/parse/data";
+import { getGradeReference } from "$lib/data/parse/osm-tags";
 import type { DataTree } from "$lib/types";
 import type { OsmFeature } from "osm-api";
 import { getStaticIdentifier, type BasicOsmType } from "@climbhub/common";

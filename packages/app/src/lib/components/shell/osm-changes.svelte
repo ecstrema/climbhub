@@ -1,30 +1,35 @@
 <script lang="ts">
   import UploadIcon from "@lucide/svelte/icons/upload";
   import DeleteIcon from "@lucide/svelte/icons/delete";
-  import { osmUser } from "./providers";
   import { Button } from "@/ui/button";
   import * as Dialog from "@/ui/dialog";
-  import { getNameOSM } from "$lib/osm-tags";
+  import { getNameOSM } from "$lib/data/parse/osm-tags";
 
   import { Progress } from "@/ui/progress";
+  import { getAppState } from "$lib/data/app-state";
 
+  const appState = getAppState();
   let open = $state(false);
   let comment = $state("");
   let error = $state<string>();
 
+  const detailedChanges = $derived(appState.osmUser.getDetailedChanges());
+
   $effect(() => {
     if (open) {
       // Compute an intelligent default comment
-      if (osmUser.changeCount === 1) {
-        const [id, changedFeature] = Object.entries(osmUser.changes)[0]!;
-        if (changedFeature) {
-          const name = getNameOSM(changedFeature.tags ?? {});
-          comment = `Updated ${name || "feature"} (${id})`;
+      if (detailedChanges.size === 1) {
+        const [slug, diff] = detailedChanges.entries().next().value!;
+
+        if (diff === "created") {
+          comment = `created ${slug}`;
+        } else if (diff === "deleted") {
+          comment = `Deleted ${slug}`;
         } else {
-          comment = `Deleted feature ${id}`;
+          comment = `Edited ${slug}`;
         }
       } else {
-        comment = `${osmUser.changeCount} features modified`;
+        comment = `${appState.osmUser.changes.size} features modified`;
       }
     }
   });
@@ -32,7 +37,7 @@
   async function submit() {
     error = undefined;
     try {
-      await osmUser.submitChanges(comment);
+      await appState.osmUser.submitChanges(comment);
       comment = "";
       open = false;
     } catch (reason) {
@@ -41,7 +46,7 @@
   }
 </script>
 
-{#if osmUser.hasChanges}
+{#if appState.osmUser.changes.size}
   <Dialog.Root bind:open>
     <Dialog.DialogTrigger>
       <Button
@@ -49,7 +54,7 @@
         aria-label="Review pending OpenStreetMap changes to submit them"
       >
         <UploadIcon />
-        <span class="text-xs">{osmUser.changeCount}</span>
+        <span class="text-xs">{appState.osmUser.changes.size}</span>
       </Button>
     </Dialog.DialogTrigger>
     <Dialog.Content>
@@ -57,20 +62,23 @@
         <Dialog.Title>OpenStreetMap changes</Dialog.Title>
         <Dialog.Description>
           <!-- TODO: use an actual translation library for handling plurals: wuchale -->
-          {osmUser.changeCount} feature{osmUser.changeCount === 1 ? "" : "s"} modified
+          {appState.osmUser.changes.size} feature{appState.osmUser.changes.size === 1 ? "" : "s"} modified
         </Dialog.Description>
       </Dialog.Header>
       <ul class="my-4 space-y-3 text-sm">
-        {#each Object.entries(osmUser.changes) as [id, changedFeature] (id)}
+        {#each Object.entries(appState.osmUser.changes) as [id, changedFeature] (id)}
           {#if changedFeature}
             <li>
               <strong>{id}</strong>
-              <span> - {getNameOSM(changedFeature.tags ?? {}) || "Unnamed feature"}</span>
+              <span>
+                - {getNameOSM(changedFeature.final?.tags ?? changedFeature.initial?.tags ?? {}) ||
+                  "Unnamed feature"}
+              </span>
               <Button
                 variant="ghost"
                 size="icon"
                 class="ml-2 p-1"
-                onclick={() => osmUser.removeChange(changedFeature)}
+                onclick={() => appState.resetFeature(changedFeature)}
               >
                 <DeleteIcon />
               </Button>
@@ -95,12 +103,16 @@
             <Button {...props} variant="outline">Cancel</Button>
           {/snippet}
         </Dialog.Close>
-        <Button onclick={submit} disabled={!!osmUser.submitting || !osmUser.loggedIn}>
-          {osmUser.submitting ? "Submitting..." : "Submit changes"}
+        <Button onclick={submit} disabled={!!appState.osmUser.submitting || !appState.osmUser.loggedIn}>
+          {appState.osmUser.submitting ? "Submitting..." : "Submit changes"}
         </Button>
       </Dialog.Footer>
-      {#if osmUser.submitting}
-        <Progress class="mt-2" value={osmUser.submitting.step} max={osmUser.submitting.total} />
+      {#if appState.osmUser.submitting}
+        <Progress
+          class="mt-2"
+          value={appState.osmUser.submitting.step}
+          max={appState.osmUser.submitting.total}
+        />
       {/if}
     </Dialog.Content>
   </Dialog.Root>

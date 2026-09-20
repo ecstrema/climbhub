@@ -1,17 +1,19 @@
 <script lang="ts">
-  import { osmUser } from "@/shell/providers";
   import type { Snippet } from "svelte";
   import * as Tooltip from "@/ui/tooltip";
   import { Button } from "@/ui/button";
+  import { getAppState } from "$lib/data/app-state";
 
   const {
     children,
   }: {
     children: Snippet<[any]>;
   } = $props();
+
+  const appState = getAppState();
 </script>
 
-{#if osmUser.loggedIn}
+{#if appState.osmUser.loggedIn}
   {@render children({})}
 {:else}
   <Tooltip.Root>
@@ -22,7 +24,7 @@
     </Tooltip.Trigger>
     <Tooltip.Content>
       <p class="text-sm">
-        <Button variant="outline" class="cursor-pointer" onclick={() => osmUser.login()}>
+        <Button variant="outline" class="cursor-pointer" onclick={() => appState.osmUser.login()}>
           Log in with OSM
         </Button>
         to edit

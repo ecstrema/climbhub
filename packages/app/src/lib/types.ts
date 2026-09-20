@@ -1,4 +1,5 @@
 import type { DataJSON } from "@climbhub/climbing-data-gen";
+import type { ScaleId } from "@climbhub/holy-grade";
 import type { OsmFeature } from "osm-api";
 
 export interface BreadcrumbSegment {
@@ -23,3 +24,8 @@ export interface DataTree<Feature extends DataJSON = DataJSON> {
   feature: Feature;
   stats?: AreaStats;
 }
+
+export type Grade = {
+  v: string;
+  scale: ScaleId | "unknown";
+};

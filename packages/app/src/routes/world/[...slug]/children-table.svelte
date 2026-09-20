@@ -1,10 +1,10 @@
 <script lang="ts">
   import { resolve } from "$app/paths";
-  import { featureToType, getName } from "$lib/data";
-  import { getGrade } from "$lib/osm-tags";
+  import { featureToType, getName } from "$lib/data/parse/data";
+  import { getGrade } from "$lib/data/parse/osm-tags";
   import type { DataTree } from "$lib/types";
   import HolyGrade from "@/grade/holy-grade.svelte";
-  import { sortChildren } from "@/shell/sidebar/utils";
+  import { sortChildren, type SortedChildren } from "@/shell/sidebar/utils";
   import * as Table from "@/ui/table";
   import type { OsmFeature } from "osm-api";
   import CircleQuestionMarkIcon from "@lucide/svelte/icons/circle-question-mark";
@@ -15,7 +15,6 @@
   }: {
     item: DataTree;
   } = $props();
-  import type { SortedChildren } from "@/shell/sidebar/sort-children";
 
   // TODO: reuse sorting done in sidebar? How bad is it for perf to sort again, like this? Maybe we can just pass the sorted list down from the parent component, but that would require a lot of refactoring.
   const allChildren: SortedChildren | undefined = $derived.by(() => sortChildren(item));

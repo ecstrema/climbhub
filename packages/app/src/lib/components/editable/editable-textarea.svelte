@@ -2,7 +2,9 @@
   import { cn } from "$lib/utils.js";
   import type { HTMLTextareaAttributes } from "svelte/elements";
   import EditableTooltip from "./editable-tooltip.svelte";
-  import { osmUser } from "@/shell/providers";
+    import { getAppState } from "$lib/data/app-state";
+
+  const appState = getAppState();
 
   let { value = $bindable(), class: className, ...props }: HTMLTextareaAttributes = $props();
 </script>
@@ -15,7 +17,7 @@
         className,
       )}
       bind:value
-      disabled={!osmUser.loggedIn}
+      disabled={!appState.osmUser.loggedIn}
       {...tooltipProps}
       {...props}></textarea>
   {/snippet}

@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { scaleIdToTag, type Grade, type WithSourceTag } from "$lib/osm-tags";
-  import { osmUser } from "@/shell/providers";
+    import { getAppState } from "$lib/data/app-state";
+  import { type WithSourceTag, scaleIdToTag } from "$lib/data/parse/osm-tags";
+  import type { Grade } from "$lib/types";
   import { Button } from "@/ui/button";
   import * as DropdownMenu from "@/ui/dropdown-menu/";
   import {
@@ -10,15 +11,19 @@
     getScaleFromId,
     type ScaleId,
   } from "@climbhub/holy-grade";
-  import type { OsmFeature, Tags } from "osm-api";
+  import type { OsmFeature } from "osm-api";
 
   const {
     grade,
     feature,
+    featureSlug,
   }: {
     grade: WithSourceTag<Grade>;
     feature: OsmFeature;
+    featureSlug: string,
   } = $props();
+
+  const appState = getAppState();
 
   const changeGradingScale: (value: string) => void = (targetScaleId) => {
     const scaleToConvertTo = getScaleFromId(targetScaleId as ScaleId);
@@ -35,8 +40,8 @@
 
     if (grade.v.scale === "unknown") {
       console.log("unknown grade scale. Deleting it and adding another.");
-      osmUser.deleteTag(feature, grade.source);
-      osmUser.setTag(feature, newGradeKey, getGradeFromReference(50, scaleToConvertTo));
+      appState.deleteTag(featureSlug, grade.source);
+      appState.setTag(featureSlug, newGradeKey, getGradeFromReference(50, scaleToConvertTo));
       return;
     }
 
@@ -59,13 +64,13 @@
       return;
     }
 
-    osmUser.deleteTag(feature, grade.source);
-    osmUser.setTag(feature, newGradeKey, newGrade);
+    appState.deleteTag(featureSlug, grade.source);
+    appState.setTag(featureSlug, newGradeKey, newGrade);
   };
 </script>
 
 <DropdownMenu.Root>
-  <DropdownMenu.Trigger disabled={!osmUser.loggedIn}>
+  <DropdownMenu.Trigger disabled={!appState.osmUser.loggedIn}>
     {#snippet child({ props })}
       <Button {...props} variant="ghost">
         <span class="font-light text-xs text-muted-foreground">

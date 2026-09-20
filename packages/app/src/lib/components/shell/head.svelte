@@ -1,8 +1,10 @@
 <script lang="ts">
-  import { getName } from "$lib/data";
-  import { getCurrentNode } from "@/shell/providers";
+  import { getAppState } from "$lib/data/app-state";
+  import { getName } from "$lib/data/parse/data";
 
-  const name: string | undefined = $derived(getName(getCurrentNode().current?.feature));
+  const appState = getAppState();
+
+  const name: string | undefined = $derived(getName(appState.currentNode.current?.feature));
 </script>
 
 <svelte:head>

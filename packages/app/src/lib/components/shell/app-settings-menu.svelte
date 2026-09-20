@@ -8,11 +8,6 @@
   import { setMode, userPrefersMode } from "mode-watcher";
 
   import {
-    osmUser,
-    getPreferredRouteGradingScale,
-    getPreferredBoulderGradingScale,
-  } from "@/shell/providers";
-  import {
     allBoulderScales,
     french,
     convertGrade,
@@ -21,9 +16,16 @@
     type ScaleId,
   } from "@climbhub/holy-grade";
   import type { FromCurrent } from "./providers/types";
+  import {
+    getPreferredBoulderGradingScale,
+    getPreferredRouteGradingScale,
+  } from "./providers/settings.svelte";
+    import { getAppState } from "$lib/data/app-state";
+
+  const appState = getAppState();
 
   const osmButton = $derived.by(() => {
-    switch (osmUser.loggedIn) {
+    switch (appState.osmUser.loggedIn) {
       case undefined:
         return {
           action: () => {},
@@ -31,12 +33,12 @@
         };
       case true:
         return {
-          action: () => osmUser.logout(),
+          action: () => appState.osmUser.logout(),
           label: "Logout OSM",
         };
       case false:
         return {
-          action: () => osmUser.login(),
+          action: () => appState.osmUser.login(),
           label: "Login with OSM",
         };
     }

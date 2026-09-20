@@ -10,15 +10,15 @@
   import BuildingIcon from "@lucide/svelte/icons/building";
   import type { DataTree } from "$lib/types";
 
-  import { getName, featureToType } from "$lib/data";
+  import { getName, featureToType } from "$lib/data/parse/data";
   import AppSidebarChildren from "./app-sidebar-children.svelte";
   import HolyGrade from "@/grade/holy-grade.svelte";
   import { onMount } from "svelte";
-  import { getGrade } from "$lib/osm-tags";
+  import { getGrade } from "$lib/data/parse/osm-tags";
   import type { OsmFeature } from "osm-api";
-  import { getBreadcrumbs, getTree } from "../providers";
   import { page } from "$app/state";
   import clsx from "clsx";
+  import { getAppState } from "$lib/data/app-state";
 
   let {
     slug,
@@ -28,8 +28,10 @@
     item: DataTree;
   } = $props();
 
-  const breadcrumbSlugs = $derived(getBreadcrumbs().slugs);
-  const tree = getTree();
+  const appState = getAppState();
+
+  const breadcrumbSlugs = $derived(appState.breadcrumbs.slugs);
+  const tree = $derived(appState.tree);
 
   const isCurrentPage = $derived((page.params.slug ?? "") === slug);
   // Check if this specific node is part of the active path being viewed
@@ -41,10 +43,10 @@
   });
 
   $effect(() => {
-    if (open) tree.fetchChildren(slug);
+    if (open) appState.fetchChildren(slug);
   });
 
-  onMount(() => tree.fetchStats(slug));
+  onMount(() => appState.fetchStats(slug));
 
   const link = $derived.by(() => {
     return resolve("/world/[...slug]", { slug });
@@ -82,7 +84,7 @@
     <span>{name || "No name"}</span>
   </Sidebar.MenuButton>
 {:else}
-  <Collapsible.Root bind:open onmouseenter={() => tree.fetchChildren(slug)} class="w-full">
+  <Collapsible.Root bind:open onmouseenter={() => appState.fetchChildren(slug)} class="w-full">
     <Collapsible.Trigger>
       {#snippet child({ props })}
         <Sidebar.MenuItem bind:ref={ref as HTMLLIElement} {...props} class="group/button">
@@ -110,20 +112,12 @@
               {/snippet}
             </DropdownMenu.Trigger>
             <DropdownMenu.Content side="right" align="start">
-              <DropdownMenu.Item>
-                Add area
-              </DropdownMenu.Item>
-              <DropdownMenu.Item>
-                Add route
-              </DropdownMenu.Item>
+              <DropdownMenu.Item>Add area</DropdownMenu.Item>
+              <DropdownMenu.Item>Add route</DropdownMenu.Item>
               <DropdownMenu.Separator />
-              <DropdownMenu.Item>
-                Download area
-              </DropdownMenu.Item>
+              <DropdownMenu.Item>Download area</DropdownMenu.Item>
               <DropdownMenu.Separator />
-              <DropdownMenu.Item>
-                Delete area
-              </DropdownMenu.Item>
+              <DropdownMenu.Item>Delete area</DropdownMenu.Item>
             </DropdownMenu.Content>
           </DropdownMenu.Root>
         </Sidebar.MenuItem>

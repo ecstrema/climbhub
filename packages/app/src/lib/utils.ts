@@ -1,3 +1,5 @@
+// Do not move this file, as it was created by shadcnsvelte and the shadcn dependencies expect it to be here.
+
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 

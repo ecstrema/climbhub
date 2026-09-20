@@ -8,19 +8,21 @@
 
   let {
     item = $bindable(),
+    slug,
   }: {
     item: DataTree<OsmFeature>;
+    slug: string;
   } = $props();
 
-  let feature = $derived(item.feature);
+  let feature = item.feature;
 </script>
 
-<EditableName {feature} />
-<EditableDescription {feature} />
+<EditableName {feature} featureSlug={slug} />
+<EditableDescription {feature} featureSlug={slug} />
 
 {#if item.stats?.totalRoutes}
   <p>{item.stats.totalRoutes} routes in total</p>
 {/if}
 
 <ChildrenTable bind:item />
-<EditableTags {feature} />
+<EditableTags {feature} featureSlug={slug} />
