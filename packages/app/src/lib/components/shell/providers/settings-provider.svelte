@@ -2,10 +2,7 @@
   import type { Snippet } from "svelte";
   import { PersistentState } from "@friendofsvelte/state";
 
-  import {
-    setPreferredRouteGradingScale,
-    setPreferredBoulderGradingScale,
-  } from "./settings.svelte";
+  import { setPreferredRouteGradingScale, setPreferredBoulderGradingScale } from "./settings.svelte";
   import type { BoulderScaleId, RouteScaleId } from "@climbhub/holy-grade";
 
   const preferredRouteGradingScale = new PersistentState<RouteScaleId | "local">(

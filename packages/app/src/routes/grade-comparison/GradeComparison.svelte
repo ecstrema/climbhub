@@ -7,21 +7,24 @@
 
   // Transform the nested objects into a flat "tidy" array of data points
   const data = allRouteScales.flatMap((scale) => {
-    return Object.entries(scale.gradeMapping).map(([grade, ref]) => ({
-      id: scale.id,
-      reference: ref,
-      grade: grade,
-      showLabel: [1, 7].includes(ref % 12),
-    }));
+    return scale.gradeMapping
+      .entries()
+      .map(([grade, ref]) => ({
+        id: scale.id,
+        reference: ref,
+        grade: grade,
+        showLabel: [1, 7].includes(ref % 12),
+      }))
+      .toArray();
   });
 
   let selectedReference: number | undefined = $state();
   const selectedData: Record<RouteScaleId, string | undefined> = $derived.by(() => {
-    const s = {} as Record<RouteScaleId, string | undefined>;
+    const res = {} as Record<RouteScaleId, string | undefined>;
     for (const scale of allRouteScales) {
-      s[scale.id] = selectedReference ? getGradeFromReference(selectedReference, scale) : undefined;
+      res[scale.id] = selectedReference ? getGradeFromReference(selectedReference, scale) : undefined;
     }
-    return s;
+    return res;
   });
   const padding = { top: 30, right: 20, bottom: 30, left: 40 };
 </script>
@@ -39,9 +42,9 @@
     yReverse
   >
     {#snippet children({ context })}
-      {const selectedReferenceFromPosition = (yPosition: number) => {
+      {const selectedReferenceFromPosition = $derived((yPosition: number) => {
         return Math.round(context.yScale.invert?.(yPosition - padding.top) || undefined);
-      }}
+      })}
       <Layer
         onpointermove={(e) => (selectedReference = selectedReferenceFromPosition(e.offsetY))}
         onpointerleave={() => (selectedReference = undefined)}
@@ -56,7 +59,7 @@
         {#each data as d, i (i)}
           <Point {d}>
             {#snippet children({ x, y })}
-              {const selected = selectedData[d.id] === d.grade}
+              {const selected = $derived(selectedData[d.id] === d.grade)}
               <circle
                 cx={x}
                 cy={y}

@@ -67,10 +67,10 @@
 
 {#if breadcrumbs.length > 0}
   <Breadcrumb.Root bind:ref={rootElement} class="w-full">
-    {const lastElement = breadcrumbs.at(-1)!}
+    {const lastElement = $derived(breadcrumbs.at(-1)!)}
     <Breadcrumb.List>
       <!-- display only the last breadcrumb with an ellipsis for parents -->
-      {const ellipsisItems = breadcrumbs.slice(0, hidden)}
+      {const ellipsisItems = $derived(breadcrumbs.slice(0, hidden))}
       {#if ellipsisItems.length > 0}
         <Breadcrumb.Item>
           <DropdownMenu.Root>
@@ -105,7 +105,7 @@
 {/if}
 
 {#snippet breadcrumbFromDataJSON(breadcrumb: BreadcrumbSegment, lastElement: BreadcrumbSegment)}
-  {const name = breadcrumb.data ? getName(breadcrumb.data.feature) : ""}
+  {const name = $derived(breadcrumb.data ? getName(breadcrumb.data.feature) : "")}
 
   <Breadcrumb.Item>
     {#if breadcrumb === lastElement}

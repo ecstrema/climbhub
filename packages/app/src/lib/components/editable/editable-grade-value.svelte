@@ -1,12 +1,12 @@
 <script lang="ts">
-    import { getAppState } from "$lib/data/app-state";
+  import { getAppState } from "$lib/data/app-state";
   import type { WithSourceTag } from "$lib/data/parse/osm-tags";
   import type { Grade } from "$lib/types";
   import HolyGrade from "@/grade/holy-grade.svelte";
   import { Button } from "@/ui/button";
   import * as DropdownMenu from "@/ui/dropdown-menu/";
-  import { allScalesMap } from "@climbhub/holy-grade";
-  import type { OsmFeature, Tags } from "osm-api";
+  import { getScaleFromId } from "@climbhub/holy-grade";
+  import type { OsmFeature } from "osm-api";
 
   const {
     grade,
@@ -23,7 +23,7 @@
   const scale = $derived.by(() => {
     if (!grade || grade.v.scale === "unknown") return;
 
-    return allScalesMap[grade.v.scale];
+    return getScaleFromId(grade.v.scale);
   });
 
   const tags = $derived(feature.tags || {});
@@ -47,10 +47,7 @@
     <DropdownMenu.RadioGroup
       bind:value={() => tags[gradeTagKey], (v) => appState.setTag(featureSlug, gradeTagKey, v)}
     >
-      {const sortedGradeMapping = Object.entries(scale?.gradeMapping ?? {})
-        .sort(([_a, a], [_b, b]) => a - b)
-        .map(([k, _]) => k)}
-      {#each sortedGradeMapping as name (name)}
+      {#each scale?.gradeMapping.keys() as name (name)}
         <DropdownMenu.RadioItem value={name} class="whitespace-nowrap">
           <HolyGrade grade={{ v: name, scale: scale?.id || "YDS" }} convert={true} />
         </DropdownMenu.RadioItem>

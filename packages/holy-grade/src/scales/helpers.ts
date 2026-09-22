@@ -1,14 +1,16 @@
+import type { GradeMapping, NormalizationGradeMapping } from "./types";
+
 export function normalizeFromGradeMappings(
-  gradeMapping: Record<string, number>,
-  extendedGradeNormalizationMapping?: Record<string, string>,
+  gradeMapping: GradeMapping,
+  extendedGradeNormalizationMapping?: NormalizationGradeMapping,
 ) {
   return (grade: string): string | undefined => {
-    if (grade in gradeMapping) {
+    if (gradeMapping.has(grade)) {
       return grade;
     }
 
-    if (extendedGradeNormalizationMapping && grade in extendedGradeNormalizationMapping) {
-      return extendedGradeNormalizationMapping[grade];
+    if (extendedGradeNormalizationMapping && extendedGradeNormalizationMapping.get(grade)) {
+      return extendedGradeNormalizationMapping.get(grade);
     }
   };
 }

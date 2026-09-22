@@ -120,7 +120,7 @@ export function getGrade(tags: Tags): WithSourceTag<Grade> | undefined {
   function testKey(key: OsmApi.Keys["keys"], scale: ScaleId): WithSourceTag<Grade> | undefined {
     const v = tags[key];
     if (v) {
-      const normalized = allScalesMap[scale].normalize(v);
+      const normalized = getScaleFromId(scale)!.normalize(v);
       // validate the grade, but ignore the result
       return {
         v: normalized ? { v: normalized, scale } : { v, scale: "unknown" },

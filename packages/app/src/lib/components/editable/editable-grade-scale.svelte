@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { getAppState } from "$lib/data/app-state";
+  import { getAppState } from "$lib/data/app-state";
   import { type WithSourceTag, scaleIdToTag } from "$lib/data/parse/osm-tags";
   import type { Grade } from "$lib/types";
   import { Button } from "@/ui/button";
@@ -20,7 +20,7 @@
   }: {
     grade: WithSourceTag<Grade>;
     feature: OsmFeature;
-    featureSlug: string,
+    featureSlug: string;
   } = $props();
 
   const appState = getAppState();

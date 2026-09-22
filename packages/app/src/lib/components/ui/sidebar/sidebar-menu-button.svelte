@@ -71,7 +71,7 @@
 </script>
 
 {#snippet Button({ props }: { props?: Record<string, unknown> })}
-  {const mergedProps = mergeProps(buttonProps, props)}
+  {const mergedProps = $derived(mergeProps(buttonProps, props))}
   {#if child}
     {@render child({ props: mergedProps })}
   {:else if href}
