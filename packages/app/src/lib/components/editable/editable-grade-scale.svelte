@@ -8,7 +8,7 @@
     allRouteScales,
     convertGrade,
     getGradeFromReference,
-    getScaleFromId,
+    getScale,
     type ScaleId,
   } from "@climbhub/holy-grade";
   import type { OsmFeature } from "osm-api";
@@ -26,7 +26,7 @@
   const appState = getAppState();
 
   const changeGradingScale: (value: string) => void = (targetScaleId) => {
-    const scaleToConvertTo = getScaleFromId(targetScaleId as ScaleId);
+    const scaleToConvertTo = getScale(targetScaleId as ScaleId);
     if (!scaleToConvertTo) {
       console.log("Could not find scale with id", targetScaleId);
       return;
@@ -45,7 +45,7 @@
       return;
     }
 
-    const scale = getScaleFromId(grade.v.scale);
+    const scale = getScale(grade.v.scale);
     if (!scale) {
       console.log("Could not find scale with id", grade.v.scale);
       return;

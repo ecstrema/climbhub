@@ -1,7 +1,7 @@
 <script lang="ts">
   import { mode } from "mode-watcher";
   import { getPreferredRouteGradingScale } from "@/shell/providers/settings.svelte";
-  import { getScaleFromId, convertGrade } from "@climbhub/holy-grade";
+  import { getScale, convertGrade } from "@climbhub/holy-grade";
   import type { Grade } from "$lib/types";
   import { getColorFromGrade } from "$lib/data/network/grade";
 
@@ -17,7 +17,7 @@
 
   const scale = $derived.by(() => {
     if (!grade || grade.scale === "unknown") return;
-    return getScaleFromId(grade.scale);
+    return getScale(grade.scale);
   });
 
   const color = $derived.by(() => {
@@ -44,7 +44,7 @@
 
     if (!convert) return grade.v;
 
-    return convertGrade(grade.v, getScaleFromId(grade.scale)!, getScaleFromId(preferredGradeScale)!);
+    return convertGrade(grade.v, getScale(grade.scale)!, getScale(preferredGradeScale)!);
   });
 </script>
 

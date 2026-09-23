@@ -2,11 +2,10 @@ import type { OsmFeature } from "osm-api";
 import type { Coordinates } from "@climbhub/climbing-data-gen";
 import {
   allScales,
-  allScalesMap,
   fb,
   french,
   getReference,
-  getScaleFromId,
+  getScale,
   uiaa,
   yds,
   type Scale,
@@ -120,7 +119,7 @@ export function getGrade(tags: Tags): WithSourceTag<Grade> | undefined {
   function testKey(key: OsmApi.Keys["keys"], scale: ScaleId): WithSourceTag<Grade> | undefined {
     const v = tags[key];
     if (v) {
-      const normalized = getScaleFromId(scale)!.normalize(v);
+      const normalized = getScale(scale)!.normalize(v);
       // validate the grade, but ignore the result
       return {
         v: normalized ? { v: normalized, scale } : { v, scale: "unknown" },
@@ -197,7 +196,7 @@ export function getGradeReference(tags: Tags): number | undefined {
   const grade = getGrade(tags)?.v;
   if (!grade || grade.scale === "unknown") return;
 
-  const scale = getScaleFromId(grade.scale);
+  const scale = getScale(grade.scale);
   if (!scale) return;
 
   const reference = getReference(grade.v, scale);

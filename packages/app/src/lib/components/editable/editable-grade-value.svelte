@@ -5,7 +5,7 @@
   import HolyGrade from "@/grade/holy-grade.svelte";
   import { Button } from "@/ui/button";
   import * as DropdownMenu from "@/ui/dropdown-menu/";
-  import { getScaleFromId } from "@climbhub/holy-grade";
+  import { getScale } from "@climbhub/holy-grade";
   import type { OsmFeature } from "osm-api";
 
   const {
@@ -23,7 +23,7 @@
   const scale = $derived.by(() => {
     if (!grade || grade.v.scale === "unknown") return;
 
-    return getScaleFromId(grade.v.scale);
+    return getScale(grade.v.scale);
   });
 
   const tags = $derived(feature.tags || {});

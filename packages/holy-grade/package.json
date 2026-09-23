@@ -12,6 +12,7 @@
   "devDependencies": {
     "@climbhub/common": "workspace:*",
     "@types/bun": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "^5.0.1"
   }
 }

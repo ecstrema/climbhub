@@ -1,42 +1,55 @@
-import type { GradeMapping, Scale } from "../types";
-import { normalizeFromGradeMappings } from "../helpers";
+import type { Scale } from "../types";
+import { buildReverseTable, normalizeFromGradeMappings } from "../helpers";
 
-const gradeMapping: GradeMapping = new Map([
-  ["VB", 25.5],
-  ["V0-", 50],
-  ["V0", 56],
-  ["V1", 62.5],
-  ["V2", 64.5],
-  ["V3", 67.5],
-  ["V4", 71.5],
-  ["V5", 75],
-  ["V6", 77.5],
-  ["V7", 79.5],
-  ["V8", 82.5],
-  ["V9", 85.5],
-  ["V10", 87],
-  ["V11", 88.5],
-  ["V12", 90.5],
-  ["V13", 92.5],
-  ["V14", 94.5],
-  ["V15", 96.5],
-  ["V16", 98.5],
-  ["V17", 100],
-  ["V18", 102],
+// Numbers are hand-picked to line up with Fontainebleau (see fb.ts): Hueco V9 = 25 = FB 7C,
+// Hueco V15 = 32 = FB 8C.
+const gradeMapping: Scale["gradeMapping"] = new Map([
+  ["VB-", 6],
+  ["VB", 7],
+  ["VB/V0-", 8],
+  ["V0-", 9],
+  ["V0-/V0", 10],
+  ["V0", 11],
+  ["V0+", 12],
+  ["V1", 13],
+  ["V1/V2", 14],
+  ["V2", 15],
+  ["V3", 16],
+  ["V3/V4", 17],
+  ["V4", 18],
+  ["V4/V5", 19],
+  ["V5", 20],
+  ["V6", 21],
+  ["V6/V7", 22],
+  ["V7", 23],
+  ["V8", 24],
+  ["V9", 25],
+  ["V10", 26],
+  ["V10/V11", 27],
+  ["V11", 28],
+  ["V12", 29],
+  ["V13", 30],
+  ["V14", 31],
+  ["V15", 32],
+  ["V16", 33],
+  ["V17", 34],
+  ["V18", 35],
 ]);
 
 const normalizer = normalizeFromGradeMappings(gradeMapping);
 
 export const hueco: Scale<"Hueco"> = {
   id: "Hueco",
-  name: "Hueco Scale - V Scale",
-  description: "A bouldering grade system used primarily in North America.",
-
+  name: "V Grade",
+  description:
+    'The V scale grading system, created by John Sherman, is the most widely used bouldering scale in North America. Also known as "Hueco".',
   gradeType: "boulder",
-
   gradeMapping,
-
-  normalize: (grade) => {
-    return normalizer(grade.toUpperCase());
-  },
+  numberToGradeTable: buildReverseTable(gradeMapping),
+  normalize: (grade) => normalizer(grade.trim().toUpperCase()),
+  nameAlt: "Hueco",
+  usedIn: "North America",
+  flags: "🇺🇸🇨🇦",
+  osmTagName: "hueco",
+  usageCount: 0,
 };
