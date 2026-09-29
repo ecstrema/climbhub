@@ -1,4 +1,4 @@
-import { getScale, getReference, type ScaleId } from "@climbhub/holy-grade";
+import { getScale, getReference, type ScaleId, DIFFICULTY_RANGE } from "@climbhub/holy-grade";
 import { scaleLinear } from "d3-scale";
 
 // Scale from 0 to 120 (degrees). 50 is 0, 90 is 120. This is a linear scale, but we could use a log scale if we wanted to emphasize the lower grades more.
@@ -10,6 +10,7 @@ export function getColorFromGrade(grade: string, scaleId: ScaleId, dark = false)
     return dark ? "hsl(0deg 0% 30%)" : "hsl(0deg 0% 70%)";
   }
   let score = getReference(grade, scale);
-  score = score ? scalor.domain([49, 109])(score) : 0;
+  const difficultyRange = DIFFICULTY_RANGE[scale.gradeType];
+  score = score ? scalor.domain([difficultyRange.beginner, difficultyRange.max])(score) : 0;
   return `hsl(${score.toFixed(0)}deg 80% ${dark ? 30 : 70}%)`;
 }

@@ -1,7 +1,7 @@
 import type { Scale } from "../types";
-import { buildReverseTable, normalizeFromGradeMappings } from "../helpers";
+import { buildReverseTable, normalizeFromGradeMappings } from "../builder";
 
-let n = 0;
+let n = 1;
 const gradeMapping: Scale["gradeMapping"] = new Map([
   ["A0-", n++],
   ["A0", n++],

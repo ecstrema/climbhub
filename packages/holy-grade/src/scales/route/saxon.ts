@@ -1,5 +1,5 @@
 import type { Scale } from "../types";
-import { buildReverseTable, normalizeFromGradeMappings, numeralAlternateNames } from "../helpers";
+import { buildReverseTable, normalizeFromGradeMappings, numeralAlternateNames } from "../builder";
 
 // Numbers are hand-picked to loosely line up with French (see french.ts): Saxon VIIb = 60 ~
 // French 6a, Saxon IXa = 72 ~ French 7a. Best-effort placement on a commonly-cited

@@ -5,7 +5,7 @@ import type { DataJSONRecord } from "$lib/types";
 import { resolve } from "$app/paths";
 import type { AreaStats } from "$lib/types";
 import type { DataJSON } from "@climbhub/climbing-data-gen";
-import { getParentSlug } from "../../helpers/slug";
+import { getParentSlug } from "$lib/helpers/slug";
 
 export interface CachedElement {
   slug: string;

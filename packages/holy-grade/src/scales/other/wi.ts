@@ -1,23 +1,11 @@
 import type { Scale } from "../types";
-import { buildReverseTable, normalizeFromGradeMappings } from "../helpers";
+import { buildReverseTable, normalizeFromGradeMappings } from "../builder";
 
-let n = 0;
-const gradeMapping: Scale["gradeMapping"] = new Map([
-  ["WI0", n++],
-  ["WI1", n++],
-  ["WI2", n++],
-  ["WI3", n++],
-  ["WI4", n++],
-  ["WI5", n++],
-  ["WI6", n++],
-  ["WI7", n++],
-  ["WI8", n++],
-  ["WI9", n++],
-  ["WI10", n++],
-  ["WI11", n++],
-  ["WI12", n++],
-  ["WI13", n++],
-]);
+const gradeMapping: Scale["gradeMapping"] = new Map();
+for (let n = 1; n < 14; n++) {
+  gradeMapping.set(`WI${n}`, 2 * n - 1)
+  gradeMapping.set(`WI${n}/${n+1}`, 2 * n)
+}
 
 const normalizer = normalizeFromGradeMappings(gradeMapping);
 

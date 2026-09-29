@@ -51,6 +51,7 @@ export type RouteScaleId =
   | "UKAdj"
   | "FrenchBritish"
   | "Scandinavian"
+  | "Ewbank"
   | "Polish";
 export type BoulderScaleId = "FB" | "Hueco";
 export type IceScaleId = "WI" | "Mixed" | "DryTooling";

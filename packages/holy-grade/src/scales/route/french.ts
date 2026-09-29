@@ -1,77 +1,59 @@
-import type { Scale } from "../types";
-import { buildReverseTable, normalizeFromGradeMappings } from "../helpers";
+import type { AlternateNamesMapping, GradeMapping, Scale } from "../types";
+import { buildReverseTable, normalizeFromGradeMappings } from "../builder";
 
 // Numbers are hand-picked to line up with equivalent grades in other scales (see yds.ts,
 // uiaa.ts, saxon.ts): French 6a = 60 = YDS 5.10a, 7a = 72 = 5.11a, 8b+ = 96 = 5.14a,
 // 9a = 102 = 5.14d. If you edit these in the app (dev mode only — see
 // GradeComparisonChart.svelte's drag-to-edit and download feature), paste the downloaded
 // text back in here.
-const gradeMapping: Scale["gradeMapping"] = new Map([
-  ["1", 43],
-  ["2", 44],
-  ["3a", 45],
-  ["3b", 46],
-  ["3c", 47],
-  ["4a", 48],
-  ["4a+", 49],
-  ["4b", 50],
-  ["4b+", 51],
-  ["4c", 52],
-  ["4c+", 53],
-  ["5a", 54],
-  ["5a+", 55],
-  ["5b", 56],
-  ["5b+", 57],
-  ["5c", 58],
-  ["5c+", 59],
-  ["6a", 60],
-  ["6a/6a+", 61],
-  ["6a+", 62],
-  ["6a+/6b", 63],
-  ["6b", 64],
-  ["6b/6b+", 65],
-  ["6b+", 66],
-  ["6b+/6c", 67],
-  ["6c", 68],
-  ["6c/6c+", 69],
-  ["6c+", 70],
-  ["6c+/7a", 71],
-  ["7a", 72],
-  ["7a/7a+", 73],
-  ["7a+", 75],
-  ["7a+/7b", 76],
-  ["7b", 77],
-  ["7b/7b+", 79],
-  ["7b+", 80],
-  ["7b+/7c", 81],
-  ["7c", 83],
-  ["7c/7c+", 84],
-  ["7c+", 85],
-  ["7c+/8a", 87],
-  ["8a", 88],
-  ["8a/8a+", 89],
-  ["8a+", 91],
-  ["8a+/8b", 92],
-  ["8b", 93],
-  ["8b/8b+", 95],
-  ["8b+", 96],
-  ["8b+/8c", 97],
-  ["8c", 98],
-  ["8c/8c+", 99],
-  ["8c+", 100],
-  ["8c+/9a", 101],
-  ["9a", 102],
-  ["9a/9a+", 103],
-  ["9a+", 104],
-  ["9a+/9b", 105],
-  ["9b", 106],
-  ["9b/9b+", 107],
-  ["9b+", 108],
-  ["9b+/9c", 109],
-  ["9c", 110],
-]);
 
-const normalizer = normalizeFromGradeMappings(gradeMapping);
+const gradeMapping: GradeMapping = new Map([]);
+const variantsPerNumber: string[] = [
+  "a",
+  "a/+",
+  "a+",
+  "a+/b",
+  "b",
+  "b/+",
+  "b+",
+  "b+/c",
+  "c",
+  "c/+",
+  "c+",
+];
+for (let n = 1; n <= 9; n++) {
+  for (let qualifierIndex = 0; qualifierIndex < variantsPerNumber.length; qualifierIndex++) {
+    const qualifier = variantsPerNumber[qualifierIndex];
+    const grade = `${n}${qualifier}`;
+    gradeMapping.set(grade, (n - 1) * (variantsPerNumber.length + 1) + qualifierIndex + 1);
+  }
+  const transitionGrade = `${n}c+/${n + 1}a`;
+  gradeMapping.set(
+    transitionGrade,
+    (n - 1) * (variantsPerNumber.length + 1) + variantsPerNumber.length + 1,
+  );
+}
+gradeMapping.set("10a", 9 * (variantsPerNumber.length + 1) + 1);
+
+const alternates: AlternateNamesMapping = new Map([
+  ["1-", "1a"],
+  ["1", "1b"],
+  ["1+", "1c"],
+  ["2-", "2a"],
+  ["2", "2b"],
+  ["2+", "2c"],
+  ["3-", "3a"],
+  ["3", "3b"],
+  ["3+", "3c"],
+  ["4-", "4a"],
+  ["4", "4b"],
+  ["4+", "4c"],
+  ["5-", "5a"],
+  ["5", "5b"],
+  ["5+", "5c"],
+])
+
+const normalizer = normalizeFromGradeMappings(gradeMapping, alternates);
 
 export const french: Scale<"French"> = {
   id: "French",
@@ -80,6 +62,7 @@ export const french: Scale<"French"> = {
     "The French numerical system rates a climb according to the overall technical difficulty and strenuousness of the route. The most common scale in the world outside North America.",
   gradeType: "route",
   gradeMapping,
+  alternateNames: alternates,
   numberToGradeTable: buildReverseTable(gradeMapping),
   // Route grades are written lowercase ("7a"), unlike Fontainebleau boulder grades ("7A") —
   // see fb.ts.

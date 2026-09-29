@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { french, yds, fb, hueco, uiaa, saxon, convertGrade } from "./index";
+import { ewbank } from "./scales/route/ewbank";
 
 describe("French <-> YDS", () => {
   // These four are exact, given equivalences — ground truth.
@@ -26,5 +27,16 @@ describe("Fontainebleau (FB) <-> Hueco (V-scale)", () => {
   ])("FB %s <-> Hueco %s", (fbGrade, huecoGrade) => {
     expect(convertGrade(fbGrade, fb, hueco)).toBe(huecoGrade);
     expect(convertGrade(huecoGrade, hueco, fb)).toBe(fbGrade);
+  });
+});
+
+describe("Ewbank <-> French", () => {
+  // These two are exact, given equivalences — ground truth.
+  it.each([
+    ["18", "6a"],
+    ["22", "7a"],
+  ])("Ewbank %s <-> French %s", (ewbankGrade, frenchGrade) => {
+    expect(convertGrade(ewbankGrade, ewbank, french)).toBe(frenchGrade);
+    expect(convertGrade(frenchGrade, french, ewbank)).toBe(ewbankGrade);
   });
 });

@@ -6,7 +6,7 @@
   import { mode } from "mode-watcher";
   import { getColorFromGrade } from "$lib/data/network/grade";
 
-  let { scales }: { scales: readonly Scale<T>[] } = $props();
+  let { scales }: { scales: Scale<T>[] } = $props();
 
   // Only available in dev — dragging edits nothing persistent, it's just a way to preview a
   // new arrangement before copying the generated text back into the scale's own file.
@@ -138,6 +138,7 @@
           {#snippet children({ x, y })}
             {const selected = $derived(selectedData[d.id] === d.grade)}
             {const dragging = $derived(draggingKey === d.key)}
+            <!-- svelte-ignore a11y_no_static_element_interactions This is only in dev. -->
             <circle
               cx={x}
               cy={y}

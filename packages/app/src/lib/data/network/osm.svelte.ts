@@ -7,7 +7,7 @@ import { online } from "svelte/reactivity/window";
 import type { DataTree } from "$lib/types";
 import { browser } from "$app/env";
 import { SvelteMap } from "svelte/reactivity";
-import type { TypedMap, TypedSvelteMap } from "$lib/helpers/types";
+import type { TypedMap } from "$lib/helpers/types";
 import { snapshot } from "$lib/helpers/svelte.svelte";
 
 // A feature change is:

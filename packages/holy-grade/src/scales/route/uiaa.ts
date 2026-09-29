@@ -1,5 +1,5 @@
 import type { Scale } from "../types";
-import { buildReverseTable, normalizeFromGradeMappings, numeralAlternateNames } from "../helpers";
+import { buildReverseTable, normalizeFromGradeMappings, numeralAlternateNames } from "../builder";
 
 // Numbers are hand-picked to loosely line up with French (see french.ts): UIAA 6- = 60 ~
 // French 6a, UIAA 7 = 72 ~ French 7a. Best-effort placement on a commonly-cited comparison
