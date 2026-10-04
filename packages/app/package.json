@@ -5,8 +5,6 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
-    "build:reverse-geocoding-data": "cd src/@climbhub/climbing-data-gen/reverse-geocoding-data && bun run build",
-    "build:@climbhub/climbing-data-gen": "cd src/@climbhub/climbing-data-gen && bun run build",
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
