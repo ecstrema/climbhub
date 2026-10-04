@@ -3,7 +3,7 @@
 </script>
 
 <svelte:head>
-  <title>Climbhub - Grade Comparison</title>
+  <title>{import.meta.env.DEV ? "[DEV] " : ""}Climbhub - Grade Comparison</title>
 </svelte:head>
 
 <GradeComparison />
