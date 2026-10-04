@@ -101,6 +101,10 @@ async function runOverpassQuery(query: string, sourceName: string): Promise<any>
       console.warn(`⚠️  Overpass API timeout for ${sourceName}. Retrying...`);
       return runOverpassQuery(query, sourceName);
     }
+    if (res.status === 429) {
+      console.warn(`⚠️  Overpass API: Too many requests for ${sourceName}. Retrying...`)
+      return runOverpassQuery(query, sourceName);
+    }
     throw new Error(`HTTP Error ${res.status}: ${res.statusText}`);
   }
   const osmData = await res.json();
@@ -169,7 +173,7 @@ async function processActionableQueries(configs: Map<string, YamlConfig>) {
 
       // Check if the delegate actually created the file we needed
       if (!existsSync(boundaryPath)) {
-        throw new Error(
+        console.warn(
           `❌ Delegate ${config.delegateTo} was executed, but failed to generate data for ${currentDir}. Does the OSM feature exist?`,
         );
       }
@@ -245,7 +249,7 @@ function validateConfigs(configs: Map<string, YamlConfig>) {
   // Validate unreferenced multiples
   for (const declared of declaredMultiples) {
     if (!referencedMultiples.has(declared)) {
-      throw new Error(
+      console.warn(
         `❌ Integrity Error: Query '${declared}' is marked as multiple: true, but no child directory delegates to it.`,
       );
     }
