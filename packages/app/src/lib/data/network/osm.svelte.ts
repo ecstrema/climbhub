@@ -10,11 +10,15 @@ import { SvelteMap } from "svelte/reactivity";
 import type { TypedMap } from "$lib/helpers/types";
 import { snapshot } from "$lib/helpers/svelte.svelte";
 
-// A feature change is:
-// - `undefined` if the feature has been deleted
-// - an OsmFeature with:
-//   - a negative id if the feature has been created
-//   - a positive id if the feature has been modified (id hasn't changed)
+/**
+ * Maps slugs to a feature diff
+ *
+ * A feature change is:
+ * - `undefined` if the feature has been deleted
+ * - an OsmFeature with:
+ *   - a negative id if the feature has been created
+ *   - a positive id if the feature has been modified (id hasn't changed)
+ */
 export type FeatureChanges = SvelteMap<string, Diff<OsmFeature | undefined>>;
 
 export type UploadProgress = {

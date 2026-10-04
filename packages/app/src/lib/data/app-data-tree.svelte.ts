@@ -104,4 +104,9 @@ export class AppDataTree {
   getReactiveNode(slug: string): DataTree | undefined {
     return this.#parentMap[slug];
   }
+
+  getParentReactiveNode(slug: string): DataTree | undefined {
+    const s = getParentSlug(slug);
+    if (s) return this.getReactiveNode(s);
+  }
 }

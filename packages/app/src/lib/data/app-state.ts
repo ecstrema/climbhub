@@ -4,8 +4,14 @@ import { dataClient } from "./network/data-client";
 import type { BreadcrumbSegment, DataTree } from "$lib/types";
 import type { FromCurrent } from "@/shell/providers/types";
 import { UndoManager } from "./undo/undo-stack";
-import { UndoableAreaCreate, UndoableRouteCreate, UndoableTagChange } from "./undo/actions";
+import {
+  UndoableAreaCreate,
+  UndoableFeatureSet,
+  UndoableRouteCreate,
+  UndoableTagChange,
+} from "./undo/actions";
 import { OsmUser } from "./network/osm.svelte";
+import type { OsmFeature } from "osm-api";
 
 export interface Breadcrumbs {
   slugs: string[];
@@ -97,9 +103,11 @@ export class AppState {
   resetFeature(targetSlug: string) {
     const node = this.tree.getReactiveNode(targetSlug);
     const feature = node?.feature;
-    if (!feature) return;
+    if (!feature || feature.type === "geographic") return;
 
-    //
+    this.undoStack.do(
+      new UndoableFeatureSet(this.osmUser, node as DataTree<OsmFeature>, targetSlug, undefined),
+    );
   }
 }
 

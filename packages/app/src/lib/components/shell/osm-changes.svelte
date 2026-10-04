@@ -44,6 +44,10 @@
       error = reason instanceof Error ? reason.message : "Could not submit changes";
     }
   }
+
+  $effect(() => {
+    if (appState.osmUser.changes.size === 0) open = false;
+  });
 </script>
 
 {#if appState.osmUser.changes.size}
@@ -66,10 +70,10 @@
         </Dialog.Description>
       </Dialog.Header>
       <ul class="my-4 space-y-3 text-sm">
-        {#each Object.entries(appState.osmUser.changes) as [id, changedFeature] (id)}
+        {#each appState.osmUser.changes as [slug, changedFeature] (slug)}
           {#if changedFeature}
             <li>
-              <strong>{id}</strong>
+              <strong>{slug}</strong>
               <span>
                 - {getNameOSM(changedFeature.final?.tags ?? changedFeature.initial?.tags ?? {}) ||
                   "Unnamed feature"}
@@ -78,13 +82,13 @@
                 variant="ghost"
                 size="icon"
                 class="ml-2 p-1"
-                onclick={() => appState.resetFeature(changedFeature)}
+                onclick={() => appState.resetFeature(slug)}
               >
                 <DeleteIcon />
               </Button>
             </li>
           {:else}
-            <span>Feature {id} was delete</span>
+            <span>Feature {slug} was deleted</span>
           {/if}
         {/each}
       </ul>
@@ -103,7 +107,10 @@
             <Button {...props} variant="outline">Cancel</Button>
           {/snippet}
         </Dialog.Close>
-        <Button onclick={submit} disabled={!!appState.osmUser.submitting || !appState.osmUser.loggedIn}>
+        <Button
+          onclick={submit}
+          disabled={!!appState.osmUser.submitting || !appState.osmUser.loggedIn}
+        >
           {appState.osmUser.submitting ? "Submitting..." : "Submit changes"}
         </Button>
       </Dialog.Footer>

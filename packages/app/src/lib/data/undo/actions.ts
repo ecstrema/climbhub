@@ -1,5 +1,5 @@
 import type { DataTree } from "$lib/types";
-import type { Tags, OsmFeature, OsmNode, OsmRelation } from "osm-api";
+import type { OsmFeature, OsmNode, OsmRelation } from "osm-api";
 import type { Undoable } from "./types";
 import type { OsmUser } from "../network/osm.svelte";
 import { snapshot } from "$lib/helpers/svelte.svelte";
@@ -145,18 +145,21 @@ export class UndoableAreaCreate extends UndoableNodeCreate {
   }
 }
 
-/** Completely replace a feature with another */
+/** Completely replace a feature with another. Set the new feature to undefined to reset to initial. */
 export class UndoableFeatureSet extends OsmUndoable implements Undoable {
   item: DataTree<OsmFeature>;
   featureSlug: string;
-  newFeature: OsmFeature;
+  newFeature: OsmFeature | undefined;
   featureBefore: OsmFeature | undefined;
 
+  /**
+   * @param newFeature Set this to undefined to reset the feature to its initial state.
+   */
   constructor(
     osmUser: OsmUser,
     item: DataTree<OsmFeature>,
     featureSlug: string,
-    newFeature: OsmFeature,
+    newFeature: OsmFeature | undefined,
   ) {
     super(osmUser);
     this.item = item;
@@ -166,8 +169,19 @@ export class UndoableFeatureSet extends OsmUndoable implements Undoable {
 
   do() {
     this.featureBefore = this.item.feature;
-    this.osmUser.markAsDirty(this.featureBefore, this.featureSlug, this.newFeature);
-    this.item.feature = this.newFeature;
+    let newFeature = this.newFeature;
+    if (!newFeature) {
+      const savedFeature = this.osmUser.changes.get(this.featureSlug)?.initial;
+      if (!savedFeature) {
+        console.warn("Cannot reset feature with no changes saved in change list.");
+        return;
+      }
+      this.osmUser.changes.delete(this.featureSlug);
+      newFeature = savedFeature;
+    } else {
+      this.osmUser.markAsDirty(this.featureBefore, this.featureSlug, this.newFeature);
+    }
+    this.item.feature = newFeature;
   }
 
   undo() {
@@ -176,31 +190,5 @@ export class UndoableFeatureSet extends OsmUndoable implements Undoable {
       this.item.feature = this.featureBefore;
       this.featureBefore = undefined;
     }
-  }
-}
-
-export class UndoableFeatureReset extends OsmUndoable implements Undoable {
-  item: DataTree<OsmFeature>;
-  featureSlug: string;
-  constructor(osmUser: OsmUser, item: DataTree<OsmFeature>, featureSlug: string) {
-    super(osmUser);
-    this.featureSlug = featureSlug;
-    this.item = item;
-  }
-
-  do() {
-    // Get the feature as it was before any changes were made to it. We get this from the changes in osmUser
-    // If the feature was never changed, then we don't do anything.
-    const featureBefore = this.osmUser.changes.get(this.featureSlug);
-    if (!featureBefore) {
-      console.log(`Feature ${this.featureSlug} was never changed, cannot reset`);
-      return;
-    }
-
-    console.warn("resetting feature undoable not implemented")
-  }
-
-  undo() {
-    console.warn("undoing feature reset not implemented")
   }
 }
