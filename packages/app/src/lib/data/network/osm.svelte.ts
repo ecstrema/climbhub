@@ -113,16 +113,20 @@ export class OsmUser {
     // We can then only process beforeSlug, since afterSlug is the same as beforeSlug
     const slug = beforeSlug;
     if (this.changes.has(slug)) {
+      const original = this.changes.get(slug)!.initial;
       // Compute diff with original and new, to see if there are still changes. Else, remove the dirtyFlag
-      const diff = this.#diff(featureBeforeChange, featureAfterChange);
-      if (typeof diff === "object" && Object.keys(diff).length === 0) {
+      const diff = this.#diff(original, featureAfterChange);
+      if (typeof diff === "object" && diff.size === 0) {
         // no changes anymore, remove from changes
         this.changes.delete(slug);
         return;
       }
 
       // Keep the original initial value, but update the final value to the new one
-      this.changes.set(slug, { initial: this.changes.get(slug)!.initial, final: featureAfterChange });
+      this.changes.set(slug, {
+        initial: original,
+        final: featureAfterChange,
+      });
       return;
     }
 
@@ -175,7 +179,7 @@ export class OsmUser {
   login() {
     if (!browser || this.loggedIn) return;
     login({
-      mode: "popup",
+      mode: "redirect",
       clientId: "PhOrL2FCMUtJ5v3WrOAfVh5qdI5CIzQ6Wsf_YVpBNtg",
       redirectUrl: `${window.location.origin}${asset("/osm-login.html")}`,
       scopes: ["read_prefs", "write_api"],
@@ -190,7 +194,10 @@ export class OsmUser {
     this.loggedIn = isLoggedIn();
   }
 
-  #buildOsmChangeset(): { changeset: OsmChange; mapIdToCreatedFeature: Record<string, OsmFeature> } {
+  #buildOsmChangeset(): {
+    changeset: OsmChange;
+    mapIdToCreatedFeature: Record<string, OsmFeature>;
+  } {
     const changeset: OsmChange = {
       create: [],
       modify: [],
@@ -220,7 +227,13 @@ export class OsmUser {
   }
 
   async submitChanges(comment: string) {
-    if (!browser || !online.current || this.submitting || !this.loggedIn || this.changes.size === 0) {
+    if (
+      !browser ||
+      !online.current ||
+      this.submitting ||
+      !this.loggedIn ||
+      this.changes.size === 0
+    ) {
       return;
     }
 
