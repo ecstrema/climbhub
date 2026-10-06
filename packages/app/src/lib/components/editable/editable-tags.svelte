@@ -5,6 +5,8 @@
   import type { OsmFeature, Tags } from "osm-api";
   import { cn } from "$lib/utils";
   import { getAppState } from "$lib/data/app-state";
+  import { Button } from "@/ui/button";
+  import Trash2Icon from "@lucide/svelte/icons/trash-2";
 
   const {
     feature,
@@ -56,6 +58,7 @@
       <Table.Row>
         <Table.Head>Tag</Table.Head>
         <Table.Head>Value</Table.Head>
+        <Table.Head></Table.Head>
       </Table.Row>
     </Table.Header>
     <Table.Body class="font-medium">
@@ -74,7 +77,7 @@
         className,
       )}
     >
-      <Table.Cell colspan={2}>{title}</Table.Cell>
+      <Table.Cell colspan={3}>{title}</Table.Cell>
     </Table.Row>
   {/if}
   {#each specialTags as key (key)}
@@ -82,6 +85,16 @@
       <Table.Cell>{key}</Table.Cell>
       <Table.Cell>
         <EditableTextarea bind:value={() => tags[key], (v) => appState.setTag(featureSlug, key, v)} />
+      </Table.Cell>
+      <Table.Cell>
+        <Button
+          size="icon-sm"
+          variant="ghost"
+          title="Delete tag {key}"
+          onclick={() => appState.deleteTag(featureSlug, key)}
+        >
+          <Trash2Icon />
+        </Button>
       </Table.Cell>
     </Table.Row>
   {/each}

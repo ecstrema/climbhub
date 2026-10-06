@@ -9,6 +9,7 @@ import {
   UndoableFeatureSet,
   UndoableRouteCreate,
   UndoableTagChange,
+  UndoableTagDelete,
 } from "./undo/actions";
 import { OsmUser } from "./network/osm.svelte";
 import type { OsmFeature } from "osm-api";
@@ -83,8 +84,13 @@ export class AppState {
     this.undoStack.do(new UndoableTagChange(this.osmUser, feature, targetSlug, tagKey, newValue));
   }
 
+  /** Applies {@link UndoableTagDelete} to remove the tag completely */
   deleteTag(targetSlug: string, tagKey: OsmApi.Keys["keys"]) {
-    this.setTag(targetSlug, tagKey, undefined);
+    const node = this.tree.getReactiveNode(targetSlug);
+    const feature = node?.feature;
+    if (!feature || feature.type === "geographic") return;
+
+    this.undoStack.do(new UndoableTagDelete(this.osmUser, feature, targetSlug, tagKey));
   }
 
   /**

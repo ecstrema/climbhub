@@ -70,6 +70,18 @@ export class UndoableTagChange extends OsmUndoable implements Undoable {
   }
 }
 
+/** An undoable for deleting a single osm tag from an element. */
+export class UndoableTagDelete extends UndoableTagChange {
+  constructor(
+    osmUser: OsmUser,
+    targetFeature: OsmFeature,
+    targetFeatureSlug: string,
+    tagKey: OsmApi.Keys["keys"],
+  ) {
+    super(osmUser, targetFeature, targetFeatureSlug, tagKey, undefined);
+  }
+}
+
 /** Add a node to the parent DataTree. Extended by {@link UndoableRouteCreate} and {@link UndoableAreaCreate} */
 export class UndoableNodeCreate extends OsmUndoable implements Undoable {
   parent: DataTree;
