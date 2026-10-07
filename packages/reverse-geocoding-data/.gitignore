@@ -1,3 +1,4 @@
 node_modules/
-*.geojson
+# Scratch files at the package root. Manual boundaries under data/ must be committed.
+/*.geojson
 output/

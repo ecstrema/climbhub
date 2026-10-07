@@ -9,4 +9,9 @@ export default defineConfig({
   server: {
     host: "127.0.0.1",
   },
+  optimizeDeps: {
+    // MapLibre loads its worker from next to its own module: pre-bundling would move the module
+    // to .vite/deps without the worker
+    exclude: ["maplibre-gl"],
+  },
 });

@@ -1,6 +1,6 @@
 import osmtogeojson from "osmtogeojson";
 import * as yaml from "js-yaml";
-import { existsSync, readFileSync, writeFileSync, readdirSync, mkdirSync } from "fs";
+import { existsSync, readFileSync, writeFileSync, readdirSync, mkdirSync, copyFileSync } from "fs";
 import { join, resolve, dirname, basename } from "path";
 
 import type { BoundingBox, IndexNode, YamlConfig } from "./types.ts";
@@ -65,6 +65,24 @@ function scanDirectoryForConfigs(
   return configs;
 }
 
+/**
+ * Copies manually provided boundaries (`boundary.geojson` files under data/) into the output directory.
+ * They always win over generated ones, so they are copied on every run.
+ */
+function copyManualBoundaries(dir: string): Set<string> {
+  const copied = new Set<string>();
+  for (const entry of readdirSync(dir, { withFileTypes: true, recursive: true })) {
+    if (!entry.isFile() || entry.name !== "boundary.geojson") continue;
+    const source = join(entry.parentPath, entry.name);
+    const target = join(OUTPUT_DIR, source.slice(CONFIG_DIR.length + 1));
+    mkdirSync(dirname(target), { recursive: true });
+    copyFileSync(source, target);
+    copied.add(target);
+  }
+  console.log(`📄 Copied ${copied.size} manual boundaries.`);
+  return copied;
+}
+
 // Global state to track when the Overpass API is allowed to be hit next
 let nextAvailableCallTime = 0;
 
@@ -111,7 +129,10 @@ async function runOverpassQuery(query: string, sourceName: string): Promise<any>
   return osmtogeojson(osmData);
 }
 
-async function processActionableQueries(configs: Map<string, YamlConfig>) {
+async function processActionableQueries(
+  configs: Map<string, YamlConfig>,
+  manualBoundaries: Set<string>,
+) {
   const executedQueries = new Set<string>();
 
   for (const [file, config] of configs) {
@@ -161,6 +182,8 @@ async function processActionableQueries(configs: Map<string, YamlConfig>) {
 
           mkdirSync(featureDir, { recursive: true });
           const outPath = join(featureDir, "boundary.geojson");
+          // Never overwrite a boundary that was edited by hand
+          if (manualBoundaries.has(outPath)) continue;
 
           const singleFeatureCollection = { type: "FeatureCollection", features: [feature] };
           writeFileSync(outPath, JSON.stringify(singleFeatureCollection));
@@ -266,7 +289,8 @@ async function main() {
 
   validateConfigs(configs);
 
-  await processActionableQueries(configs);
+  const manualBoundaries = copyManualBoundaries(CONFIG_DIR);
+  await processActionableQueries(configs, manualBoundaries);
 
   console.log("\n=== PHASE 2: COMPILING HIERARCHY INDEX ===");
   const worldTree = buildHierarchyTree(WORLD_DIR, configs);
