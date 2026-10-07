@@ -1,0 +1,5 @@
+query: |
+  [out:json][timeout:90];
+  relation["boundary"="administrative"]["ISO3166-2"="CA-BC"];
+  out geom;
+displayName: British Columbia
