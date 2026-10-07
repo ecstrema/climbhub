@@ -11,6 +11,6 @@ export function getColorFromGrade(grade: string, scaleId: ScaleId, dark = false)
   }
   let score = getReference(grade, scale);
   const difficultyRange = DIFFICULTY_RANGE[scale.gradeType];
-  score = score ? scalor.domain([difficultyRange.beginner, difficultyRange.max])(score) : 0;
+  score = score ? scalor.domain([difficultyRange.beginner, difficultyRange.pro])(score) : 0;
   return `hsl(${score.toFixed(0)}deg 80% ${dark ? 30 : 70}%)`;
 }

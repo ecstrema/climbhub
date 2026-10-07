@@ -1,5 +1,5 @@
 import { getScale } from "./scales";
-import type { GradeMapping, GradeType, Scale, ScaleId } from "./scales/types";
+import type { GradeType, Scale, ScaleId } from "./scales/types";
 
 /** Whether `grade` (after normalization) is a valid grade for the given scale. */
 export function isValidGrade(scale: Scale | ScaleId, grade: string): boolean {
