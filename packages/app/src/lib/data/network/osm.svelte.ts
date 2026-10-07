@@ -183,7 +183,7 @@ export class OsmUser {
   login() {
     if (!browser || this.loggedIn) return;
     login({
-      mode: "redirect",
+      mode: "popup",
       clientId: "PhOrL2FCMUtJ5v3WrOAfVh5qdI5CIzQ6Wsf_YVpBNtg",
       redirectUrl: `${window.location.origin}${asset("/osm-login.html")}`,
       scopes: ["read_prefs", "write_api"],

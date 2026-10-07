@@ -1,5 +1,0 @@
-query: |
-  [out:json][timeout:90];
-  relation["boundary"="administrative"]["ISO3166-2"="CA-MB"];
-  out geom;
-displayName: Manitoba
