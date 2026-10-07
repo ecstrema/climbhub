@@ -15,6 +15,7 @@ declare global {
         | "climbing:grade:fontainebleau"
         | "climbing:grade:hueco"
         | "climbing:grade:vscale"
+        | "climbing:length"
         | "amenity"
         | "leisure"
         | "natural" // = "cliff"
