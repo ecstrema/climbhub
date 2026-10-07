@@ -3,6 +3,7 @@ import type { OsmFeature, OsmNode, OsmRelation } from "osm-api";
 import type { Undoable } from "./types";
 import type { OsmUser } from "../network/osm.svelte";
 import { snapshot } from "$lib/helpers/svelte.svelte";
+import { reversed } from "$lib/helpers/iterators";
 
 /** An undoable action can be done and undone. */
 export class OsmUndoable {
@@ -79,6 +80,23 @@ export class UndoableTagDelete extends UndoableTagChange {
     tagKey: OsmApi.Keys["keys"],
   ) {
     super(osmUser, targetFeature, targetFeatureSlug, tagKey, undefined);
+  }
+}
+
+/** Several undoables applied as a single step */
+export class UndoableGroup implements Undoable {
+  undoables: Undoable[];
+
+  constructor(undoables: Undoable[]) {
+    this.undoables = undoables;
+  }
+
+  do() {
+    for (const undoable of this.undoables) undoable.do();
+  }
+
+  undo() {
+    for (const undoable of reversed(this.undoables)) undoable.undo();
   }
 }
 

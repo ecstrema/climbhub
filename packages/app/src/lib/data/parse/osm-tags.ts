@@ -129,6 +129,17 @@ export function getGrade(tags: Tags): WithSourceTag<Grade> | undefined {
   }
 }
 
+const lengthValidator = (v: string) => /^\d+(\.\d+)?$/.test(v.trim());
+
+/**
+ * Length of a route in metres, as `climbing:length`.
+ * See https://wiki.openstreetmap.org/wiki/Climbing#Route_properties
+ */
+export function getLength(tags: Tags): number | undefined {
+  const v = tags["climbing:length"];
+  return v && lengthValidator(v) ? Number(v) : undefined;
+}
+
 export function getDescription(tags: Tags): string | undefined {
   return tags.description || undefined;
 }
@@ -180,6 +191,7 @@ export const processedTags: Record<OSMClimbingFeatureType, ProcessedTags> = {
   route: {
     ...sharedProcessedTags,
     ...processedGrades,
+    "climbing:length": lengthValidator,
     climbing: allowMultipleValues(new Set(["route_bottom", "route_top"])),
   },
   area: {

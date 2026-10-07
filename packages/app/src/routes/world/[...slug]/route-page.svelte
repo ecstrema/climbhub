@@ -3,6 +3,7 @@
   import EditableDescription from "$lib/components/editable/editable-description.svelte";
   import EditableTags from "$lib/components/editable/editable-tags.svelte";
   import EditableGrade from "@/editable/editable-grade.svelte";
+  import EditableLength from "@/editable/editable-length.svelte";
   import type { DataTree } from "$lib/types";
   import type { OsmFeature } from "osm-api";
   import { getCoordinates, getGrade } from "$lib/data/parse/osm-tags";
@@ -24,6 +25,7 @@
 <div class="flex gap-2 items-baseline">
   <EditableName {feature} featureSlug={slug} />
   <EditableGrade {feature} {grade} featureSlug={slug} />
+  <EditableLength {feature} featureSlug={slug} />
 </div>
 
 {#if coordinates}
