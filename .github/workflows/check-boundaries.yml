@@ -1,0 +1,25 @@
+name: Check boundaries
+
+on:
+  pull_request:
+    paths:
+      - "packages/reverse-geocoding-data/**"
+
+jobs:
+  check_boundaries:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Validate data/
+        run: bun run build:reverse-geocoding-data
+
+      - name: Check the size of the added or modified boundaries
+        run: |
+          git diff --name-only -z --diff-filter=AM "origin/${{ github.base_ref }}...HEAD" \
+            -- 'packages/reverse-geocoding-data/data/*.geojson' \
+            | xargs -0 --no-run-if-empty bun run packages/reverse-geocoding-data/src/check-size.ts

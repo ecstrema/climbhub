@@ -12,13 +12,6 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Cache reverse-geocoding-data
-        uses: actions/cache@v3
-        with:
-          path: packages/reverse-geocoding-data/output
-          key: ${{ runner.os }}-reverse-geocoding-data-${{ github.run_id }}
-          restore-keys: ${{ runner.os }}-reverse-geocoding-data-
-
       - name: Cache Bun dependencies
         uses: actions/cache@v3
         with:
