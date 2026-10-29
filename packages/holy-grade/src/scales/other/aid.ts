@@ -5,16 +5,22 @@ let n = 1;
 const gradeMapping: Scale["gradeMapping"] = new Map([
   ["A0-", n++],
   ["A0", n++],
+  ["A0/A1", n++],
   ["A1", n++],
   ["A1+", n++],
+  ["A1/A2", n++],
   ["A2", n++],
   ["A2+", n++],
+  ["A2/A3", n++],
   ["A3", n++],
   ["A3+", n++],
+  ["A3/A4", n++],
   ["A4", n++],
   ["A4+", n++],
+  ["A4/A5", n++],
   ["A5", n++],
   ["A5+", n++],
+  ["A5/A6", n++],
   ["A6", n++],
 ]);
 
@@ -23,11 +29,20 @@ const gradeMapping: Scale["gradeMapping"] = new Map([
 // category in practice, so there's no C4/C5/C6.
 const alternateNames = new Map<string, string>([
   ["C0", "A0"],
+  ["C0/C1", "A0/A1"],
   ["C1", "A1"],
+  ["C1/C2", "A1/A2"],
   ["C2", "A2"],
   ["C2+", "A2+"],
+  ["C2/C3", "A2/A3"],
   ["C3", "A3"],
   ["C3+", "A3+"],
+  ["A0/1", "A0/A1"],
+  ["A1/2", "A1/A2"],
+  ["A2/3", "A2/A3"],
+  ["A3/4", "A3/A4"],
+  ["A4/5", "A4/A5"],
+  ["A5/6", "A5/A6"],
 ]);
 
 const normalizer = normalizeFromGradeMappings(gradeMapping, alternateNames);

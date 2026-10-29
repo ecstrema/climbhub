@@ -4,8 +4,8 @@ export { yds } from "./route/yds";
 export { uiaa } from "./route/uiaa";
 export { saxon } from "./route/saxon";
 export { ukTech } from "./route/uk-tech";
-export { ukAdj } from "./route/uk-adj";
-export { frenchBritish } from "./route/french-british";
+export { ukAdj } from "./danger/uk-adj";
+export { ydsDanger } from "./danger/yds-danger";
 export { scandinavian } from "./route/scandinavian";
 export { ewbank } from "./route/ewbank";
 export { polish } from "./route/polish";
@@ -15,7 +15,15 @@ export { mixed } from "./other/mixed";
 export { dryTooling } from "./other/dry-tooling";
 export { aid } from "./other/aid";
 
-import type { AidScaleId, BoulderScaleId, IceScaleId, RouteScaleId, Scale, ScaleId } from "./types";
+import type {
+  AidScaleId,
+  BoulderScaleId,
+  DangerScaleId,
+  IceScaleId,
+  RouteScaleId,
+  Scale,
+  ScaleId,
+} from "./types";
 
 import { french } from "./route/french";
 import { fb } from "./bouldering/fb";
@@ -23,8 +31,8 @@ import { yds } from "./route/yds";
 import { uiaa } from "./route/uiaa";
 import { saxon } from "./route/saxon";
 import { ukTech } from "./route/uk-tech";
-import { ukAdj } from "./route/uk-adj";
-import { frenchBritish } from "./route/french-british";
+import { ukAdj } from "./danger/uk-adj";
+import { ydsDanger } from "./danger/yds-danger";
 import { scandinavian } from "./route/scandinavian";
 import { ewbank } from "./route/ewbank";
 import { polish } from "./route/polish";
@@ -40,8 +48,6 @@ export const allScales: Scale[] = [
   uiaa,
   saxon,
   ukTech,
-  ukAdj,
-  frenchBritish,
   scandinavian,
   ewbank,
   polish,
@@ -51,11 +57,13 @@ export const allScales: Scale[] = [
   mixed,
   dryTooling,
   aid,
+  ukAdj,
+  ydsDanger,
 ];
 
 export const scalesById: Map<ScaleId, Scale> = new Map(allScales.map((s) => [s.id, s]));
 
-export const { allAidScales, allBoulderScales, allIceScales, allRouteScales } =
+export const { allAidScales, allBoulderScales, allDangerScales, allIceScales, allRouteScales } =
   getScalesByType(allScales);
 
 function getScalesByType(scales: Scale[]) {
@@ -63,6 +71,7 @@ function getScalesByType(scales: Scale[]) {
   const allBoulderScales: Scale<BoulderScaleId>[] = [];
   const allIceScales: Scale<IceScaleId>[] = [];
   const allAidScales: Scale<AidScaleId>[] = [];
+  const allDangerScales: Scale<DangerScaleId>[] = [];
 
   for (const scale of scales) {
     switch (scale.gradeType) {
@@ -78,11 +87,15 @@ function getScalesByType(scales: Scale[]) {
       case "aid":
         allAidScales.push(scale as Scale<AidScaleId>);
         break;
+      case "danger":
+        allDangerScales.push(scale as Scale<DangerScaleId>);
+        break;
     }
   }
-  return { allRouteScales, allBoulderScales, allIceScales, allAidScales };
+  return { allRouteScales, allBoulderScales, allIceScales, allAidScales, allDangerScales };
 }
 
 export function getScale(id: ScaleId): Scale | undefined {
   return scalesById.get(id);
 }
+

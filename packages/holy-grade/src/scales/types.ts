@@ -1,4 +1,4 @@
-export type GradeType = "route" | "boulder" | "ice" | "aid";
+export type GradeType = "route" | "boulder" | "ice" | "aid" | "danger";
 
 export type GradeMapping = Map<string, number>;
 
@@ -48,12 +48,28 @@ export type RouteScaleId =
   | "UIAA"
   | "Saxon"
   | "UKTech"
-  | "UKAdj"
-  | "FrenchBritish"
   | "Scandinavian"
   | "Ewbank"
   | "Polish";
 export type BoulderScaleId = "FB" | "Hueco";
 export type IceScaleId = "WI" | "Mixed" | "DryTooling";
 export type AidScaleId = "Aid";
-export type ScaleId = RouteScaleId | BoulderScaleId | IceScaleId | AidScaleId;
+export type DangerScaleId = "UKAdj" | "YDSDanger";
+export type ScaleId = RouteScaleId | BoulderScaleId | IceScaleId | AidScaleId | DangerScaleId;
+
+export interface ParsedGrade {
+  /** The primary technical / difficulty grade (e.g. "5.10a", "5b", "6a", "V5") */
+  primary?: {
+    grade: string;
+    scale: ScaleId;
+  };
+  /** The danger / risk / adjectival grade (e.g. "R", "PG-13", "E1", "HVS") */
+  danger?: {
+    grade: string;
+    scale: DangerScaleId;
+  };
+  /** The raw input string, trimmed */
+  raw: string;
+}
+
+

@@ -50,7 +50,15 @@ const gradeMapping: Scale["gradeMapping"] = new Map([
   ["V18", 99],
 ]);
 
-const normalizer = normalizeFromGradeMappings(gradeMapping);
+const alternateNames = new Map<string, string>([
+  ["V0/V1", "V0+/V1"],
+  ["VB/V0", "VB/V0-"],
+]);
+for (let n = 1; n < 18; n++) {
+  alternateNames.set(`V${n}/V${n + 1}`, `V${n}/${n + 1}`);
+}
+
+const normalizer = normalizeFromGradeMappings(gradeMapping, alternateNames);
 
 export const hueco: Scale<"Hueco"> = {
   id: "Hueco",
@@ -60,6 +68,7 @@ export const hueco: Scale<"Hueco"> = {
   gradeType: "boulder",
   gradeMapping,
   numberToGradeTable: buildReverseTable(gradeMapping),
+  alternateNames,
   normalize: (grade) => normalizer(grade.trim().toUpperCase()),
   nameAlt: "Hueco",
   usedIn: "North America",

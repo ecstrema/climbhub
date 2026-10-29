@@ -7,7 +7,12 @@ for (let n = 1; n < 14; n++) {
   gradeMapping.set(`M${n}/${n+1}`, 2 * n)
 }
 
-const normalizer = normalizeFromGradeMappings(gradeMapping);
+const alternateNames = new Map<string, string>();
+for (let n = 1; n < 13; n++) {
+  alternateNames.set(`M${n}/M${n + 1}`, `M${n}/${n + 1}`);
+}
+
+const normalizer = normalizeFromGradeMappings(gradeMapping, alternateNames);
 
 export const mixed: Scale<"Mixed"> = {
   id: "Mixed",
@@ -16,6 +21,7 @@ export const mixed: Scale<"Mixed"> = {
   gradeType: "ice",
   gradeMapping,
   numberToGradeTable: buildReverseTable(gradeMapping),
+  alternateNames,
   normalize: (grade) => normalizer(grade.trim().toUpperCase()),
   flags: "🇨🇦",
   osmTagName: "mixed",

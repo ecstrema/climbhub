@@ -7,7 +7,12 @@ for (let n = 1; n < 14; n++) {
   gradeMapping.set(`D${n}/${n+1}`, 2 * n)
 }
 
-const normalizer = normalizeFromGradeMappings(gradeMapping);
+const alternateNames = new Map<string, string>();
+for (let n = 1; n < 13; n++) {
+  alternateNames.set(`D${n}/D${n + 1}`, `D${n}/${n + 1}`);
+}
+
+const normalizer = normalizeFromGradeMappings(gradeMapping, alternateNames);
 
 export const dryTooling: Scale<"DryTooling"> = {
   id: "DryTooling",
@@ -17,6 +22,7 @@ export const dryTooling: Scale<"DryTooling"> = {
   gradeType: "ice",
   gradeMapping,
   numberToGradeTable: buildReverseTable(gradeMapping),
+  alternateNames,
   normalize: (grade) => normalizer(grade.trim().toUpperCase()),
   usedIn: "Alpine ice/mixed climbing regions (Alps, Rockies, etc.)",
   flags: "🇨🇦🇫🇷",
