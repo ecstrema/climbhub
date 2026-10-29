@@ -7,6 +7,7 @@ export { ukTech } from "./route/uk-tech";
 export { ukAdj } from "./route/uk-adj";
 export { frenchBritish } from "./route/french-british";
 export { scandinavian } from "./route/scandinavian";
+export { ewbank } from "./route/ewbank";
 export { polish } from "./route/polish";
 export { hueco } from "./bouldering/hueco";
 export { wi } from "./other/wi";
@@ -25,6 +26,7 @@ import { ukTech } from "./route/uk-tech";
 import { ukAdj } from "./route/uk-adj";
 import { frenchBritish } from "./route/french-british";
 import { scandinavian } from "./route/scandinavian";
+import { ewbank } from "./route/ewbank";
 import { polish } from "./route/polish";
 import { hueco } from "./bouldering/hueco";
 import { wi } from "./other/wi";
@@ -41,6 +43,7 @@ export const allScales: Scale[] = [
   ukAdj,
   frenchBritish,
   scandinavian,
+  ewbank,
   polish,
   fb,
   hueco,

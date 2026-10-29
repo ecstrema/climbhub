@@ -9,6 +9,9 @@
       "types": "./src/index.d.ts"
     }
   },
+  "scripts": {
+    "test": "vitest run"
+  },
   "devDependencies": {
     "@climbhub/common": "workspace:*",
     "@types/bun": "catalog:",

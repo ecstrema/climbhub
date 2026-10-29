@@ -1,43 +1,47 @@
 import type { Scale } from "../types";
 import { buildReverseTable, normalizeFromGradeMappings } from "../builder";
 
+// Numbers are hand-picked to line up with French (see french.ts): Polish VI- = 61 =
+// French 6a, VI.3 = 73 = French 7a, VI.4+ = 81 = French 7c, VI.5+ = 85 = French 8a,
+// VI.6+ = 91 = French 8b+, VI.8 = 97 = French 9a.
 const gradeMapping: Scale["gradeMapping"] = new Map([
-  ["I-", 0],
-  ["I", 3],
-  ["I+", 6],
-  ["II-", 9],
-  ["II", 11],
-  ["II+", 14],
-  ["III-", 17],
-  ["III", 20],
-  ["III+", 23],
-  ["IV-", 26],
-  ["IV", 29],
-  ["IV+", 31],
-  ["V-", 34],
-  ["V", 37],
-  ["V+", 40],
-  ["VI-", 43],
-  ["VI", 46],
-  ["VI.1", 49],
-  ["VI.1+", 51],
-  ["VI.2", 54],
-  ["VI.2+", 57],
-  ["VI.3", 60],
-  ["VI.3+", 63],
-  ["VI.4", 66],
-  ["VI.4+", 69],
-  ["VI.5", 71],
-  ["VI.5+", 74],
-  ["VI.6", 77],
-  ["VI.6+", 80],
-  ["VI.7", 83],
-  ["VI.7+", 86],
-  ["VI.8", 89],
-  ["VI.8+", 91],
-  ["VI.9", 94],
-  ["VI.9+", 97],
-  [">VI.9+", 100],
+  ["I-", 31],
+  ["I", 33],
+  ["I+", 35],
+  ["II-", 37],
+  ["II", 39],
+  ["II+", 41],
+  ["III-", 43],
+  ["III", 45],
+  ["III+", 47],
+  ["IV-", 49],
+  ["IV", 51],
+  ["IV+", 53],
+  ["V-", 55],
+  ["V", 57],
+  ["V+", 59],
+  ["VI-", 61],
+  ["VI", 62],
+  ["VI+", 63],
+  ["VI.1", 65],
+  ["VI.1+", 67],
+  ["VI.2", 69],
+  ["VI.2+", 71],
+  ["VI.3", 73],
+  ["VI.3+", 75],
+  ["VI.4", 77],
+  ["VI.4+", 81],
+  ["VI.5", 83],
+  ["VI.5+", 85],
+  ["VI.6", 89],
+  ["VI.6+", 91],
+  ["VI.7", 93],
+  ["VI.7+", 95],
+  ["VI.8", 97],
+  ["VI.8+", 99],
+  ["VI.9", 103],
+  ["VI.9+", 105],
+  [">VI.9+", 107],
 ]);
 
 // Below VI, Polish grades work like UIAA (Roman numerals with -/+); Arabic digits are a
@@ -51,6 +55,7 @@ const alternateNames = new Map<string, string>();
 });
 alternateNames.set("6-", "VI-");
 alternateNames.set("6", "VI");
+alternateNames.set("6+", "VI+");
 
 const normalizer = normalizeFromGradeMappings(gradeMapping, alternateNames);
 
