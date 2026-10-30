@@ -1,9 +1,12 @@
 <script lang="ts">
-  import GradeComparison from "./GradeComparison.svelte";
+  import { resolve } from "$app/paths";
 </script>
 
 <svelte:head>
-  <title>{import.meta.env.DEV ? "[DEV] " : ""}Climbhub - Grade Comparison</title>
+  <meta http-equiv="refresh" content="0;url={resolve('/grade-comparison/route')}" />
 </svelte:head>
 
-<GradeComparison />
+<p class="text-center text-muted-foreground">
+  Redirecting to <a href={resolve('/grade-comparison/route')} class="underline">Route Grade Comparison</a>...
+</p>
+
