@@ -2,6 +2,7 @@ import { existsSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
 import { request } from "https";
 import { USER_AGENT } from "@climbhub/reverse-geocoding-data";
+import { tryOverpassInstances } from "@climbhub/common";
 
 import {
   parseWorldClimbingPoints,
@@ -46,8 +47,20 @@ function enqueue<T>(request: () => Promise<T>): Promise<T> {
  */
 export function postOverpass(
   query: string,
-  endpoint = "https://overpass-api.de/api/interpreter",
+  validateResponse?: (data: any) => void,
 ): Promise<string> {
+  return tryOverpassInstances(async (endpoint) => {
+    const body = await postOverpassToEndpoint(query, endpoint);
+    const data = JSON.parse(body);
+    if (!Array.isArray(data.elements) || data.remark?.toLowerCase().includes("error")) {
+      throw new Error(data.remark || "Overpass returned an invalid response");
+    }
+    validateResponse?.(data);
+    return body;
+  });
+}
+
+function postOverpassToEndpoint(query: string, endpoint: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const req = request(
       endpoint,

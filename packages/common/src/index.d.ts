@@ -38,4 +38,9 @@ declare global {
   }
 }
 
+export declare const OVERPASS_ENDPOINTS: readonly string[];
+export declare function tryOverpassInstances<T>(
+  request: (endpoint: string) => Promise<T>,
+): Promise<T>;
+
 export {};

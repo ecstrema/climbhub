@@ -1,4 +1,5 @@
 import osmtogeojson from "osmtogeojson";
+import { tryOverpassInstances } from "@climbhub/common";
 import { slugify } from "@climbhub/reverse-geocoding-data/shared";
 import { toBoundary } from "./geometry";
 import type { Boundary } from "./types";
@@ -29,16 +30,22 @@ export function runRawOverpassQuery(query: string, signal?: AbortSignal): Promis
 
 async function fetchOverpass(query: string, signal?: AbortSignal): Promise<any> {
   signal?.throwIfAborted();
-  const res = await fetch("https://overpass-api.de/api/interpreter", {
-    method: "POST",
-    body: query,
-    headers: { "Content-Type": "text/plain; charset=utf-8" },
-    signal,
+  return tryOverpassInstances(async (endpoint) => {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      body: query,
+      headers: { "Content-Type": "text/plain; charset=utf-8" },
+      signal,
+    });
+    if (!res.ok) {
+      throw new Error(`Overpass error ${res.status}: ${res.statusText}\n${await res.text()}`);
+    }
+    const data = await res.json();
+    if (!Array.isArray(data.elements) || data.remark?.toLowerCase().includes("error")) {
+      throw new Error(data.remark || "Overpass returned an invalid response");
+    }
+    return data;
   });
-  if (!res.ok) {
-    throw new Error(`Overpass error ${res.status}: ${res.statusText}\n${await res.text()}`);
-  }
-  return res.json();
 }
 
 /** Splits the result of a query by feature, named after the slug of their name. */

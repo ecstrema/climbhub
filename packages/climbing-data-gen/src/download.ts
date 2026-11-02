@@ -8,7 +8,6 @@ const WORLD_CLIMBING_DATA_QUERY = `
 [out:json][timeout:600];
 nwr["sport"="climbing"];
 out center meta;`;
-const WORLD_CLIMBING_OVERPASS_ENDPOINT = "https://overpass.private.coffee/api/interpreter";
 const GLOBAL_RETRIES = 10;
 const GLOBAL_RETRY_DELAY = 60_000;
 
@@ -32,14 +31,12 @@ export async function downloadClimbingData(
   let data: any;
   for (let attempt = 0; ; attempt++) {
     try {
-      const response = await postOverpass(
-        WORLD_CLIMBING_DATA_QUERY,
-        WORLD_CLIMBING_OVERPASS_ENDPOINT,
-      );
+      const response = await postOverpass(WORLD_CLIMBING_DATA_QUERY, (result) => {
+        if (result.remark) {
+          throw new Error(`Overpass returned incomplete climbing data: ${result.remark}`);
+        }
+      });
       data = JSON.parse(response);
-      if (data.remark)
-        throw new Error(`Overpass returned incomplete climbing data: ${data.remark}`);
-      if (!Array.isArray(data.elements)) throw new Error("Overpass response has no elements array");
       break;
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);

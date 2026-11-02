@@ -21,6 +21,7 @@
     "import": "bun run import/main.ts"
   },
   "devDependencies": {
+    "@climbhub/common": "workspace:*",
     "@types/bun": "catalog:",
     "@types/node": "catalog:",
     "osmtogeojson": "catalog:",
