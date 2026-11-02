@@ -27,6 +27,16 @@ jobs:
       - run: bun run build:climbing-data-gen
       - run: bun run build
 
+      - name: Verify deployment contents
+        run: |
+          test -s packages/app/build/world.html
+          test -s packages/app/build/grade-comparison.html
+          test -s packages/app/build/edit-map.html
+          test -s packages/app/build/api/world/deep.json
+          for continent in africa americas asia europe oceania; do
+            test -f "packages/app/build/api/world/$continent/data.json"
+          done
+
       - name: Upload Artifacts
         uses: actions/upload-pages-artifact@v3
         with:
