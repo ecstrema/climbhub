@@ -5,14 +5,10 @@ tools and an editor for the worldwide boundary data.
 
 ## Repository
 
-- `packages/app/` contains the SvelteKit site, including the world directory, grade comparison, and
-	boundary editor.
-- `packages/reverse-geocoding-data/` contains the worldwide region boundaries and the importer and
-	validation tools used to maintain them.
-- `packages/climbing-data-gen/` turns worldwide OpenStreetMap climbing data and those boundaries
-	into the static world API consumed by the site.
-- `packages/holy-grade/` contains the climbing-grade conversion library; `packages/common/` holds
-	shared utilities.
+- `packages/app/` contains the SvelteKit site, including the world directory, grade comparison, and boundary editor.
+- `packages/reverse-geocoding-data/` contains the worldwide region boundaries and the importer and validation tools used to maintain them.
+- `packages/climbing-data-gen/` turns worldwide OpenStreetMap climbing data and those boundaries into the static world API consumed by the site.
+- `packages/holy-grade/` contains the climbing-grade conversion library; `packages/common/` holds shared utilities.
 
 ## Build
 
