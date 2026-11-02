@@ -14,6 +14,7 @@ describe("featureToTypeOSM", () => {
     "route_start",
     "boulder",
     "bouldering",
+    "route; boulder",
     "abseil_route",
     "abseil",
     "toprope",

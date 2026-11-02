@@ -180,42 +180,44 @@ export type WithSourceTag<T> = { v: T; source: OsmApi.Keys["keys"] };
 
 export type OSMClimbingFeatureType = "route" | "area" | "gym";
 
+const routeClimbingValues = new Set([
+  "route_bottom",
+  "route_top",
+  "route",
+  "route_start",
+  "boulder",
+  "bouldering",
+  "abseil_route",
+  "abseil",
+  "toprope",
+  "drytooling",
+]);
+const areaClimbingValues = new Set(["area", "crag"]);
+const gymClimbingValues = new Set(["indoor_wall", "artificial_wall", "wall", "gym"]);
+const gymLeisureValues = new Set([
+  "sports_centre",
+  "sports_hall",
+  "fitness_centre",
+  "sport_centre",
+]);
+
+function hasClimbingValue(value: string | undefined, acceptedValues: ReadonlySet<string>) {
+  if (!value) return false;
+  if (acceptedValues.has(value)) return true;
+  return value.includes(";") && value.split(";").some((part) => acceptedValues.has(part.trim()));
+}
+
 export function featureToTypeOSM(feature: OsmFeature): OSMClimbingFeatureType | undefined {
   if (!feature.tags) return;
 
   const tags = feature.tags;
-  const climbingValues = tags.climbing?.split(";").map((value) => value.trim()) ?? [];
-  if (
-    climbingValues.some((value) =>
-      [
-        "route_bottom",
-        "route_top",
-        "route",
-        "route_start",
-        "boulder",
-        "bouldering",
-        "abseil_route",
-        "abseil",
-        "toprope",
-        "drytooling",
-      ].includes(value),
-    )
-  ) {
-    return "route";
-  }
+  if (hasClimbingValue(tags.climbing, routeClimbingValues)) return "route";
 
-  if (climbingValues.some((value) => ["area", "crag"].includes(value))) {
-    return "area";
-  }
+  if (hasClimbingValue(tags.climbing, areaClimbingValues)) return "area";
 
   if (
-    ["indoor_wall", "artificial_wall", "wall", "gym"].some((value) =>
-      climbingValues.includes(value),
-    ) ||
-    (tags.sport === "climbing" &&
-      ["sports_centre", "sports_hall", "fitness_centre", "sport_centre"].includes(
-        tags.leisure || "",
-      ))
+    hasClimbingValue(tags.climbing, gymClimbingValues) ||
+    (tags.sport === "climbing" && gymLeisureValues.has(tags.leisure || ""))
   ) {
     return "gym";
   }
