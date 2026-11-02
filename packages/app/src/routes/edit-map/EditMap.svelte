@@ -20,8 +20,6 @@
     insertOnSegment,
     isEmptyBBox,
     labelPoint,
-    mergeBoundaries,
-    mergeBoundariesAtPoints,
     moveVertex,
     boundaryPolygons,
     polygonsContain,
@@ -185,19 +183,14 @@
           ? [node]
           : [];
       for (const area of areas) {
-        const isMergeSelected = store.mergeSelection.has(area);
         for (const feature of displayFeatures(area, nodeTolerance)) {
           features.push({
             type: "Feature",
             geometry: feature.geometry,
             properties: {
               nodeId: area.id,
-              role: isMergeSelected ? "mergeSelected" : role,
-              color: isMergeSelected
-                ? "#f43f5e"
-                : role === "child"
-                  ? PALETTE[i % PALETTE.length]
-                  : "#475569",
+              role,
+              color: role === "child" ? PALETTE[i % PALETTE.length] : "#475569",
               state: store.boundaryState(area),
             },
           });
@@ -241,59 +234,44 @@
     return { type: "FeatureCollection", features };
   }
 
-  /** The nodes whose vertices are displayed */
-  function vertexNodes(): { node: EditorNode; canEdit: boolean }[] {
-    const list: { node: EditorNode; canEdit: boolean }[] = [];
-    if (store.editing && store.selected?.boundary && store.selected.vertexCount <= MAX_EDITABLE_VERTICES) {
-      list.push({ node: store.selected, canEdit: true });
-    }
-    if (store.mergeMode || store.mergeSelection.size > 0) {
-      for (const n of store.mergeSelection) {
-        if (!list.some((item) => item.node === n) && n.boundary && n.vertexCount <= MAX_EDITABLE_VERTICES * 2) {
-          list.push({ node: n, canEdit: false });
-        }
-      }
-    }
-    return list;
-  }
-
+  /** The selected node, when its vertices are displayed */
   function editableNode(): EditorNode | undefined {
     const node = store.selected;
     if (store.editing && node?.boundary && node.vertexCount <= MAX_EDITABLE_VERTICES) return node;
   }
 
   function segmentMidpoint(a: Position, b: Position): Position {
-    return [(a[0]! + b[0]!) / 2, (a[1]! + b[1]!) / 2];
+    const currentMap = map;
+    if (!currentMap) return [(a[0]! + b[0]!) / 2, (a[1]! + b[1]!) / 2];
+    const start = currentMap.project([a[0]!, a[1]!]);
+    const end = currentMap.project([b[0]!, b[1]!]);
+    const point = currentMap.unproject([(start.x + end.x) / 2, (start.y + end.y) / 2]);
+    return [point.lng, point.lat];
   }
 
-  function vertexFeatures(includeMidpoints = true): { vertices: FeatureCollection; midpoints: FeatureCollection } {
-    const nodes = vertexNodes();
-    if (!nodes.length) return { vertices: empty, midpoints: empty };
+  function vertexFeatures(): { vertices: FeatureCollection; midpoints: FeatureCollection } {
+    const node = editableNode();
+    if (!node) return { vertices: empty, midpoints: empty };
     const vertices: Feature[] = [];
     const midpoints: Feature[] = [];
     const selection = store.vertexSelection;
-    const hasSelection = selection.size > 0;
-    for (const { node, canEdit } of nodes) {
-      forEachRing(node.boundary!, (ring, ref) => {
-        for (let v = 0; v < ring.length - 1; v++) {
-          const properties = { nodeId: node.id, ...ref, vertex: v };
-          const a = ring[v]!;
-          vertices.push({
-            type: "Feature",
-            geometry: { type: "Point", coordinates: a },
-            properties: { ...properties, selected: hasSelection && selection.has(positionKey(a)) },
-          });
-          if (includeMidpoints && canEdit) {
-            const b = ring[v + 1]!;
-            midpoints.push({
-              type: "Feature",
-              geometry: { type: "Point", coordinates: [(a[0]! + b[0]!) / 2, (a[1]! + b[1]!) / 2] },
-              properties,
-            });
-          }
-        }
-      });
-    }
+    forEachRing(node.boundary!, (ring, ref) => {
+      for (let v = 0; v < ring.length - 1; v++) {
+        const properties = { ...ref, vertex: v };
+        const a = ring[v]!;
+        const b = ring[v + 1]!;
+        vertices.push({
+          type: "Feature",
+          geometry: { type: "Point", coordinates: a },
+          properties: { ...properties, selected: selection.has(positionKey(a)) },
+        });
+        midpoints.push({
+          type: "Feature",
+          geometry: { type: "Point", coordinates: segmentMidpoint(a, b) },
+          properties,
+        });
+      }
+    });
     return {
       vertices: { type: "FeatureCollection", features: vertices },
       midpoints: { type: "FeatureCollection", features: midpoints },
@@ -310,9 +288,7 @@
     const tolerance = displayTolerance();
     // The siblings and children of the selected node are drawn: the revision of the parent changes
     // with any of them. The labels show the number of places.
-    const mergeKey = [...store.mergeSelection].map((n) => n.id).sort().join(",");
-    const vSelKey = [...store.vertexSelection.keys()].sort().join(",");
-    const key = `${selected.id} ${(selected.parent ?? selected).revision} ${tolerance} ${store.pointsVersion} ${store.version} ${mergeKey} ${store.mergeMode} ${store.mergeSideIndex} ${vSelKey} ${store.editing}`;
+    const key = `${selected.id} ${(selected.parent ?? selected).revision} ${tolerance} ${store.pointsVersion} ${store.version}`;
     if (dragging || key !== renderedKey) {
       source("boundaries")?.setData(boundaryFeatures(tolerance));
       if (!dragging) {
@@ -320,35 +296,10 @@
         renderedKey = key;
       }
     }
-    const { vertices, midpoints } = vertexFeatures(!dragging);
+    const { vertices, midpoints } = vertexFeatures();
     source("vertices")?.setData(vertices);
-    if (!dragging) source("midpoints")?.setData(midpoints);
+    source("midpoints")?.setData(midpoints);
   }
-
-  // Live preview of merged boundary when multiple regions are selected
-  $effect(() => {
-    void store.version;
-    const mergeNodes = [...store.mergeSelection];
-    const points = [...store.vertexSelection.values()];
-    if (mergeNodes.length === 2 && points.length === 2 && mergeNodes[0]?.boundary && mergeNodes[1]?.boundary) {
-      const res = mergeBoundariesAtPoints(
-        mergeNodes[0].boundary,
-        mergeNodes[1].boundary,
-        points[0]!,
-        points[1]!,
-        store.mergeSideIndex,
-      );
-      if (res) {
-        store.preview = res.boundary;
-        return;
-      }
-    }
-    if (mergeNodes.length >= 2) {
-      store.preview = mergeBoundaries(mergeNodes.map((n) => n.boundary));
-    } else if (store.mergeMode && mergeNodes.length < 2 && store.preview) {
-      store.preview = undefined;
-    }
-  });
 
   let frame: number | undefined;
   function scheduleRender() {
@@ -485,20 +436,17 @@
   }
 
   function onVertexDown(e: MapLayerMouseEvent) {
-    const feat = e.features?.[0];
-    const nodeId = feat?.properties?.nodeId;
-    const node = (nodeId ? store.nodesById.get(nodeId) : undefined) ?? store.selected;
+    const node = store.selected;
     const ref = refFromFeature(e);
     if (!node?.boundary || !ref || e.originalEvent.button !== 0) return;
     e.preventDefault();
     const position = getPosition(node, ref);
     if (!position) return;
     const key = positionKey(position);
-    if (e.originalEvent.shiftKey || store.mergeMode || store.mergeSelection.size > 0) {
+    if (e.originalEvent.shiftKey) {
       toggleSelection(position);
       return;
     }
-    if (!store.editing) return;
     startDrag(linkedTargets(node, position), "Move vertex", (end) => {
       // A selected vertex stays selected where it is dropped
       if (!store.vertexSelection.has(key)) return;
@@ -517,12 +465,10 @@
     store.vertexSelection = selection;
   }
 
-  /** Shift + drag outside of a vertex: draws a lasso, and selects the vertices inside or regions for merge */
+  /** Shift + drag outside of a vertex: draws a lasso, and selects the vertices inside */
   function onMapMouseDown(e: MapMouseEvent) {
-    if (!e.originalEvent.shiftKey || e.originalEvent.button !== 0 || !map) return;
     const node = editableNode();
-    const isMergeLasso = !node && (store.mergeMode || store.mergeSelection.size > 0);
-    if (!node && !isMergeLasso) return;
+    if (!map || !node || !e.originalEvent.shiftKey || e.originalEvent.button !== 0) return;
     if (map.queryRenderedFeatures(e.point, { layers: ["vertices", "midpoints"] }).length) return;
     e.preventDefault();
     const lasso: Position[] = [[e.lngLat.lng, e.lngLat.lat]];
@@ -540,39 +486,15 @@
       () => {
         map?.off("mousemove", onMove);
         source("lasso")?.setData(empty);
-        if (lasso.length < 3) return;
+        if (lasso.length < 3 || !node.boundary) return;
         const prepared = preparePolygons([[[...lasso, lasso[0]!]]]);
-
-        if (node?.boundary) {
-          const selection = new Map(store.vertexSelection);
-          forEachRing(node.boundary, (ring) => {
-            for (const p of ring.slice(0, -1)) {
-              if (polygonsContain(prepared, p[0]!, p[1]!)) selection.set(positionKey(p), p);
-            }
-          });
-          store.vertexSelection = selection;
-        } else if (isMergeLasso) {
-          const current = store.selected ?? store.root;
-          const candidateLeaves = current.children.length
-            ? current.children.filter((c) => !c.children.length && c.boundary)
-            : (current.parent?.children ?? []).filter((c) => !c.children.length && c.boundary);
-
-          const selection = new Set(store.mergeSelection);
-          for (const candidate of candidateLeaves) {
-            let hit = false;
-            forEachRing(candidate.boundary!, (ring) => {
-              if (hit) return;
-              for (const p of ring) {
-                if (polygonsContain(prepared, p[0]!, p[1]!)) {
-                  hit = true;
-                  break;
-                }
-              }
-            });
-            if (hit) selection.add(candidate);
+        const selection = new Map(store.vertexSelection);
+        forEachRing(node.boundary, (ring) => {
+          for (const p of ring.slice(0, -1)) {
+            if (polygonsContain(prepared, p[0]!, p[1]!)) selection.set(positionKey(p), p);
           }
-          store.mergeSelection = selection;
-        }
+        });
+        store.vertexSelection = selection;
       },
       { once: true },
     );
@@ -654,15 +576,7 @@
         filter: ["!=", ["get", "role"], "context"],
         paint: {
           "fill-color": ["get", "color"],
-          "fill-opacity": [
-            "match",
-            ["get", "role"],
-            "mergeSelected",
-            0.4,
-            "child",
-            0.18,
-            0.05,
-          ],
+          "fill-opacity": ["case", ["==", ["get", "role"], "child"], 0.18, 0.05],
         },
       });
       m.addLayer({
@@ -678,27 +592,12 @@
         source: "boundaries",
         paint: {
           "line-color": [
-            "case",
-            ["==", ["get", "role"], "mergeSelected"],
-            "#f43f5e",
-            [
-              "match",
-              ["get", "state"],
-              ...Object.entries(BOUNDARY_STATE_COLORS).flat(),
-              "#64748b",
-            ],
-          ],
-          "line-width": [
             "match",
-            ["get", "role"],
-            "mergeSelected",
-            3,
-            "selected",
-            2.5,
-            "child",
-            1.5,
-            1,
+            ["get", "state"],
+            ...Object.entries(BOUNDARY_STATE_COLORS).flat(),
+            "#64748b",
           ],
+          "line-width": ["match", ["get", "role"], "selected", 2.5, "child", 1.5, 1],
         },
       });
       m.addLayer({
@@ -816,28 +715,10 @@
           store.vertexSelection = new Map();
           return;
         }
-        // Select or toggle child/region under the cursor
-        const [child] = m.queryRenderedFeatures(e.point, {
-          layers: ["boundary-fill", "boundary-context-fill"],
-        });
+        // Select the child under the cursor
+        const [child] = m.queryRenderedFeatures(e.point, { layers: ["boundary-fill"] });
         const node = child && store.nodesById.get(child.properties.nodeId);
-        if (node && !node.children.length) {
-          if (
-            store.mergeMode ||
-            e.originalEvent.ctrlKey ||
-            e.originalEvent.metaKey ||
-            e.originalEvent.shiftKey
-          ) {
-            store.toggleMerge(node);
-            return;
-          }
-          if (child.properties.role === "child") {
-            store.selected = node;
-            return;
-          }
-        } else if (node && child.properties.role === "child") {
-          store.selected = node;
-        }
+        if (node && child.properties.role === "child") store.selected = node;
       });
 
       loaded = true;
@@ -879,11 +760,11 @@
     store.vertexSelection = new Map();
   });
 
-  // Shift + drag draws a lasso instead of zooming while editing or merging
+  // Shift + drag draws a lasso instead of zooming while editing
   $effect(() => {
-    const lassoActive = store.editing || store.mergeMode || store.mergeSelection.size > 0;
+    const editing = store.editing;
     if (!loaded || !map) return;
-    if (lassoActive) map.boxZoom.disable();
+    if (editing) map.boxZoom.disable();
     else map.boxZoom.enable();
   });
 
@@ -902,9 +783,10 @@
   let allBoundariesKey = "";
   $effect(() => {
     void store.version;
+    void store.selected;
     const show = showAllBoundaries.current;
     if (!loaded) return;
-    const tolerance = 0.01;
+    const tolerance = displayTolerance();
     const key = show ? `${store.root.revision} ${tolerance} ${store.version}` : "";
     if (key === allBoundariesKey) return;
     allBoundariesKey = key;
