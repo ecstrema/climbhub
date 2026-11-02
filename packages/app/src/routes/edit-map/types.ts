@@ -1,22 +1,21 @@
-import type { YamlConfig } from "@climbhub/reverse-geocoding-data";
 import type { FeatureCollection, MultiPolygon, Polygon } from "geojson";
 
 export type Boundary = FeatureCollection<Polygon | MultiPolygon>;
 
-export interface ConfigFile {
-  /** `config.yaml` or `<name>.config.yaml` */
-  file: string;
-  config: YamlConfig;
-  /** Original text of the file, to write it back untouched when it is not modified */
-  raw?: string;
-}
+export const MAX_STAGE_AREAS = 50;
 
-/** A directory of packages/reverse-geocoding-data, as sent by /api/edit-map/tree.json */
-export interface ServerTreeNode {
-  slug: string;
-  configs: ConfigFile[];
-  /** `manual` when it comes from data/, `generated` when it comes from output/ */
-  boundarySource?: "manual" | "generated";
-  boundary?: Boundary;
-  children: ServerTreeNode[];
-}
+export type BoundaryState = "new" | "modified" | "staged" | "committed";
+export type BoundaryStates = Record<string, BoundaryState>;
+
+export const BOUNDARY_STATE_COLORS: Record<BoundaryState, string> = {
+  new: "#2563eb",
+  modified: "#d97706",
+  staged: "#16a34a",
+  committed: "#64748b",
+};
+
+/**
+ * Files of packages/reverse-geocoding-data/data, by path relative to it
+ * (`world/americas/north/canada/quebec/laurentides.geojson`).
+ */
+export type DataFiles = Record<string, string>;

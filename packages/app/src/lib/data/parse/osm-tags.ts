@@ -6,6 +6,7 @@ import {
   french,
   getReference,
   getScale,
+  parseGrade,
   uiaa,
   yds,
   type Scale,
@@ -97,6 +98,20 @@ export function getGrade(tags: Tags): WithSourceTag<Grade> | undefined {
   // If no grade was found, check for a generic climbing:grade tag
   const genericGrade = tags["climbing:grade"];
   if (genericGrade) {
+    const parsed = parseGrade(genericGrade);
+    if (parsed?.primary) {
+      return {
+        v: { v: parsed.primary.grade, scale: parsed.primary.scale },
+        source: "climbing:grade",
+      };
+    }
+    if (parsed?.danger) {
+      return {
+        v: { v: parsed.danger.grade, scale: parsed.danger.scale },
+        source: "climbing:grade",
+      };
+    }
+
     // Try to detect the scale from the value
     for (const scale of allScales) {
       const g = scale.normalize(genericGrade);
@@ -119,7 +134,8 @@ export function getGrade(tags: Tags): WithSourceTag<Grade> | undefined {
   function testKey(key: OsmApi.Keys["keys"], scale: ScaleId): WithSourceTag<Grade> | undefined {
     const v = tags[key];
     if (v) {
-      const normalized = getScale(scale)!.normalize(v);
+      const parsed = parseGrade(v, scale);
+      const normalized = parsed?.primary?.grade ?? getScale(scale)!.normalize(v);
       // validate the grade, but ignore the result
       return {
         v: normalized ? { v: normalized, scale } : { v, scale: "unknown" },

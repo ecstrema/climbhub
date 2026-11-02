@@ -11,7 +11,7 @@ export type SortedChildren = Record<ItemType | "other", string[]>;
 export function sortChildren(item: DataTree): SortedChildren | undefined {
   if (!item.children) return;
 
-  if (item.feature.type === "relation") {
+  if (item.feature.type === "relation" && Array.isArray(item.feature.members)) {
     const idToItem = getIdToItem(item);
     const result: SortedChildren = {
       geographic: [],

@@ -1,44 +1,26 @@
 import { strToU8, zipSync, type Zippable } from "fflate";
-import * as yaml from "js-yaml";
 
-import { nodePath, walk, type EditorStore } from "./editor.svelte";
+import type { DataChanges, EditorStore } from "./editor.svelte";
 
-const README = `Configuration exported by the boundary editor of Climbhub (/edit-map).
+const README = `Boundaries exported by the boundary editor of Climbhub (/edit-map).
 
 Replace packages/reverse-geocoding-data/data with the data/ directory of this archive:
 
   cd packages/reverse-geocoding-data
-  rm -rf data && unzip -o <this archive> && bun run build
-
-stale-outputs.txt lists the directories of output/ whose boundary must be regenerated (their
-query changed, or they were removed). Delete them before running the build:
-
-  xargs -I{} rm -rf output/{} < stale-outputs.txt
+  rm -rf data && unzip -o <this archive> -x README.txt && bun run build
 `;
 
 /** Builds the zip of the whole data/ directory of packages/reverse-geocoding-data. */
 export function exportZip(store: EditorStore): Uint8Array {
+  const files: Zippable = { "README.txt": strToU8(README) };
+  for (const [path, text] of Object.entries(store.files())) files[`data/${path}`] = strToU8(text);
+  return zipSync(files, { level: 6 });
+}
+
+/** Builds the zip of the files of data/ that were added or modified, to drop on GitHub's upload page. */
+export function exportChangesZip(changes: DataChanges): Uint8Array {
   const files: Zippable = {};
-
-  for (const node of walk(store.root)) {
-    const dir = `data/${nodePath(node)}`;
-    for (const { file, config, raw } of node.configs) {
-      const text =
-        raw !== undefined && !node.changedConfigs.has(file)
-          ? raw
-          : yaml.dump(config, { lineWidth: -1 });
-      files[`${dir}/${file}`] = strToU8(text);
-    }
-    if (node.boundary && (node.origin === "manual" || node.origin === "edited")) {
-      files[`${dir}/boundary.geojson`] = strToU8(JSON.stringify(node.boundary));
-    }
-  }
-
-  const stale = new Set(store.stalePaths);
-  for (const path of store.removedPaths) stale.add(path);
-  files["stale-outputs.txt"] = strToU8([...stale].sort().join("\n") + (stale.size ? "\n" : ""));
-  files["README.txt"] = strToU8(README);
-
+  for (const [path, text] of changes.write) files[`data/${path}`] = strToU8(text);
   return zipSync(files, { level: 6 });
 }
 

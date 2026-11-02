@@ -4,6 +4,7 @@
   import EditableTags from "$lib/components/editable/editable-tags.svelte";
   import EditableGrade from "@/editable/editable-grade.svelte";
   import EditableLength from "@/editable/editable-length.svelte";
+  import CommonsTopo from "$lib/components/commons-topo.svelte";
   import type { DataTree } from "$lib/types";
   import type { OsmFeature } from "osm-api";
   import { getCoordinates, getGrade } from "$lib/data/parse/osm-tags";
@@ -33,5 +34,7 @@
 {/if}
 
 <EditableDescription {feature} featureSlug={slug} />
+
+<CommonsTopo {feature} featureSlug={slug} />
 
 <EditableTags {feature} featureSlug={slug} />
