@@ -283,7 +283,6 @@
     store.preview = undefined;
   }
 
-
   // --- Overpass ----------------------------------------------------------------------------------
 
   function useQueryResult() {
@@ -856,8 +855,8 @@
         </label>
 
         <p class="text-[11px] text-muted-foreground">
-          Dashed red line on the map. Fully encompasses the region in water. Land borders stay intact.
-          Changes are kept in memory until saved.
+          Dashed red line on the map. Fully encompasses the region in water. Land borders stay
+          intact. Changes are kept in memory until saved.
         </p>
 
         <div class="flex flex-wrap items-center gap-1.5 pt-1">
@@ -976,7 +975,9 @@
       >
       <Button
         size="sm"
-        variant={mergeOpen || store.mergeMode || store.mergeSelection.size > 0 ? "default" : "outline"}
+        variant={mergeOpen || store.mergeMode || store.mergeSelection.size > 0
+          ? "default"
+          : "outline"}
         title="Select and merge multiple regions together (M)"
         onclick={toggleMerge}
       >
@@ -1144,17 +1145,21 @@
         </div>
 
         {#if selectedList.length > 0}
-          <div class="flex max-h-36 flex-wrap gap-1 overflow-y-auto rounded border bg-background/90 p-1.5">
+          <div
+            class="flex max-h-36 flex-wrap gap-1 overflow-y-auto rounded border bg-background/90 p-1.5"
+          >
             {#each selectedList as sel (sel.id)}
-              <span class="inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-xs font-medium">
+              <span
+                class="inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-xs font-medium"
+              >
                 <span class="max-w-[140px] truncate" title={nodeName(sel)}>{nodeName(sel)}</span>
                 <span class="tabular-nums text-muted-foreground">({sel.total})</span>
                 <button
                   type="button"
                   class="ml-0.5 cursor-pointer font-bold text-muted-foreground hover:text-foreground"
                   onclick={() => store.toggleMerge(sel)}
-                  title="Remove from selection"
-                >&times;</button>
+                  title="Remove from selection">&times;</button
+                >
               </span>
             {/each}
           </div>
@@ -1171,8 +1176,12 @@
           </div>
 
           {#if selectedList.length === 2}
-            <div class="flex flex-col gap-1.5 rounded border border-rose-300 bg-rose-100/50 p-2 dark:bg-rose-900/30">
-              <div class="flex items-center justify-between font-semibold text-rose-950 dark:text-rose-100">
+            <div
+              class="flex flex-col gap-1.5 rounded border border-rose-300 bg-rose-100/50 p-2 dark:bg-rose-900/30"
+            >
+              <div
+                class="flex items-center justify-between font-semibold text-rose-950 dark:text-rose-100"
+              >
                 <span>Merge at 2 Points</span>
                 <span class="text-[11px] font-normal text-muted-foreground">
                   {selectedPoints.length}/2 points selected
@@ -1186,7 +1195,11 @@
                   <Button size="xs" variant="outline" onclick={() => store.mergeSideIndex++}>
                     Flip side / Cycle connection
                   </Button>
-                  <Button size="xs" variant="ghost" onclick={() => (store.vertexSelection = new Map())}>
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    onclick={() => (store.vertexSelection = new Map())}
+                  >
                     Clear points
                   </Button>
                   <Button size="xs" variant="default" onclick={applyMergeAt2Points}>
@@ -1198,7 +1211,12 @@
                   Click 2 vertices on the map to bridge the 2 shapes between them.
                 </p>
                 {#if sharedNodesBetweenTwo.length >= 2}
-                  <Button size="xs" variant="outline" class="self-start" onclick={autoSelectCommonNodes}>
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    class="self-start"
+                    onclick={autoSelectCommonNodes}
+                  >
                     Auto-select 2 common nodes ({sharedNodesBetweenTwo.length} found)
                   </Button>
                 {/if}
@@ -1208,33 +1226,52 @@
 
           {#if mergeType === "new"}
             <div class="flex flex-col gap-1.5">
-              <label class="font-medium text-muted-foreground">New region name</label>
+              <label for="new-region-name" class="font-medium text-muted-foreground"
+                >New region name</label
+              >
               <div class="flex items-center gap-1.5">
-                <input class="{inputClass} flex-1" placeholder="e.g. Kootenays" bind:value={newRegionName} />
+                <input
+                  id="new-region-name"
+                  class="{inputClass} flex-1"
+                  placeholder="e.g. Kootenays"
+                  bind:value={newRegionName}
+                />
                 <code class="shrink-0 text-muted-foreground">{newRegionSlug || "slug"}</code>
               </div>
               <div class="flex items-center justify-between pt-1">
                 <span class="tabular-nums text-muted-foreground">
-                  {#if merged}{polygons.length} polygon{polygons.length === 1 ? "" : "s"} · {/if}{totalPlaces} places
+                  {#if merged}{polygons.length} polygon{polygons.length === 1 ? "" : "s"} ·
+                  {/if}{totalPlaces} places
                 </span>
-                <Button size="xs" disabled={!newRegionSlug || selectedList.length < 2} onclick={applyMergeIntoNew}>
+                <Button
+                  size="xs"
+                  disabled={!newRegionSlug || selectedList.length < 2}
+                  onclick={applyMergeIntoNew}
+                >
                   Create "{newRegionSlug || "..."}"
                 </Button>
               </div>
             </div>
           {:else}
             <div class="flex flex-col gap-1.5">
-              <label class="font-medium text-muted-foreground">Region to keep</label>
-              <select class={inputClass} bind:value={mergeTargetId}>
+              <label for="merge-target-region" class="font-medium text-muted-foreground"
+                >Region to keep</label
+              >
+              <select id="merge-target-region" class={inputClass} bind:value={mergeTargetId}>
                 {#each selectedList as opt (opt.id)}
                   <option value={opt.id}>{nodeName(opt)} ({opt.slug})</option>
                 {/each}
               </select>
               <div class="flex items-center justify-between pt-1">
                 <span class="tabular-nums text-muted-foreground">
-                  {#if merged}{polygons.length} polygon{polygons.length === 1 ? "" : "s"} · {/if}{totalPlaces} places
+                  {#if merged}{polygons.length} polygon{polygons.length === 1 ? "" : "s"} ·
+                  {/if}{totalPlaces} places
                 </span>
-                <Button size="xs" disabled={!mergeTargetId || selectedList.length < 2} onclick={applyMergeIntoExisting}>
+                <Button
+                  size="xs"
+                  disabled={!mergeTargetId || selectedList.length < 2}
+                  onclick={applyMergeIntoExisting}
+                >
                   Merge into selected
                 </Button>
               </div>
