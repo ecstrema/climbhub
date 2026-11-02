@@ -184,17 +184,44 @@ export function featureToTypeOSM(feature: OsmFeature): OSMClimbingFeatureType | 
   if (!feature.tags) return;
 
   const tags = feature.tags;
-  if (["route_bottom", "route_top"].includes(tags.climbing || "")) {
+  const climbingValues = tags.climbing?.split(";").map((value) => value.trim()) ?? [];
+  if (
+    climbingValues.some((value) =>
+      [
+        "route_bottom",
+        "route_top",
+        "route",
+        "route_start",
+        "boulder",
+        "bouldering",
+        "abseil_route",
+        "abseil",
+        "toprope",
+        "drytooling",
+      ].includes(value),
+    )
+  ) {
     return "route";
   }
 
-  if (["area", "crag"].includes(tags.climbing || "")) {
+  if (climbingValues.some((value) => ["area", "crag"].includes(value))) {
     return "area";
   }
 
-  if (tags.leisure === "sports_centre" && tags.sport === "climbing") {
+  if (
+    ["indoor_wall", "artificial_wall", "wall", "gym"].some((value) =>
+      climbingValues.includes(value),
+    ) ||
+    (tags.sport === "climbing" &&
+      ["sports_centre", "sports_hall", "fitness_centre", "sport_centre"].includes(
+        tags.leisure || "",
+      ))
+  ) {
     return "gym";
   }
+
+  // The world import also includes climbing POIs without a more specific climbing tag.
+  if (tags.sport === "climbing") return "area";
 }
 
 export const sharedProcessedTags: ProcessedTags = {
