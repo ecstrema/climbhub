@@ -1,4 +1,8 @@
 node_modules/
-# Scratch files at the package root. Manual boundaries under data/ must be committed.
+# Scratch files at the package root
 /*.geojson
 output/
+# Overpass responses cached by import/main.ts
+/import/raw/
+/import/*.log
+/import/audit.json

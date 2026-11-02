@@ -9,7 +9,10 @@ if (dirname.includes(".svelte-kit")) {
   dirname = join(appDir, "../climbing-data-gen/src");
 }
 
-export const OSM_DATA_FILE = join(dirname, "climbing-data.json");
+/** Climbing data of the whole world, as downloaded from Overpass: one file per tile */
+export const OSM_DATA_DIR = join(dirname, "climbing-data");
 export const OUT_DIR = join(dirname, "../build");
+/** Raw worldwide Overpass result containing climbing features and their dependencies */
+export const CLIMBING_DATA_FILE = join(dirname, "climbing.json");
 /** Cache of the world climbing places, used by the boundary editor of the app */
 export const WORLD_CLIMBING_POINTS_FILE = join(dirname, "world-climbing-points.json");

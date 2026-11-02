@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
 import type { Position, Feature, MultiPolygon, Polygon } from "geojson";
-import type { IndexNode } from "@climbhub/reverse-geocoding-data";
+import { BOUNDARY_EXTENSION, type IndexNode } from "@climbhub/reverse-geocoding-data";
 
 export class ReverseGeolocator {
   /** The tree with the bounding boxes and the children. */
@@ -21,8 +21,8 @@ export class ReverseGeolocator {
   /**
    * Initializes the reverse geolocator, keeping the index loaded in memory.
    * @param indexPath Path to the hierarchy-index.json file
-   * @param dataDir Base directory where the world data is stored
-   * @param maxCacheSize Maximum number of boundary.geojson files to keep in memory (default: 100)
+   * @param dataDir data/ directory of @climbhub/reverse-geocoding-data
+   * @param maxCacheSize Maximum number of boundary files to keep in memory (default: 100)
    */
   constructor(indexPath: string, dataDir: string, maxCacheSize: number = 100) {
     if (!existsSync(indexPath)) {
@@ -66,8 +66,10 @@ export class ReverseGeolocator {
     }
 
     // If we are inside the bounding box, check children recursively
+    let isLeaf = true;
     for (const [key, val] of Object.entries(indexNode)) {
-      if (key === "_bbox" || key === "_name") continue;
+      if (key === "_bbox") continue;
+      isLeaf = false;
 
       const matched = this.geolocateRecursive(lon, lat, [...path, key], val as IndexNode);
 
@@ -76,8 +78,8 @@ export class ReverseGeolocator {
       }
     }
 
-    // If no children matched, check if this node has a precise polygon
-    if (this.checkPolygonContains(path, [lon, lat])) {
+    // Only the leaves have a precise polygon
+    if (isLeaf && this.checkPolygonContains(path, [lon, lat])) {
       return path;
     }
 
@@ -114,27 +116,12 @@ export class ReverseGeolocator {
     return false;
   }
 
-  // Get the name of a path, as given by the geojson properties.
+  /**
+   * Name of a region. The path is the key of its translation.
+   * TODO: translate it with wuchale. Until then, the slug is displayed.
+   */
   public getName(path: string[]) {
-    // Check if the hierarchy-index.json has a name for this path
-    let currentNode: IndexNode | undefined = this.indexTree;
-    for (const segment of path) {
-      if (!currentNode || !currentNode[segment]) {
-        currentNode = undefined;
-        break;
-      }
-      currentNode = currentNode[segment] as IndexNode;
-    }
-
-    if (currentNode && currentNode._name) {
-      return currentNode._name;
-    }
-
-    const features = this.getCachedFeatures(path);
-
-    const properties = features[0]?.properties;
-    // TODO: handle translations
-    return properties?.official_name || properties?.name;
+    return path.at(-1)!;
   }
 
   /**
@@ -142,9 +129,8 @@ export class ReverseGeolocator {
    * Manages memory using a Least Recently Used (LRU) eviction strategy.
    */
   private getCachedFeatures(path: string[]): Feature<MultiPolygon | Polygon>[] {
-    const fullFilePath = join(this.dataDir, ...path, "boundary.geojson");
-
-    const filepath = join(...path, "boundary.geojson");
+    const filepath = join(...path) + BOUNDARY_EXTENSION;
+    const fullFilePath = join(this.dataDir, filepath);
     if (this.geoJsonCache.has(filepath)) {
       // Cache Hit: Move this item to the end of the Map to mark it as most recently used
       const features = this.geoJsonCache.get(filepath)!;

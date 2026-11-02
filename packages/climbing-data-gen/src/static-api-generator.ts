@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
-import { writeFile } from "fs/promises";
 import { join, dirname } from "path";
+import { createHash } from "crypto";
 
 import { ReverseGeolocator } from "./reverse-geolocation.ts";
 import type { Coordinates, DataJSON, GeographicFolderElement, OverpassRequest } from "./types.ts";
@@ -10,7 +10,8 @@ import { getStaticIdentifier } from "@climbhub/common";
 
 export type StaticApiGeneratorOptions = {
   outApiDirectory: string;
-  osmDataFile: string;
+  /** Overpass responses, for instance one per tile. An element may be in several of them. */
+  osmDataFiles: string[];
   geoIndexFile: string;
   reverseGeocodingDataDirectory: string;
   maxCacheSize?: number;
@@ -20,27 +21,49 @@ export function generateStaticAPI(options: StaticApiGeneratorOptions) {
   ensureDirExists(options.outApiDirectory);
 
   console.info("Processing OSM Climbing Data...");
-  const allElements = readOsmData(options.osmDataFile);
+  const allElements = readOsmData(options.osmDataFiles);
+  writeNodeHashes(options.outApiDirectory, allElements);
   const rootNodes = getRootOsmDataNodes(allElements);
 
   console.info("Writing static API endpoints");
   writeStaticApi(options, allElements, rootNodes);
 }
 
-function readOsmData(osmDataFile: string): Map<string, OsmFeature> {
-  if (!existsSync(osmDataFile)) {
-    throw new Error(`Missing OSM Data: Please ensure ${osmDataFile} exists.`);
-  }
-
-  const rawData: OverpassRequest = JSON.parse(readFileSync(osmDataFile, "utf8"));
-
+function readOsmData(osmDataFiles: string[]): Map<string, OsmFeature> {
   // Index all elements
   const osmElementsMap = new Map<string, OsmFeature>();
-  for (const el of rawData.elements) {
-    osmElementsMap.set(getStaticIdentifier(el.type, el.id), el);
+  for (const osmDataFile of osmDataFiles) {
+    if (!existsSync(osmDataFile)) {
+      throw new Error(`Missing OSM Data: Please ensure ${osmDataFile} exists.`);
+    }
+
+    const rawData: OverpassRequest = JSON.parse(readFileSync(osmDataFile, "utf8"));
+    for (const el of rawData.elements) {
+      const id = getStaticIdentifier(el.type, el.id);
+      // The files may have been downloaded at different times: keep the latest version
+      const existing = osmElementsMap.get(id);
+      if (existing && (existing.version ?? 0) >= (el.version ?? 0)) continue;
+      osmElementsMap.set(id, el);
+    }
   }
+  console.info(`${osmElementsMap.size} elements in ${osmDataFiles.length} files`);
 
   return osmElementsMap;
+}
+
+function writeNodeHashes(outApiDirectory: string, allElements: Map<string, OsmFeature>) {
+  const hashes = Object.fromEntries(
+    Array.from(allElements.entries())
+      .filter(([, element]) => element.type === "node")
+      .sort(([idA], [idB]) => idA.localeCompare(idB))
+      .map(([id, element]) => [
+        id,
+        createHash("sha256").update(JSON.stringify(element)).digest("hex"),
+      ]),
+  );
+
+  writeFileSync(join(outApiDirectory, "node-hashes.json"), JSON.stringify(hashes));
+  console.info(`${Object.keys(hashes).length} node hashes written`);
 }
 
 function getRootOsmDataNodes(allElements: Map<string, OsmFeature>): OsmFeature[] {
@@ -174,6 +197,7 @@ function writeStaticApi(
   let noTags = 0;
   let emptyTags = 0;
   let cliffs = 0;
+  const outsideRegions: string[] = [];
   for (const rootNode of rootNodes) {
     const coordinates = getRepresentativeCoordinates(rootNode, allElements);
     if (!coordinates) {
@@ -182,8 +206,12 @@ function writeStaticApi(
     }
     const location = geolocator.geolocate(coordinates.lon, coordinates.lat);
 
+    // Outside of every region of @climbhub/reverse-geocoding-data: not in the API until a region
+    // is added there
     if (!location) {
-      console.error("Failed to geolocate coordinates", coordinates, "from node", rootNode);
+      outsideRegions.push(
+        `${rootNode.type}/${rootNode.id} (${coordinates.lon},${coordinates.lat})`,
+      );
       continue;
     }
 
@@ -234,6 +262,12 @@ function writeStaticApi(
   console.info("no tags:", noTags);
   console.info("empty tags:", emptyTags);
   console.info("cliffs:", cliffs);
+  if (outsideRegions.length > 0) {
+    console.warn(
+      `${outsideRegions.length} root elements are outside of every region, and skipped:`,
+      outsideRegions.slice(0, 20).join(", ") + (outsideRegions.length > 20 ? ", ..." : ""),
+    );
+  }
 
   // Add info to the geographicTree api endpoints by iterating through it.
   writeChildrenDataToGeoTree([options.outApiDirectory], geographicTree, geolocator);
@@ -252,9 +286,7 @@ function writeChildrenDataToGeoTree(
       name: geolocator.getName(newPath.slice(1)),
     };
 
-    writeFile(join(newPath.join("/"), "data.json"), JSON.stringify(data satisfies DataJSON), {
-      encoding: "utf-8",
-    });
+    writeFileSync(join(newPath.join("/"), "data.json"), JSON.stringify(data satisfies DataJSON));
 
     writeChildrenDataToGeoTree(newPath, childMapTree, geolocator);
   }

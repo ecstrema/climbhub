@@ -17,7 +17,8 @@
     "idb": "^8.0.3",
     "layerchart": "^2.1.0",
     "mode-watcher": "^1.1.0",
-    "osm-api": "catalog:"
+    "osm-api": "catalog:",
+    "polygon-clipping": "^0.15.7"
   },
   "devDependencies": {
     "@climbhub/climbing-data-gen": "workspace:*",
@@ -35,13 +36,11 @@
     "@types/bun": "catalog:",
     "@types/d3-scale": "^4.0.9",
     "@types/geojson": "catalog:",
-    "@types/js-yaml": "catalog:",
     "@types/node": "catalog:",
     "@vitejs/devtools": "^0.1.24",
     "bits-ui": "^2.18.1",
     "clsx": "^2.1.1",
     "fflate": "^0.8.3",
-    "js-yaml": "catalog:",
     "maplibre-gl": "^6.12.0",
     "osmtogeojson": "catalog:",
     "shadcn-svelte": "^1.4.2",

@@ -1,61 +1,74 @@
 # reverse geocoding
 
-For the reverse geocoding, we use boundaries from Overpass converted to GeoJSON with osmtogeojson. We then generate an index of bounding boxes for each region.
+The climbing places are grouped by region. A region is a path such as
+`world/americas/north/canada/quebec/laurentides`, and the boundaries of the regions are committed
+in `data/`.
+
+## Structure of `data/`
+
+`data/` only contains directories and GeoJSON files:
+
+- Every leaf region is a `<slug>.geojson` file: a `FeatureCollection` of `Polygon` or
+  `MultiPolygon`. For example `data/world/americas/north/canada/quebec/laurentides.geojson`.
+- Every other region is a directory, without a boundary: its extent is the union of its children.
+  A region cannot be both a directory and a file.
+- Names are slugs (see `slugify` in `src/shared.ts`). The path is also the key of the display name
+  of the region (translations are not done yet, so the slug is displayed for now).
+
+A climbing place is geolocated by walking the tree: the first sibling (by slug) whose boundary
+contains it wins. Places outside of every leaf are dropped.
+
+Keep the files small: a pull request cannot add or modify a file larger than 50 KB (checked by
+`.github/workflows/check-boundaries.yml`, with `bun run check-size <files>`), and the build warns
+for the existing ones. Simplify them in the editor first.
+
+## Editing the boundaries
+
+Use the boundary editor of the app, `/edit-map`:
+
+- With `bun run dev`, it reads `data/` directly, can run Overpass queries to get boundaries, and
+  saves the changes to `data/`. Commit them as usual.
+- On the deployed site, it reads `data/` from GitHub. Changes can be downloaded as a zip of the
+  whole `data/` directory, or proposed directly as a pull request.
+
+## Importing countries from OpenStreetMap
+
+`import/regions.ts` lists the imported regions: the ISO code of their OSM relation (ISO3166-2 for a
+subdivision, ISO3166-1 for a whole country) or its id, their path in `data/world`, and whether they
+are a leaf or a group of their subdivisions of a given `admin_level`.
+
+```bash
+bun run import
+```
+
+It only imports the regions that were never imported (`import/imported.json` lists the others), and
+never overwrites a file, so edits made in the editor are kept: a region deleted, merged or renamed
+in the editor is not imported again (remove its code from `import/imported.json` to import it again):
+
+- It downloads them one Overpass request at a time, 10s apart (retries included), into
+  `import/raw/`, a cache that is not committed. A request that keeps failing is retried in the
+  next pass, until everything is downloaded (20 passes at most). Run it again to resume.
+- After each download, it simplifies the new boundaries (below 48 KB if possible, with a tolerance
+  of at most 0.01°: larger files are listed, simplify them in the editor), keeping the shared
+  borders identical, snaps them onto the borders of the existing files, and writes them to `data/`.
+- A group without subdivisions at its `admin_level` is written as a single leaf.
+- `-- --dry` downloads nothing and shows what `import/raw/` would add.
+
+To repair files:
+
+- `-- --audit` downloads every region into `import/raw/`, imported or not, and lists the files that
+  are more than 0.02° away from their OSM boundary, with the command to import them again.
+- `-- --redo <path>...` imports these paths of `data/world` again. A file is rebuilt in place; a
+  directory is deleted and imported again, like a new region (with its `admin_level` of
+  `regions.ts`).
+
+## Build
 
 ```bash
 bun install
 bun run build
 ```
 
-# Updating boundaries
-
-There are two ways to get a boundary:
-
-1. An overpass query. Simply put `config.yaml` into its directory. The query will be run if there is no boundary.geojson file in the directory. Else it will assume it has already been generated.
-2. Put directly the file there. Add it to source control. Use only this for regions where an overpass query cannot do the job.
-
-Sometimes, a single query can get multiple regions at once. In this case, declare the query to be from the parent, and the parent to be a query to split. See world/canada/quebec for an example.
-
-# Structure of `config.yaml`
-
-`config.yaml` has several configuration options:
-
-- `query`: (string) multiline string indicating the overpass query to run.
-- `multiple`: (bool, default false) Indicates that this query generates multiple geojson. In this case, each geojson will be put into `${childName}/boundary.geojson`. Note that queries with the `multiple: true` value will not be run by default. They are only run when a children _delegates_ to it. See the `delegate` key below.
-- `delegate`: (path) When a single query generates multiple boundaries, the children path should point to their generating query. Example: `../generates_multiple.config.yaml`. That way, when we walk the tree, we run each query only if the boundary.geojson file is not preset.
-
-If you need multiple queries in a single folder, you can name them `yourname.config.yaml` and they will be run in the order they are encountered when walking the tree.
-
-## Example for world/canada/quebec
-
-In Quebec, most regions are generated by the same query. So in `world/canada/quebec/` is this `regions.config.yaml`:
-
-```yaml
-query: |
-  [out:json][timeout:90];
-  area["ISO3166-2"="CA-QC"]->.quebec;
-  relation["boundary"="administrative"]["admin_level"="5"](area.quebec);
-  out geom;
-
-multiple: true
-```
-
-Then, each region, for example `world/canada/quebec/laurentides/` has `config.yaml`:
-
-```yaml
-delegateTo: ../regions.config.yaml
-```
-
-Then what happens is the following:
-
-1. When walking the tree, we first encouter `world/canada/quebec/regions.config.yaml`. Since there is the `multiple: true` indication, we do not run the query now, as we do not know what it will generate, so we cannot know if they are already there.
-2. We then encouter `world/canada/quebec/outaouais/config.yaml`. Since it _delegates_ to the previous query, we then run it. This should generate `world/canada/quebec/outaouais/boundary.geojson`. We check that it is the case, otherwise we error.
-3. Then, when we encounter for example `world/canada/quebec/monteregie/config.yaml`, we see that the `boundary.geojson` in this directory has already been generated, so we do not run the delegate.
-
-In total, each query should be run once at most.
-
-Additionnally, if a query with `multiple: true` is not referenced by any other query, we raise an error.
-
-## Usage
-
-See `packages/@climbhub/climbing-data-gen`.
+This validates `data/` and writes `output/hierarchy-index.json`, the bounding boxes of every
+region, used for a fast prefilter by `packages/climbing-data-gen`. It is independent of the import:
+it only reads `data/`, and runs in CI.

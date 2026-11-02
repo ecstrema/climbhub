@@ -1,10 +1,3 @@
-export interface YamlConfig {
-  query?: string;
-  multiple?: boolean;
-  delegateTo?: string;
-  displayName?: string;
-}
-
 export interface BoundingBox {
   x0: number;
   x1: number;
@@ -12,8 +5,11 @@ export interface BoundingBox {
   y1: number;
 }
 
+/**
+ * A node of hierarchy-index.json. The other keys are the children, by slug. A node without
+ * children is a leaf: its boundary is `data/<path>.geojson`.
+ */
 export interface IndexNode {
   _bbox: BoundingBox;
-  _name?: string;
   [key: string]: any;
 }

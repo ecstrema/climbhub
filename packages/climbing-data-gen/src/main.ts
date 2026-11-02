@@ -17,26 +17,28 @@ if (!Map.prototype.getOrInsert) {
 
 import { existsSync } from "fs";
 import { rm } from "fs/promises";
-import { OSM_DATA_FILE, OUT_DIR } from "./config.ts";
-import { downloadOSMData } from "./download.ts";
+import { CLIMBING_DATA_FILE, OUT_DIR } from "./config.ts";
+import { downloadClimbingData } from "./download.ts";
 import { generateStaticAPI } from "./static-api-generator.ts";
 
 import {
+  DATA_DIR as REVERSE_GEOCODING_DATA_DIR,
   HIERARCHY_INDEX,
-  OUTPUT_DIR as REVERSE_GEOCODING_DATA_DIR,
 } from "@climbhub/reverse-geocoding-data";
 
-// first, delete the output directory if it exists
+const climbingDataFile = await downloadClimbingData(CLIMBING_DATA_FILE, {
+  force: process.argv.includes("--refresh"),
+});
+
+// Keep the current API available if downloading the source data fails.
 if (existsSync(OUT_DIR)) {
   console.log(`Deleting existing output directory at ${OUT_DIR}`);
   await rm(OUT_DIR, { recursive: true, force: true });
 }
 
-await downloadOSMData(OSM_DATA_FILE);
-
 generateStaticAPI({
   geoIndexFile: HIERARCHY_INDEX,
-  osmDataFile: OSM_DATA_FILE,
+  osmDataFiles: [climbingDataFile],
   outApiDirectory: OUT_DIR,
   reverseGeocodingDataDirectory: REVERSE_GEOCODING_DATA_DIR,
 });

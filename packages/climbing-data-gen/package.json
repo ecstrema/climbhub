@@ -9,10 +9,15 @@
     ".": {
       "import": "./src/index.ts",
       "types": "./src/index.d.ts"
+    },
+    "./world-points": {
+      "import": "./src/world-points.ts",
+      "types": "./src/world-points.ts"
     }
   },
   "scripts": {
-    "build": "bun run src/main.ts"
+    "build": "bun run ../reverse-geocoding-data/src/main.ts && bun run src/main.ts",
+    "update": "bun run ../reverse-geocoding-data/src/main.ts && bun run src/main.ts --refresh"
   },
   "dependencies": {
     "@climbhub/reverse-geocoding-data": "workspace:*",
@@ -24,7 +29,6 @@
     "@climbhub/common": "workspace:*",
     "@types/bun": "catalog:",
     "@types/geojson": "catalog:",
-    "@types/js-yaml": "catalog:",
     "@types/node": "^26.4.0",
     "osm-api": "catalog:",
     "typescript": "catalog:"

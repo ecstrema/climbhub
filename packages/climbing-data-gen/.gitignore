@@ -1,4 +1,6 @@
 node_modules/
 src/climbing-data.json
+src/climbing.json
 build/
 src/world-climbing-points.json
+src/climbing-data/

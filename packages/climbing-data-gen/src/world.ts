@@ -2,74 +2,21 @@ import { existsSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
 import { request } from "https";
 import { USER_AGENT } from "@climbhub/reverse-geocoding-data";
-import type { OsmFeature } from "osm-api";
 
-/**
- * Lightweight version of the climbing data, for the whole world. It only contains the places
- * (crags, areas, boulders, gyms), not the routes, and only a representative point for each.
- * This is what the boundary editor (packages/app/src/routes/edit-map) uses to decide how to
- * split the world into regions.
- */
-export type ClimbingPointKind = "crag" | "area" | "boulder" | "gym" | "other";
+import {
+  parseWorldClimbingPoints,
+  WORLD_CLIMBING_QUERY,
+  type WorldClimbingPoints,
+} from "./world-points.ts";
 
-export interface ClimbingPoint {
-  /** `n123`, `w123` or `r123` */
-  id: string;
-  lon: number;
-  lat: number;
-  kind: ClimbingPointKind;
-  name?: string;
-}
+export * from "./world-points.ts";
 
-export interface WorldClimbingPoints {
-  /** ISO date of the OSM data */
-  timestamp: string;
-  points: ClimbingPoint[];
-}
-
-// Overpass only answers once the whole query has run, which can take several minutes. It may
-// refuse the query when it is busy ("Dispatcher_Client::request_read_and_idx::timeout"): then
-// retry later.
-const QUERY = `
-[out:json][timeout:600];
-// Every climbing place, except individual routes
-nwr["sport"="climbing"]["climbing"!~"^route"];
-out tags center qt;`;
 const RETRIES = 10;
 /** Pause between two Overpass requests. Requests are never made in parallel. */
 const DELAY_BETWEEN_REQUESTS = 5_000;
 /** First wait after a failure, doubled on each retry */
 const RETRY_DELAY = 30_000;
 const MAX_RETRY_DELAY = 5 * 60_000;
-
-function getKind(tags: Record<string, string>): ClimbingPointKind {
-  switch (tags.climbing) {
-    case "crag":
-      return "crag";
-    case "area":
-      return "area";
-    case "boulder":
-      return "boulder";
-  }
-  if (tags.type === "site") return "area";
-  if (tags.leisure === "sports_centre" || tags.leisure === "fitness_centre") return "gym";
-  return "other";
-}
-
-function toClimbingPoint(el: OsmFeature): ClimbingPoint | undefined {
-  // @ts-ignore `center` is added by `out center`
-  const coordinates: { lat: number; lon: number } | undefined = el.type === "node" ? el : el.center;
-  if (!coordinates) return;
-
-  const tags = (el.tags ?? {}) as Record<string, string>;
-  return {
-    id: `${el.type[0]}${el.id}`,
-    lon: coordinates.lon,
-    lat: coordinates.lat,
-    kind: getKind(tags),
-    name: tags.name || tags.official_name || undefined,
-  };
-}
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -97,10 +44,13 @@ function enqueue<T>(request: () => Promise<T>): Promise<T> {
  * POSTs the query with `https` rather than `fetch`: `fetch` gives up when the response headers
  * take more than 5 minutes, and Overpass sends them only when the query is done.
  */
-function postOverpass(query: string): Promise<string> {
+export function postOverpass(
+  query: string,
+  endpoint = "https://overpass-api.de/api/interpreter",
+): Promise<string> {
   return new Promise((resolve, reject) => {
     const req = request(
-      "https://overpass-api.de/api/interpreter",
+      endpoint,
       {
         method: "POST",
         headers: {
@@ -128,7 +78,7 @@ function postOverpass(query: string): Promise<string> {
 async function runQuery(onRetry: (error: string) => void): Promise<any> {
   for (let attempt = 0; ; attempt++) {
     try {
-      return JSON.parse(await enqueue(() => postOverpass(QUERY)));
+      return JSON.parse(await enqueue(() => postOverpass(WORLD_CLIMBING_QUERY)));
     } catch (e) {
       // Network errors (connection refused or reset) are retried like HTTP errors
       const error = e instanceof Error ? e.message : String(e);
@@ -183,17 +133,20 @@ export async function getWorldClimbingPoints(
 }
 
 /** Downloads all the climbing places of the world, and caches them in `outputFilePath`. */
-export async function downloadWorldClimbingPoints(outputFilePath: string): Promise<WorldClimbingPoints> {
+export async function downloadWorldClimbingPoints(
+  outputFilePath: string,
+): Promise<WorldClimbingPoints> {
   return download(outputFilePath, { startedAt: new Date().toISOString() });
 }
 
-async function download(outputFilePath: string, status: WorldDownloadStatus): Promise<WorldClimbingPoints> {
+async function download(
+  outputFilePath: string,
+  status: WorldDownloadStatus,
+): Promise<WorldClimbingPoints> {
   console.log("📡 Downloading the climbing places of the whole world...");
   const data = await runQuery((error) => (status.retrying = error));
-  const points = (data.elements as OsmFeature[]).map(toClimbingPoint).filter((p) => p !== undefined);
-
-  const result: WorldClimbingPoints = { timestamp: data.osm3s?.timestamp_osm_base ?? "", points };
+  const result = parseWorldClimbingPoints(data);
   await writeFile(outputFilePath, JSON.stringify(result));
-  console.log(`✅ ${points.length} climbing places saved to ${outputFilePath}`);
+  console.log(`✅ ${result.points.length} climbing places saved to ${outputFilePath}`);
   return result;
 }
