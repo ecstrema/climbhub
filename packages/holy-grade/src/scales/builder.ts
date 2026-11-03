@@ -86,10 +86,7 @@ export function romanToArabic(roman: string): number | undefined {
  * Compound transition grades (e.g. "6-/6") aren't covered — Roman-numeral spellings of those
  * are rare enough in practice that hand-listing every one isn't worth the complexity.
  */
-export function numeralAlternateNames(
-  maxNumber: number,
-  canonicalIsArabic: boolean,
-): AlternateNamesMapping {
+export function numeralAlternateNames(maxNumber: number, canonicalIsArabic: boolean): AlternateNamesMapping {
   const alternates: AlternateNamesMapping = new Map();
   for (let n = 1; n <= maxNumber; n++) {
     const arabic = String(n);

@@ -1,12 +1,12 @@
 <script lang="ts">
-  import type { BreadcrumbSegment, DataJSONRecord, DataTree } from "$lib/types";
+  import type { BreadcrumbSegment, DataJSONRecord, DataTree } from "#lib/types.js";
   import { type Snippet } from "svelte";
-  import { AppState, setAppState, type Breadcrumbs } from "$lib/data/app-state";
+  import { AppState, setAppState, type Breadcrumbs } from "#lib/data/app-state.js";
   import { browser } from "$app/env";
   import { type OsmFeature } from "osm-api";
   import { untrack } from "svelte";
-  import { getParentSlugs } from "$lib/helpers/slug";
-  import { AppDataTree } from "$lib/data/app-data-tree.svelte";
+  import { getParentSlugs } from "#lib/helpers/slug.js";
+  import { AppDataTree } from "#lib/data/app-data-tree.svelte.js";
   import type { FromCurrent } from "./types";
 
   const {

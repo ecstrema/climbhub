@@ -4,11 +4,7 @@ import { request } from "https";
 import { USER_AGENT } from "@climbhub/reverse-geocoding-data";
 import { tryOverpassInstances } from "@climbhub/common";
 
-import {
-  parseWorldClimbingPoints,
-  WORLD_CLIMBING_QUERY,
-  type WorldClimbingPoints,
-} from "./world-points.ts";
+import { parseWorldClimbingPoints, WORLD_CLIMBING_QUERY, type WorldClimbingPoints } from "./world-points.ts";
 
 export * from "./world-points.ts";
 
@@ -45,10 +41,7 @@ function enqueue<T>(request: () => Promise<T>): Promise<T> {
  * POSTs the query with `https` rather than `fetch`: `fetch` gives up when the response headers
  * take more than 5 minutes, and Overpass sends them only when the query is done.
  */
-export function postOverpass(
-  query: string,
-  validateResponse?: (data: any) => void,
-): Promise<string> {
+export function postOverpass(query: string, validateResponse?: (data: any) => void): Promise<string> {
   return tryOverpassInstances(async (endpoint) => {
     const body = await postOverpassToEndpoint(query, endpoint);
     const data = JSON.parse(body);
@@ -146,16 +139,11 @@ export async function getWorldClimbingPoints(
 }
 
 /** Downloads all the climbing places of the world, and caches them in `outputFilePath`. */
-export async function downloadWorldClimbingPoints(
-  outputFilePath: string,
-): Promise<WorldClimbingPoints> {
+export async function downloadWorldClimbingPoints(outputFilePath: string): Promise<WorldClimbingPoints> {
   return download(outputFilePath, { startedAt: new Date().toISOString() });
 }
 
-async function download(
-  outputFilePath: string,
-  status: WorldDownloadStatus,
-): Promise<WorldClimbingPoints> {
+async function download(outputFilePath: string, status: WorldDownloadStatus): Promise<WorldClimbingPoints> {
   console.log("📡 Downloading the climbing places of the whole world...");
   const data = await runQuery((error) => (status.retrying = error));
   const result = parseWorldClimbingPoints(data);

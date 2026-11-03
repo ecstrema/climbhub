@@ -1,11 +1,11 @@
 <script lang="ts">
-  import EditableDescription from "@/editable/editable-description.svelte";
-  import EditableName from "@/editable/editable-name.svelte";
+  import EditableDescription from "#components/editable/editable-description.svelte";
+  import EditableName from "#components/editable/editable-name.svelte";
   import ChildrenTable from "./children-table.svelte";
-  import EditableTags from "@/editable/editable-tags.svelte";
-  import CommonsTopo from "$lib/components/commons-topo.svelte";
+  import EditableTags from "#components/editable/editable-tags.svelte";
+  import CommonsTopo from "#lib/components/commons-topo.svelte";
   import type { OsmFeature } from "osm-api";
-  import type { DataTree } from "$lib/types";
+  import type { DataTree } from "#lib/types.js";
 
   let {
     item = $bindable(),

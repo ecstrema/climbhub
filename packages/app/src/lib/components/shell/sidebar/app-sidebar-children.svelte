@@ -1,12 +1,12 @@
 <script lang="ts">
-  import type { DataTree } from "$lib/types";
-  import { Button } from "@/ui/button";
+  import type { DataTree } from "#lib/types.js";
+  import { Button } from "#components/ui/button/index.js";
 
   import AppSidebarNode from "./app-sidebar-node.svelte";
   import { getSearchFilter, sortChildren } from "./utils";
   import type { OsmRelation, OsmWay } from "osm-api";
-  import { featureToType } from "$lib/data/parse/data";
-  import { getAppState } from "$lib/data/app-state";
+  import { featureToType } from "#lib/data/parse/data.js";
+  import { getAppState } from "#lib/data/app-state.js";
 
   let {
     item = $bindable(),

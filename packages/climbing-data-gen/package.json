@@ -29,7 +29,7 @@
     "@climbhub/common": "workspace:*",
     "@types/bun": "catalog:",
     "@types/geojson": "catalog:",
-    "@types/node": "^26.4.0",
+    "@types/node": "^26.6.6",
     "osm-api": "catalog:",
     "typescript": "catalog:"
   }

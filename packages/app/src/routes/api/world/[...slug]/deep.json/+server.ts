@@ -1,44 +1,17 @@
-import { join, dirname } from "path";
-import { readdir } from "fs/promises";
-
-import { error } from "@sveltejs/kit";
-
-import type { DataJSONRecord } from "$lib/types";
+import { join } from "path";
 
 import type { RequestHandler } from "./$types";
-import { withCache, rootPath, withErrorHandler } from "../utils";
-import { dataClient } from "$lib/data/network/data-client";
+import { jsonRawBuffer, readGeneratedJson, rootPath, withErrorHandler } from "../utils";
 
 /**
  * The deep endpoint returns all grandchildren, grandgrandchildren, etc. Every subchild that is not a direct child.
  * It is used to download all the missing data if the user wants to download an area, but has almost only the direct children.
  */
-export const GET: RequestHandler = async ({ params, fetch }) => {
+export const GET: RequestHandler = async ({ params }) => {
   const path = join(rootPath, params.slug);
   const deepPath = join(path, "deep.json");
 
-  return withErrorHandler(() =>
-    withCache(deepPath, async () => {
-      const files: DataJSONRecord = {};
-
-      // Get all data.json except those that are in children.json. That is, those in deep subdirectories, not those 1 directory deep.
-      const entries = await readdir(path, { withFileTypes: true, recursive: true });
-      for (const entry of entries) {
-        if (!(entry.isFile() && entry.name === "data.json")) {
-          continue;
-        }
-        // It should be at least two level deep.
-        if (entry.parentPath === path || dirname(entry.parentPath) === path) {
-          continue;
-        }
-
-        const slug = join(entry.parentPath.slice(rootPath.length + 1)).replaceAll("\\", "/");
-        const node = await dataClient.getNode(slug, fetch);
-        if (node) files[slug] = node;
-      }
-      return files;
-    }),
-  );
+  return withErrorHandler(async () => jsonRawBuffer(await readGeneratedJson(deepPath)));
 };
 
 export const prerender = true;

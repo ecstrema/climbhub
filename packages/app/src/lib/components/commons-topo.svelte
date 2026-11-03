@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { Button } from "@/ui/button";
+  import { Button } from "#components/ui/button/index.js";
   import CheckIcon from "@lucide/svelte/icons/check";
   import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
   import PencilIcon from "@lucide/svelte/icons/pencil";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import XIcon from "@lucide/svelte/icons/x";
-  import { getAppState } from "$lib/data/app-state";
+  import { getAppState } from "#lib/data/app-state.js";
   import type { OsmFeature } from "osm-api";
 
   type CommonsImage = { key: string; pathKey: string; title: string };
@@ -62,10 +62,7 @@
 
   function formatPath(points: RoutePoint[]) {
     return points
-      .map(
-        ({ x, y, marker, dottedAfter }) =>
-          `${x.toFixed(3)},${y.toFixed(3)}${marker}${dottedAfter ? ":" : ""}`,
-      )
+      .map(({ x, y, marker, dottedAfter }) => `${x.toFixed(3)},${y.toFixed(3)}${marker}${dottedAfter ? ":" : ""}`)
       .join("|");
   }
 
@@ -146,9 +143,7 @@
   function movePoint(event: PointerEvent) {
     if (draggingPoint === undefined) return;
     const position = eventPosition(event, event.currentTarget as HTMLButtonElement);
-    draftPoints = draftPoints.map((point, index) =>
-      index === draggingPoint ? { ...point, ...position } : point,
-    );
+    draftPoints = draftPoints.map((point, index) => (index === draggingPoint ? { ...point, ...position } : point));
   }
 
   function finishPointDrag() {
@@ -158,17 +153,13 @@
   function setSelectedMarker(event: Event) {
     if (selectedPoint === undefined) return;
     const marker = (event.currentTarget as HTMLSelectElement).value;
-    draftPoints = draftPoints.map((point, index) =>
-      index === selectedPoint ? { ...point, marker } : point,
-    );
+    draftPoints = draftPoints.map((point, index) => (index === selectedPoint ? { ...point, marker } : point));
   }
 
   function setSelectedDotted(event: Event) {
     if (selectedPoint === undefined) return;
     const dottedAfter = (event.currentTarget as HTMLInputElement).checked;
-    draftPoints = draftPoints.map((point, index) =>
-      index === selectedPoint ? { ...point, dottedAfter } : point,
-    );
+    draftPoints = draftPoints.map((point, index) => (index === selectedPoint ? { ...point, dottedAfter } : point));
   }
 
   function removeSelectedPoint() {
@@ -227,11 +218,8 @@
           <div class="flex flex-wrap items-center gap-1.5">
             {#if editing}
               <Button size="xs" onclick={() => saveEdit(image)}><CheckIcon /> Save path</Button>
-              <Button
-                size="xs"
-                variant="outline"
-                onclick={removeSelectedPoint}
-                disabled={selectedPoint === undefined}><Trash2Icon /> Remove point</Button
+              <Button size="xs" variant="outline" onclick={removeSelectedPoint} disabled={selectedPoint === undefined}
+                ><Trash2Icon /> Remove point</Button
               >
               <label class="flex items-center gap-1 text-xs">
                 Marker
@@ -258,13 +246,9 @@
                 />
                 Dotted after
               </label>
-              <Button size="icon-xs" variant="ghost" title="Cancel path edits" onclick={cancelEdit}
-                ><XIcon /></Button
-              >
+              <Button size="icon-xs" variant="ghost" title="Cancel path edits" onclick={cancelEdit}><XIcon /></Button>
             {:else}
-              <Button size="xs" variant="outline" onclick={() => beginEdit(image)}
-                ><PencilIcon /> Edit path</Button
-              >
+              <Button size="xs" variant="outline" onclick={() => beginEdit(image)}><PencilIcon /> Edit path</Button>
             {/if}
           </div>
         {/if}
@@ -318,11 +302,7 @@
                     cx={point.x}
                     cy={point.y}
                     r={point.marker ? 0.013 : 0.008}
-                    fill={selectedPoint === index
-                      ? "#f59e0b"
-                      : point.marker
-                        ? "#2563eb"
-                        : "#e5484d"}
+                    fill={selectedPoint === index ? "#f59e0b" : point.marker ? "#2563eb" : "#e5484d"}
                     stroke="white"
                     stroke-width="0.004"
                   />

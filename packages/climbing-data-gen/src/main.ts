@@ -21,10 +21,7 @@ import { CLIMBING_DATA_FILE, OUT_DIR } from "./config.ts";
 import { downloadClimbingData } from "./download.ts";
 import { generateStaticAPI } from "./static-api-generator.ts";
 
-import {
-  DATA_DIR as REVERSE_GEOCODING_DATA_DIR,
-  HIERARCHY_INDEX,
-} from "@climbhub/reverse-geocoding-data";
+import { DATA_DIR as REVERSE_GEOCODING_DATA_DIR, HIERARCHY_INDEX } from "@climbhub/reverse-geocoding-data";
 
 const climbingDataFile = await downloadClimbingData(CLIMBING_DATA_FILE, {
   force: process.argv.includes("--refresh"),

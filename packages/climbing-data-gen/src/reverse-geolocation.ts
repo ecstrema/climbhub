@@ -44,12 +44,7 @@ export class ReverseGeolocator {
     return this.geolocateRecursive(lon, lat, ["world"]);
   }
 
-  private geolocateRecursive(
-    lon: number,
-    lat: number,
-    path: string[],
-    node?: IndexNode,
-  ): string[] | undefined {
+  private geolocateRecursive(lon: number, lat: number, path: string[], node?: IndexNode): string[] | undefined {
     const indexNode = node || this.getIndexNodeForPath(path);
     if (!indexNode) {
       console.error(`Index node not found for path: ${path.join("/")}`);

@@ -26,7 +26,11 @@ function polygon(ring: Position[]): Boundary {
   return {
     type: "FeatureCollection",
     features: [
-      { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [[...ring, ring[0]!]] } },
+      {
+        type: "Feature",
+        properties: {},
+        geometry: { type: "Polygon", coordinates: [[...ring, ring[0]!]] },
+      },
     ],
   };
 }
@@ -47,8 +51,20 @@ describe("point in polygon", () => {
           geometry: {
             type: "Polygon",
             coordinates: [
-              [[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]],
-              [[4, 4], [6, 4], [6, 6], [4, 6], [4, 4]],
+              [
+                [0, 0],
+                [10, 0],
+                [10, 10],
+                [0, 10],
+                [0, 0],
+              ],
+              [
+                [4, 4],
+                [6, 4],
+                [6, 6],
+                [4, 6],
+                [4, 4],
+              ],
             ],
           },
         },
@@ -73,8 +89,7 @@ describe("simplifyBoundary", () => {
     const w = boundaryPolygons(simplifyBoundary(west, options))[0]![0]!;
     const e = boundaryPolygons(simplifyBoundary(east, options))[0]![0]!;
 
-    const onBorder = (ring: Position[]) =>
-      new Set(ring.filter((p) => Math.abs(p[0]!) < 1).map(positionKey));
+    const onBorder = (ring: Position[]) => new Set(ring.filter((p) => Math.abs(p[0]!) < 1).map(positionKey));
     expect(onBorder(w).size).toBeLessThan(border.length);
     expect(onBorder(w)).toEqual(onBorder(e));
   });
@@ -86,7 +101,11 @@ describe("simplifyBoundary", () => {
   });
 
   it("does not remove everything", () => {
-    const tiny = polygon([[0, 0], [0.001, 0], [0.001, 0.001]]);
+    const tiny = polygon([
+      [0, 0],
+      [0.001, 0],
+      [0.001, 0.001],
+    ]);
     const result = simplifyBoundary(tiny, { tolerance: 1, sharers: () => "", locked: () => false });
     expect(boundaryPolygons(result)).toHaveLength(1);
   });
@@ -94,8 +113,16 @@ describe("simplifyBoundary", () => {
 
 describe("insertOnSegment", () => {
   it("inserts in both directions", () => {
-    const a = polygon([[0, 0], [1, 0], [1, 1]]);
-    const b = polygon([[1, 0], [0, 0], [0, -1]]);
+    const a = polygon([
+      [0, 0],
+      [1, 0],
+      [1, 1],
+    ]);
+    const b = polygon([
+      [1, 0],
+      [0, 0],
+      [0, -1],
+    ]);
     for (const boundary of [a, b]) insertOnSegment(boundary, [0, 0], [1, 0], [0.5, 0]);
     expect(boundaryPolygons(a)[0]![0]).toContainEqual([0.5, 0]);
     expect(boundaryPolygons(b)[0]![0]).toContainEqual([0.5, 0]);
@@ -104,18 +131,42 @@ describe("insertOnSegment", () => {
 });
 
 describe("removeVertices", () => {
-  const square = polygon([[0, 0], [1, 0], [1, 1], [0, 1]]);
+  const square = polygon([
+    [0, 0],
+    [1, 0],
+    [1, 1],
+    [0, 1],
+  ]);
 
   it("removes the vertices, and keeps the ring closed", () => {
     const b = structuredClone(square);
     removeVertices(b, new Set([positionKey([0, 0])]));
-    expect(boundaryPolygons(b)[0]![0]).toEqual([[1, 0], [1, 1], [0, 1], [1, 0]]);
+    expect(boundaryPolygons(b)[0]![0]).toEqual([
+      [1, 0],
+      [1, 1],
+      [0, 1],
+      [1, 0],
+    ]);
   });
 
   it("removes the polygons left with fewer than 3 vertices", () => {
-    const b = addPolygon(structuredClone(square), [[5, 5], [6, 5], [6, 6], [5, 5]]);
+    const b = addPolygon(structuredClone(square), [
+      [5, 5],
+      [6, 5],
+      [6, 6],
+      [5, 5],
+    ]);
     removeVertices(b, new Set([positionKey([0, 0]), positionKey([1, 0])]));
-    expect(boundaryPolygons(b)).toEqual([[[[5, 5], [6, 5], [6, 6], [5, 5]]]]);
+    expect(boundaryPolygons(b)).toEqual([
+      [
+        [
+          [5, 5],
+          [6, 5],
+          [6, 6],
+          [5, 5],
+        ],
+      ],
+    ]);
     removeVertices(b, new Set([positionKey([6, 6])]));
     expect(b.features).toEqual([]);
   });
@@ -132,9 +183,27 @@ describe("splitBoundary", () => {
         geometry: {
           type: "Polygon",
           coordinates: [
-            [[0, 0], [2, 0], [4, 0], [4, 2], [2, 2], [0, 2], [0, 0]],
-            [[0.5, 0.5], [1, 0.5], [1, 1], [0.5, 0.5]],
-            [[3, 0.5], [3.5, 0.5], [3.5, 1], [3, 0.5]],
+            [
+              [0, 0],
+              [2, 0],
+              [4, 0],
+              [4, 2],
+              [2, 2],
+              [0, 2],
+              [0, 0],
+            ],
+            [
+              [0.5, 0.5],
+              [1, 0.5],
+              [1, 1],
+              [0.5, 0.5],
+            ],
+            [
+              [3, 0.5],
+              [3.5, 0.5],
+              [3.5, 1],
+              [3, 0.5],
+            ],
           ],
         },
       },
@@ -145,9 +214,21 @@ describe("splitBoundary", () => {
     const [option] = splitBoundary(rectangle, [2, 0], [2, 2]);
     const kept = boundaryPolygons(option.kept);
     const part = boundaryPolygons(option.part);
-    expect(kept[0]![0]).toEqual([[2, 0], [4, 0], [4, 2], [2, 2], [2, 0]]);
+    expect(kept[0]![0]).toEqual([
+      [2, 0],
+      [4, 0],
+      [4, 2],
+      [2, 2],
+      [2, 0],
+    ]);
     expect(kept[0]!.length).toBe(2);
-    expect(part[0]![0]).toEqual([[2, 2], [0, 2], [0, 0], [2, 0], [2, 2]]);
+    expect(part[0]![0]).toEqual([
+      [2, 2],
+      [0, 2],
+      [0, 0],
+      [2, 0],
+      [2, 2],
+    ]);
     expect(part[0]![1]![0]).toEqual([0.5, 0.5]);
     expect(countVertices(option.kept) + countVertices(option.part)).toBe(4 + 4 + 3 + 3);
     // The properties of the OSM feature stay in the kept half
@@ -158,9 +239,24 @@ describe("splitBoundary", () => {
   it("rejects invalid cuts", () => {
     expect(() => splitBoundary(rectangle, [0, 0], [2, 0])).toThrow("neighbours");
     expect(() => splitBoundary(rectangle, [0, 0], [9, 9])).toThrow("outer ring");
-    const u = polygon([[0, 0], [3, 0], [3, 3], [2, 3], [2, 1], [1, 1], [1, 3], [0, 3]]);
+    const u = polygon([
+      [0, 0],
+      [3, 0],
+      [3, 3],
+      [2, 3],
+      [2, 1],
+      [1, 1],
+      [1, 3],
+      [0, 3],
+    ]);
     expect(() => splitBoundary(u, [0, 3], [3, 3])).toThrow("outside");
-    const notch = polygon([[0, 0], [4, 0], [4, 4], [2, 1], [0, 4]]);
+    const notch = polygon([
+      [0, 0],
+      [4, 0],
+      [4, 4],
+      [2, 1],
+      [0, 4],
+    ]);
     expect(() => splitBoundary(notch, [0, 0], [4, 4])).toThrow("crosses");
   });
 });
@@ -187,19 +283,48 @@ describe("mergeBoundaries", () => {
   });
 
   it("dissolves whatever the orientation of the rings", () => {
-    const a = polygon([[0, 0], [1, 0], [1, 1], [0, 1]]);
-    const b = polygon([[1, 0], [1, 1], [2, 1], [2, 0]]); // clockwise
+    const a = polygon([
+      [0, 0],
+      [1, 0],
+      [1, 1],
+      [0, 1],
+    ]);
+    const b = polygon([
+      [1, 0],
+      [1, 1],
+      [2, 1],
+      [2, 0],
+    ]); // clockwise
     const polygons = boundaryPolygons(mergeBoundaries([a, b]));
     expect(polygons).toHaveLength(1);
     // The ends of the border stay: neighbours may use them
-    expect(keys(polygons[0]![0]!)).toEqual(keys([[0, 0], [1, 0], [2, 0], [2, 1], [1, 1], [0, 1]]));
+    expect(keys(polygons[0]![0]!)).toEqual(
+      keys([
+        [0, 0],
+        [1, 0],
+        [2, 0],
+        [2, 1],
+        [1, 1],
+        [0, 1],
+      ]),
+    );
     expect(area(polygons[0]![0]!)).toBe(2);
   });
 
   it("keeps the polygons which do not touch, and the properties of the first boundary", () => {
-    const a = polygon([[0, 0], [1, 0], [1, 1], [0, 1]]);
+    const a = polygon([
+      [0, 0],
+      [1, 0],
+      [1, 1],
+      [0, 1],
+    ]);
     a.features[0]!.properties = { name: "A" };
-    const b = polygon([[5, 0], [6, 0], [6, 1], [5, 1]]);
+    const b = polygon([
+      [5, 0],
+      [6, 0],
+      [6, 1],
+      [5, 1],
+    ]);
     b.features[0]!.properties = { name: "B" };
     const merged = mergeBoundaries([a, b])!;
     expect(merged.features).toHaveLength(1);
@@ -211,8 +336,18 @@ describe("mergeBoundaries", () => {
   });
 
   it("separates polygons touching at a single vertex", () => {
-    const a = polygon([[0, 0], [1, 0], [1, 1], [0, 1]]);
-    const b = polygon([[1, 1], [2, 1], [2, 2], [1, 2]]);
+    const a = polygon([
+      [0, 0],
+      [1, 0],
+      [1, 1],
+      [0, 1],
+    ]);
+    const b = polygon([
+      [1, 1],
+      [2, 1],
+      [2, 2],
+      [1, 2],
+    ]);
     const polygons = dissolvePolygons(boundaryPolygons(mergeBoundaries([a])).concat(boundaryPolygons(b)))!;
     expect(polygons).toHaveLength(2);
     expect(polygons.map((p) => area(p[0]!))).toEqual([1, 1]);
@@ -221,10 +356,34 @@ describe("mergeBoundaries", () => {
   it("makes a hole when a ring of regions is merged, and fills it with the enclave", () => {
     // Four regions around the square (1, 1)-(2, 2)
     const around = [
-      polygon([[0, 0], [3, 0], [3, 1], [2, 1], [1, 1], [0, 1]]),
-      polygon([[2, 1], [3, 1], [3, 2], [2, 2]]),
-      polygon([[0, 2], [1, 2], [2, 2], [3, 2], [3, 3], [0, 3]]),
-      polygon([[0, 1], [1, 1], [1, 2], [0, 2]]),
+      polygon([
+        [0, 0],
+        [3, 0],
+        [3, 1],
+        [2, 1],
+        [1, 1],
+        [0, 1],
+      ]),
+      polygon([
+        [2, 1],
+        [3, 1],
+        [3, 2],
+        [2, 2],
+      ]),
+      polygon([
+        [0, 2],
+        [1, 2],
+        [2, 2],
+        [3, 2],
+        [3, 3],
+        [0, 3],
+      ]),
+      polygon([
+        [0, 1],
+        [1, 1],
+        [1, 2],
+        [0, 2],
+      ]),
     ];
     const ring = boundaryPolygons(mergeBoundaries(around));
     expect(ring).toHaveLength(1);
@@ -235,11 +394,27 @@ describe("mergeBoundaries", () => {
     expect(polygonsContain(prepared, 1.5, 1.5)).toBe(false);
     expect(polygonsContain(prepared, 0.5, 1.5)).toBe(true);
 
-    const enclave = polygon([[1, 1], [2, 1], [2, 2], [1, 2]]);
+    const enclave = polygon([
+      [1, 1],
+      [2, 1],
+      [2, 2],
+      [1, 2],
+    ]);
     const full = boundaryPolygons(mergeBoundaries([mergeBoundaries(around), enclave]));
     expect(full).toHaveLength(1);
     expect(full[0]).toHaveLength(1);
-    expect(keys(full[0]![0]!)).toEqual(keys([[0, 0], [3, 0], [3, 1], [3, 2], [3, 3], [0, 3], [0, 2], [0, 1]]));
+    expect(keys(full[0]![0]!)).toEqual(
+      keys([
+        [0, 0],
+        [3, 0],
+        [3, 1],
+        [3, 2],
+        [3, 3],
+        [0, 3],
+        [0, 2],
+        [0, 1],
+      ]),
+    );
     expect(area(full[0]![0]!)).toBe(9);
   });
 
@@ -253,14 +428,31 @@ describe("mergeBoundaries", () => {
           geometry: {
             type: "Polygon",
             coordinates: [
-              [[0, 0], [4, 0], [4, 4], [0, 4], [0, 0]],
-              [[1, 1], [2, 1], [2, 2], [1, 2], [1, 1]],
+              [
+                [0, 0],
+                [4, 0],
+                [4, 4],
+                [0, 4],
+                [0, 0],
+              ],
+              [
+                [1, 1],
+                [2, 1],
+                [2, 2],
+                [1, 2],
+                [1, 1],
+              ],
             ],
           },
         },
       ],
     };
-    const next = polygon([[4, 0], [8, 0], [8, 4], [4, 4]]);
+    const next = polygon([
+      [4, 0],
+      [8, 0],
+      [8, 4],
+      [4, 4],
+    ]);
     const polygons = boundaryPolygons(mergeBoundaries([withHole, next]));
     expect(polygons).toHaveLength(1);
     expect(polygons[0]).toHaveLength(2);
@@ -268,8 +460,18 @@ describe("mergeBoundaries", () => {
   });
 
   it("merges two shapes at two points", () => {
-    const a = polygon([[0, 0], [1, 0], [1, 2], [0, 2]]);
-    const b = polygon([[1, 0], [2, 0], [2, 2], [1, 2]]);
+    const a = polygon([
+      [0, 0],
+      [1, 0],
+      [1, 2],
+      [0, 2],
+    ]);
+    const b = polygon([
+      [1, 0],
+      [2, 0],
+      [2, 2],
+      [1, 2],
+    ]);
     const res = mergeBoundariesAtPoints(a, b, [1, 0], [1, 2]);
     expect(res).toBeDefined();
     const polygons = boundaryPolygons(res!.boundary);
@@ -294,7 +496,11 @@ describe("simplifyCoast", () => {
   const isShared = (p: Position) => sharedKeys.has(positionKey(p));
 
   it("simplifies the coast while keeping the shared border vertices 100% intact", () => {
-    const simplified = simplifyCoast(coastalRegion, { isShared, tolerance: 0.5, offsetDegrees: 0.5 });
+    const simplified = simplifyCoast(coastalRegion, {
+      isShared,
+      tolerance: 0.5,
+      offsetDegrees: 0.5,
+    });
     const poly = boundaryPolygons(simplified)[0]![0]!;
 
     // Every shared border vertex must be in the simplified ring in exact order
@@ -308,7 +514,11 @@ describe("simplifyCoast", () => {
   });
 
   it("encompasses the previous region fully (all original vertices are inside or on boundary)", () => {
-    const simplified = simplifyCoast(coastalRegion, { isShared, tolerance: 0.5, offsetDegrees: 0.5 });
+    const simplified = simplifyCoast(coastalRegion, {
+      isShared,
+      tolerance: 0.5,
+      offsetDegrees: 0.5,
+    });
     const prepared = preparePolygons(boundaryPolygons(simplified));
 
     // Test a sample of original interior/coastal points

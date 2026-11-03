@@ -15,15 +15,7 @@ export { mixed } from "./other/mixed";
 export { dryTooling } from "./other/dry-tooling";
 export { aid } from "./other/aid";
 
-import type {
-  AidScaleId,
-  BoulderScaleId,
-  DangerScaleId,
-  IceScaleId,
-  RouteScaleId,
-  Scale,
-  ScaleId,
-} from "./types";
+import type { AidScaleId, BoulderScaleId, DangerScaleId, IceScaleId, RouteScaleId, Scale, ScaleId } from "./types";
 
 import { french } from "./route/french";
 import { fb } from "./bouldering/fb";
@@ -98,4 +90,3 @@ function getScalesByType(scales: Scale[]) {
 export function getScale(id: ScaleId): Scale | undefined {
   return scalesById.get(id);
 }
-

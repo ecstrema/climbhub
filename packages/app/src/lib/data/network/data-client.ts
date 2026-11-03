@@ -1,11 +1,11 @@
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
 import { browser } from "$app/env";
 import type { OsmFeature } from "osm-api";
-import type { DataJSONRecord } from "$lib/types";
+import type { DataJSONRecord } from "#lib/types.js";
 import { resolve } from "$app/paths";
-import type { AreaStats } from "$lib/types";
+import type { AreaStats } from "#lib/types.js";
 import type { DataJSON } from "@climbhub/climbing-data-gen";
-import { getParentSlug } from "$lib/helpers/slug";
+import { getParentSlug } from "#lib/helpers/slug.js";
 
 export interface CachedElement {
   slug: string;
@@ -71,15 +71,12 @@ class DataClient {
   private inFlightRequests = new Map<string, Promise<any>>();
   private nodeHashesPromise?: Promise<Record<string, string> | undefined>;
 
-  private async getNodeHashes(
-    customFetch: typeof fetch,
-  ): Promise<Record<string, string> | undefined> {
+  private async getNodeHashes(customFetch: typeof fetch): Promise<Record<string, string> | undefined> {
     if (!browser || !dbPromise) return;
     if (!this.nodeHashesPromise) {
       this.nodeHashesPromise = (async () => {
-        const res = await customFetch(resolve("/api/world/node-hashes.json"), {
-          cache: "no-store",
-        });
+        const res = await customFetch(resolve("api/world/node-hashes.json"), { cache: "no-store" });
+
         if (!res.ok) throw new Error(`Failed to fetch node hashes: ${res.status}`);
 
         const hashes = (await res.json()) as Record<string, string>;
@@ -89,6 +86,7 @@ class DataClient {
             .map(([id, hash]) => `${id}:${hash}`)
             .join("\n"),
         );
+
         await this.reconcileNodeHashes(hashes, manifestHash, await dbPromise!);
         return hashes;
       })().catch((err) => {
@@ -115,6 +113,7 @@ class DataClient {
 
       const expectedHash = hashes[`node:${cached.data.id}`];
       const nodeHash = cached.nodeHash ?? (await this.hashNode(cached.data as OsmFeature));
+
       if (nodeHash !== expectedHash) stale.push(cached);
       else if (!cached.nodeHash) updated.push({ ...cached, nodeHash });
     }
@@ -174,15 +173,10 @@ class DataClient {
   private async hashText(value: string): Promise<string> {
     const bytes = new TextEncoder().encode(value);
     const digest = await crypto.subtle.digest("SHA-256", bytes);
-    return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join(
-      "",
-    );
+    return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
   }
 
-  async getNode(
-    slug: string,
-    customFetch: typeof fetch = globalThis.fetch,
-  ): Promise<DataJSON | undefined> {
+  async getNode(slug: string, customFetch: typeof fetch = globalThis.fetch): Promise<DataJSON | undefined> {
     const requestKey = `node-${slug}`;
     if (this.inFlightRequests.has(requestKey)) {
       return this.inFlightRequests.get(requestKey)!;
@@ -241,10 +235,7 @@ class DataClient {
     }
   }
 
-  async getChildren(
-    slug: string,
-    customFetch: typeof fetch = globalThis.fetch,
-  ): Promise<DataJSONRecord | undefined> {
+  async getChildren(slug: string, customFetch: typeof fetch = globalThis.fetch): Promise<DataJSONRecord | undefined> {
     const requestKey = `children-${slug}`;
     if (this.inFlightRequests.has(requestKey)) {
       return this.inFlightRequests.get(requestKey)!;
@@ -271,20 +262,14 @@ class DataClient {
     }
   }
 
-  private async getCachedChildren(
-    slug: string,
-    db: IDBPDatabase<ClimbDataDB>,
-  ): Promise<DataJSONRecord> {
+  private async getCachedChildren(slug: string, db: IDBPDatabase<ClimbDataDB>): Promise<DataJSONRecord> {
     const tx = db.transaction("elements", "readonly");
     const parentIndex = tx.store.index("parentSlug");
     const children = await parentIndex.getAll(slug);
     return Object.fromEntries(children.map((child) => [child.slug, child.data]));
   }
 
-  private async fetchAndCacheChildren(
-    slug: string,
-    customFetch: typeof fetch,
-  ): Promise<DataJSONRecord | undefined> {
+  private async fetchAndCacheChildren(slug: string, customFetch: typeof fetch): Promise<DataJSONRecord | undefined> {
     const res = await customFetch(resolve("/api/world/[...slug]/children.json", { slug }), {
       cache: "no-store",
     });
@@ -346,10 +331,7 @@ class DataClient {
     return records;
   }
 
-  async getStats(
-    slug: string,
-    customFetch: typeof fetch = globalThis.fetch,
-  ): Promise<AreaStats | undefined> {
+  async getStats(slug: string, customFetch: typeof fetch = globalThis.fetch): Promise<AreaStats | undefined> {
     await this.getNodeHashes(customFetch);
     if (browser && dbPromise) {
       const db = await dbPromise;

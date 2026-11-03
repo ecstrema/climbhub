@@ -1,11 +1,11 @@
 <script lang="ts">
   import { resolve } from "$app/paths";
-  import { featureToType, getName } from "$lib/data/parse/data";
-  import { getGrade } from "$lib/data/parse/osm-tags";
-  import type { DataTree } from "$lib/types";
-  import HolyGrade from "@/grade/holy-grade.svelte";
-  import { sortChildren, type SortedChildren } from "@/shell/sidebar/utils";
-  import * as Table from "@/ui/table";
+  import { featureToType, getName } from "#lib/data/parse/data.js";
+  import { getGrade } from "#lib/data/parse/osm-tags.js";
+  import type { DataTree } from "#lib/types.js";
+  import HolyGrade from "#components/grade/holy-grade.svelte";
+  import { sortChildren, type SortedChildren } from "#components/shell/sidebar/utils.ts";
+  import * as Table from "#components/ui/table/index.js";
   import type { OsmFeature } from "osm-api";
   import CircleQuestionMarkIcon from "@lucide/svelte/icons/circle-question-mark";
   import BuildingIcon from "@lucide/svelte/icons/building";
@@ -59,10 +59,7 @@
         {const grade = $derived(getGrade((child.feature as OsmFeature).tags || {}))}
         <Table.Row>
           <Table.Cell>
-            <a
-              href={resolve("/world/[...slug]", { slug })}
-              class="font-medium underline underline-offset-2"
-            >
+            <a href={resolve("/world/[...slug]", { slug })} class="font-medium underline underline-offset-2">
               {getName(child.feature) || "No Name"}
             </a>
           </Table.Cell>

@@ -91,14 +91,11 @@ function buildHierarchyTree(dir: string, relativePath: string): IndexNode {
       slug = entry.name.slice(0, -BOUNDARY_EXTENSION.length);
       child = readLeaf(path, childRelativePath);
     } else {
-      error(
-        `Unexpected file ${childRelativePath}: data/ only contains directories and *${BOUNDARY_EXTENSION}`,
-      );
+      error(`Unexpected file ${childRelativePath}: data/ only contains directories and *${BOUNDARY_EXTENSION}`);
       continue;
     }
 
-    if (slug !== slugify(slug))
-      error(`${childRelativePath} is not a slug (expected ${slugify(slug)})`);
+    if (slug !== slugify(slug)) error(`${childRelativePath} is not a slug (expected ${slugify(slug)})`);
     if (children.has(slug)) {
       error(
         `${relativePath}/${slug} is both a directory and a ${BOUNDARY_EXTENSION} file: only leaves have a boundary`,

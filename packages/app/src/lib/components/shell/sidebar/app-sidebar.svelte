@@ -1,14 +1,14 @@
 <script lang="ts">
-  import * as Sidebar from "@/ui/sidebar";
+  import * as Sidebar from "#components/ui/sidebar";
   import type { ComponentProps } from "svelte";
-  import { featureToType, getName } from "$lib/data/parse/data";
+  import { featureToType, getName } from "#lib/data/parse/data.js";
   import { resolve } from "$app/paths";
   import AppSidebarChildren from "./app-sidebar-children.svelte";
 
-  import Input from "@/ui/input/input.svelte";
-  import type { DataTree } from "$lib/types";
+  import Input from "#components/ui/input/input.svelte";
+  import type { DataTree } from "#lib/types.js";
   import { setSearchFilter, type SearchFilter } from "./utils";
-  import { getAppState } from "$lib/data/app-state";
+  import { getAppState } from "#lib/data/app-state.js";
 
   let { ref = $bindable(null), ...restProps }: ComponentProps<typeof Sidebar.Root> & {} = $props();
 
@@ -46,14 +46,11 @@
   </Sidebar.Header>
   <Sidebar.Content>
     <Sidebar.Group>
-      <Sidebar.GroupLabel>
-        <a href={resolve("/world")}>{getName(appState.tree.root.feature)}</a>
-      </Sidebar.GroupLabel>
-      <Sidebar.GroupContent>
-        <Sidebar.Menu>
-          <AppSidebarChildren bind:item={appState.tree.root} slug={""} />
-        </Sidebar.Menu>
-      </Sidebar.GroupContent>
+      <Sidebar.GroupLabel><a href={resolve("world")}>{getName(appState.tree.root.feature)}</a></Sidebar.GroupLabel>
+      <Sidebar.GroupContent
+        ><Sidebar.Menu><AppSidebarChildren bind:item={appState.tree.root} slug={""} /></Sidebar.Menu
+        ></Sidebar.GroupContent
+      >
     </Sidebar.Group>
   </Sidebar.Content>
   <Sidebar.Rail />

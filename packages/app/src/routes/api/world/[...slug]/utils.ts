@@ -1,5 +1,6 @@
-import { mkdir, readFile, writeFile } from "fs/promises";
-import { join, dirname } from "path";
+import { spawn } from "node:child_process";
+import { readFile } from "fs/promises";
+import { join, resolve } from "path";
 
 import { OUT_DIR as OUT_GEN_DIR } from "@climbhub/climbing-data-gen";
 import { error } from "@sveltejs/kit";
@@ -13,41 +14,49 @@ export function jsonRawBuffer(body: NonSharedBuffer) {
   });
 }
 
-const textEncoder = new TextEncoder();
-
-export function jsonRawString(body: string) {
-  return new Response(body, {
-    headers: {
-      "content-type": "application/json",
-      "content-length": textEncoder.encode(body).byteLength.toString(),
-    },
-  });
-}
-
-export function jsonAndSave(body: unknown, path: string) {
-  const stringData = JSON.stringify(body);
-  (async () => {
-    await mkdir(dirname(path), { recursive: true });
-    await writeFile(path, stringData);
-  })().catch(() => {
-    console.error("Error saving JSON data");
-  });
-  return jsonRawString(stringData);
-}
-
 export const rootPath = join(OUT_GEN_DIR, "world");
+const repositoryRoot = resolve(OUT_GEN_DIR, "../../..");
 
-export async function withCache(cachePath: string, compute: () => Promise<unknown> | unknown) {
-  try {
-    return jsonRawBuffer(await readFile(cachePath));
-  } catch {} // The file does not exist, or another error, fallback to regenerating it.
+let dataGenerationPromise: Promise<void> | undefined;
 
-  return jsonAndSave(await compute(), cachePath);
+function runDataGeneration(): Promise<void> {
+  return new Promise((resolvePromise, rejectPromise) => {
+    const child = spawn("bun", ["run", "build:climbing-data-gen"], {
+      cwd: repositoryRoot,
+      stdio: "inherit",
+    });
+
+    child.once("error", rejectPromise);
+    child.once("exit", (code, signal) => {
+      if (code === 0) {
+        resolvePromise();
+      } else {
+        rejectPromise(new Error(`Climbing data generation failed (code ${code}, signal ${signal ?? "none"})`));
+      }
+    });
+  });
 }
 
-export function withErrorHandler<T>(fn: () => T) {
+export async function readGeneratedJson(path: string) {
   try {
-    return fn();
+    return await readFile(path);
+  } catch (cause) {
+    if ((cause as NodeJS.ErrnoException).code !== "ENOENT") throw cause;
+  }
+
+  if (!dataGenerationPromise) {
+    dataGenerationPromise = runDataGeneration().finally(() => {
+      dataGenerationPromise = undefined;
+    });
+  }
+
+  await dataGenerationPromise;
+  return readFile(path);
+}
+
+export async function withErrorHandler<T>(fn: () => T | Promise<T>): Promise<T> {
+  try {
+    return await fn();
   } catch (err) {
     console.log("catching error");
     if (err instanceof Error) return error(404, err.message);

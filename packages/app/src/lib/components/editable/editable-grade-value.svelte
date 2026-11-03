@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { getAppState } from "$lib/data/app-state";
-  import type { WithSourceTag } from "$lib/data/parse/osm-tags";
-  import type { Grade } from "$lib/types";
-  import HolyGrade from "@/grade/holy-grade.svelte";
-  import { Button } from "@/ui/button";
-  import * as DropdownMenu from "@/ui/dropdown-menu/";
+  import { getAppState } from "#lib/data/app-state.js";
+  import type { WithSourceTag } from "#lib/data/parse/osm-tags.js";
+  import type { Grade } from "#lib/types.js";
+  import HolyGrade from "#components/grade/holy-grade.svelte";
+  import Button from "#components/ui/button/button.svelte";
+  import * as DropdownMenu from "#components/ui/dropdown-menu/index.ts";
   import { getScale } from "@climbhub/holy-grade";
   import type { OsmFeature } from "osm-api";
 
@@ -44,9 +44,7 @@
       Change Grade
       <!-- TODO: add an information on hover about not seeing all grades -->
     </DropdownMenu.Label>
-    <DropdownMenu.RadioGroup
-      bind:value={() => tags[gradeTagKey], (v) => appState.setTag(featureSlug, gradeTagKey, v)}
-    >
+    <DropdownMenu.RadioGroup bind:value={() => tags[gradeTagKey], (v) => appState.setTag(featureSlug, gradeTagKey, v)}>
       {#each scale?.gradeMapping.keys() as name (name)}
         <DropdownMenu.RadioItem value={name} class="whitespace-nowrap">
           <HolyGrade grade={{ v: name, scale: scale?.id || "YDS" }} convert={true} />

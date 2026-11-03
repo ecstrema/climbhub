@@ -1,12 +1,12 @@
 <script lang="ts">
   import UploadIcon from "@lucide/svelte/icons/upload";
   import DeleteIcon from "@lucide/svelte/icons/delete";
-  import { Button } from "@/ui/button";
-  import * as Dialog from "@/ui/dialog";
-  import { getNameOSM } from "$lib/data/parse/osm-tags";
+  import { Button } from "#components/ui/button/index.js";
+  import * as Dialog from "#components/ui/dialog";
+  import { getNameOSM } from "#lib/data/parse/osm-tags.js";
 
-  import { Progress } from "@/ui/progress";
-  import { getAppState } from "$lib/data/app-state";
+  import { Progress } from "#components/ui/progress/index.js";
+  import { getAppState } from "#lib/data/app-state.js";
 
   const appState = getAppState();
   let open = $state(false);
@@ -75,15 +75,9 @@
             <li>
               <strong>{slug}</strong>
               <span>
-                - {getNameOSM(changedFeature.final?.tags ?? changedFeature.initial?.tags ?? {}) ||
-                  "Unnamed feature"}
+                - {getNameOSM(changedFeature.final?.tags ?? changedFeature.initial?.tags ?? {}) || "Unnamed feature"}
               </span>
-              <Button
-                variant="ghost"
-                size="icon"
-                class="ml-2 p-1"
-                onclick={() => appState.resetFeature(slug)}
-              >
+              <Button variant="ghost" size="icon" class="ml-2 p-1" onclick={() => appState.resetFeature(slug)}>
                 <DeleteIcon />
               </Button>
             </li>
@@ -107,19 +101,12 @@
             <Button {...props} variant="outline">Cancel</Button>
           {/snippet}
         </Dialog.Close>
-        <Button
-          onclick={submit}
-          disabled={!!appState.osmUser.submitting || !appState.osmUser.loggedIn}
-        >
+        <Button onclick={submit} disabled={!!appState.osmUser.submitting || !appState.osmUser.loggedIn}>
           {appState.osmUser.submitting ? "Submitting..." : "Submit changes"}
         </Button>
       </Dialog.Footer>
       {#if appState.osmUser.submitting}
-        <Progress
-          class="mt-2"
-          value={appState.osmUser.submitting.step}
-          max={appState.osmUser.submitting.total}
-        />
+        <Progress class="mt-2" value={appState.osmUser.submitting.step} max={appState.osmUser.submitting.total} />
       {/if}
     </Dialog.Content>
   </Dialog.Root>

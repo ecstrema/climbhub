@@ -1,13 +1,13 @@
 <script lang="ts">
-  import * as Breadcrumb from "@/ui/breadcrumb";
-  import * as DropdownMenu from "@/ui/dropdown-menu";
-  import { Button } from "@/ui/button";
+  import * as Breadcrumb from "#components/ui/breadcrumb";
+  import * as DropdownMenu from "#components/ui/dropdown-menu";
+  import { Button } from "#components/ui/button/index.js";
 
-  import { getName } from "$lib/data/parse/data";
+  import { getName } from "#lib/data/parse/data.js";
   import { resolve } from "$app/paths";
-  import type { BreadcrumbSegment } from "$lib/types";
+  import type { BreadcrumbSegment } from "#lib/types.js";
   import { onMount, settled } from "svelte";
-  import { getAppState } from "$lib/data/app-state";
+  import { getAppState } from "#lib/data/app-state.js";
 
   const appState = getAppState();
   const breadcrumbs = $derived.by(() => appState.breadcrumbs.items);

@@ -1,6 +1,6 @@
-import { featureToType, getName, type ItemType } from "$lib/data/parse/data";
-import { getGradeReference } from "$lib/data/parse/osm-tags";
-import type { DataTree } from "$lib/types";
+import { featureToType, getName, type ItemType } from "#lib/data/parse/data.js";
+import { getGradeReference } from "#lib/data/parse/osm-tags.js";
+import type { DataTree } from "#lib/types.js";
 import type { OsmFeature } from "osm-api";
 import { getStaticIdentifier, type BasicOsmType } from "@climbhub/common";
 import { createContext } from "svelte";
@@ -32,10 +32,7 @@ export function sortChildren(item: DataTree): SortedChildren | undefined {
     return result;
   }
 
-  const grouped = Object.groupBy(
-    Object.entries(item.children),
-    ([, child]) => featureToType(child.feature) ?? "other",
-  );
+  const grouped = Object.groupBy(Object.entries(item.children), ([, child]) => featureToType(child.feature) ?? "other");
 
   return {
     geographic: grouped.geographic?.sort(nameSort).map(([slug]) => slug) ?? [],

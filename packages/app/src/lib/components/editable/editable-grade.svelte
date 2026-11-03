@@ -3,10 +3,10 @@
   import EditableGradeScale from "./editable-grade-scale.svelte";
   import type { OsmFeature } from "osm-api";
   import EditableTooltip from "./editable-tooltip.svelte";
-  import { Button } from "@/ui/button";
-  import type { WithSourceTag } from "$lib/data/parse/osm-tags";
-  import type { Grade } from "$lib/types";
-    import { getAppState } from "$lib/data/app-state";
+  import { Button } from "#components/ui/button/index.js";
+  import type { WithSourceTag } from "#lib/data/parse/osm-tags.js";
+  import type { Grade } from "#lib/types.js";
+  import { getAppState } from "#lib/data/app-state.js";
 
   const {
     grade,
@@ -15,7 +15,7 @@
   }: {
     grade: WithSourceTag<Grade> | undefined;
     feature: OsmFeature;
-    featureSlug: string,
+    featureSlug: string;
   } = $props();
 
   const appState = getAppState();
@@ -34,9 +34,7 @@
         <EditableGradeScale {feature} {grade} {featureSlug} />
       </div>
     {:else}
-      <Button class="text-muted-foreground" onclick={addGrade} variant="outline" {...props}>
-        Add Grade
-      </Button>
+      <Button class="text-muted-foreground" onclick={addGrade} variant="outline" {...props}>Add Grade</Button>
     {/if}
   {/snippet}
 </EditableTooltip>

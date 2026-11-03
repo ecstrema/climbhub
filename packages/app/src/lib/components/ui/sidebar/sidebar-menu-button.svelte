@@ -26,8 +26,8 @@
 </script>
 
 <script lang="ts">
-  import * as Tooltip from "@/ui/tooltip/index.js";
-  import { cn, type WithElementRef, type WithoutChildrenOrChild } from "$lib/utils.js";
+  import * as Tooltip from "#components/ui/tooltip/index.js";
+  import { cn, type WithElementRef, type WithoutChildrenOrChild } from "#lib/utils.js";
   import { mergeProps } from "bits-ui";
   import type { ComponentProps, Snippet } from "svelte";
   import type { HTMLAttributes } from "svelte/elements";
@@ -45,10 +45,7 @@
     tooltipContentProps,
     href,
     ...restProps
-  }: WithElementRef<
-    HTMLAttributes<HTMLButtonElement | HTMLAnchorElement>,
-    HTMLButtonElement | HTMLAnchorElement
-  > & {
+  }: WithElementRef<HTMLAttributes<HTMLButtonElement | HTMLAnchorElement>, HTMLButtonElement | HTMLAnchorElement> & {
     isActive?: boolean;
     variant?: SidebarMenuButtonVariant;
     size?: SidebarMenuButtonSize;

@@ -52,9 +52,7 @@ export async function loadFromGitHub(onProgress?: (done: number, total: number) 
   await Promise.all(
     Array.from({ length: 6 }, async () => {
       for (let entry = queue.shift(); entry; entry = queue.shift()) {
-        const res = await fetch(
-          `https://raw.githubusercontent.com/${UPSTREAM}/${commit}/${entry.path}`,
-        );
+        const res = await fetch(`https://raw.githubusercontent.com/${UPSTREAM}/${commit}/${entry.path}`);
         if (!res.ok) throw new Error(`${entry.path}: ${res.status} ${res.statusText}`);
         files[entry.path.slice(prefix.length)] = await res.text();
         onProgress?.(++done, entries.length);

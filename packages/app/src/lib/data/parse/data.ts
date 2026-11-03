@@ -1,4 +1,4 @@
-import type { DataJSONRecord } from "$lib/types";
+import type { DataJSONRecord } from "#lib/types.js";
 import { featureToTypeOSM, getNameOSM, type OSMClimbingFeatureType } from "./osm-tags";
 import type { DataJSON } from "@climbhub/climbing-data-gen";
 

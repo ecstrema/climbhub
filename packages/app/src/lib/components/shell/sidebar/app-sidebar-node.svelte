@@ -1,24 +1,24 @@
 <script lang="ts">
   import { resolve } from "$app/paths";
-  import * as Collapsible from "@/ui/collapsible";
-  import * as Sidebar from "@/ui/sidebar";
-  import * as DropdownMenu from "@/ui/dropdown-menu";
+  import * as Collapsible from "#components/ui/collapsible";
+  import * as Sidebar from "#components/ui/sidebar";
+  import * as DropdownMenu from "#components/ui/dropdown-menu";
   import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
   import Ellipsis from "@lucide/svelte/icons/ellipsis";
   import EarthIcon from "@lucide/svelte/icons/earth";
   import CircleQuestionMarkIcon from "@lucide/svelte/icons/circle-question-mark";
   import BuildingIcon from "@lucide/svelte/icons/building";
-  import type { DataTree } from "$lib/types";
+  import type { DataTree } from "#lib/types.js";
 
-  import { getName, featureToType } from "$lib/data/parse/data";
+  import { getName, featureToType } from "#lib/data/parse/data.js";
   import AppSidebarChildren from "./app-sidebar-children.svelte";
-  import HolyGrade from "@/grade/holy-grade.svelte";
+  import HolyGrade from "#components/grade/holy-grade.svelte";
   import { onMount } from "svelte";
-  import { getGrade } from "$lib/data/parse/osm-tags";
+  import { getGrade } from "#lib/data/parse/osm-tags.js";
   import type { OsmFeature } from "osm-api";
   import { page } from "$app/state";
   import clsx from "clsx";
-  import { getAppState } from "$lib/data/app-state";
+  import { getAppState } from "#lib/data/app-state.js";
 
   let {
     slug,

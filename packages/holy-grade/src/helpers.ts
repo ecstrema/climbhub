@@ -13,10 +13,7 @@ export function isValidGrade(scale: Scale | ScaleId, grade: string): boolean {
  * used to translate a cursor/pointer position on the comparison chart's shared axis (which
  * usually won't land exactly on a rank that has a grade) back into a grade label.
  */
-export function getGradeFromReference<T extends ScaleId>(
-  reference: number,
-  scale: Scale<T> | T,
-): string | undefined {
+export function getGradeFromReference<T extends ScaleId>(reference: number, scale: Scale<T> | T): string | undefined {
   if (typeof scale === "string") {
     const maybeScale = getScale(scale);
     if (!maybeScale) return undefined;
@@ -45,11 +42,7 @@ export function getGradeFromReference<T extends ScaleId>(
  * to line up (see the comments at the top of each scale file) — for two arbitrary scales this
  * will still return *something*, but it won't mean anything.
  */
-export function convertGrade(
-  grade: string,
-  from: Scale | ScaleId,
-  to: Scale | ScaleId,
-): string | undefined {
+export function convertGrade(grade: string, from: Scale | ScaleId, to: Scale | ScaleId): string | undefined {
   const fromScale = typeof from === "string" ? getScale(from) : from;
   const toScale = typeof to === "string" ? getScale(to) : to;
   if (!fromScale || !toScale) return undefined;
@@ -114,10 +107,7 @@ function checkDangerToken(token: string): { grade: string; scale: DangerScaleId 
   return undefined;
 }
 
-function checkPrimaryToken(
-  token: string,
-  preferredScales?: Scale[],
-): { grade: string; scale: ScaleId } | undefined {
+function checkPrimaryToken(token: string, preferredScales?: Scale[]): { grade: string; scale: ScaleId } | undefined {
   let fallbackMatch: { grade: string; scale: ScaleId } | undefined;
 
   const candidateScales = preferredScales
@@ -159,17 +149,12 @@ function tokenize(input: string): string[] {
       const slashIdx = single.lastIndexOf("/");
       const p1 = single.slice(0, slashIdx);
       const p2 = single.slice(slashIdx + 1);
-      if (
-        (checkDangerToken(p1) && checkPrimaryToken(p2)) ||
-        (checkPrimaryToken(p1) && checkDangerToken(p2))
-      ) {
+      if ((checkDangerToken(p1) && checkPrimaryToken(p2)) || (checkPrimaryToken(p1) && checkDangerToken(p2))) {
         return [p1, p2];
       }
     }
 
-    const dangerSuffixMatch = single.match(
-      /^(.*?)(?:\s*[-/]?\s*)(PG-?13|R\/X|R-X|RX|G\/PG|PG|R|X)$/i,
-    );
+    const dangerSuffixMatch = single.match(/^(.*?)(?:\s*[-/]?\s*)(PG-?13|R\/X|R-X|RX|G\/PG|PG|R|X)$/i);
     if (dangerSuffixMatch && dangerSuffixMatch[1]) {
       const p1 = dangerSuffixMatch[1];
       const p2 = dangerSuffixMatch[2];
@@ -216,10 +201,7 @@ export function parseGrade(gradeString: string, scaleHint?: ScaleId): ParsedGrad
 
     const danger0 = checkDangerToken(t0);
     if (danger0) {
-      const preferred = [
-        ...(hintScale ? [hintScale] : []),
-        ...(danger0.scale === "UKAdj" ? [ukTech] : [yds]),
-      ];
+      const preferred = [...(hintScale ? [hintScale] : []), ...(danger0.scale === "UKAdj" ? [ukTech] : [yds])];
       const primary1 = checkPrimaryToken(t1, preferred);
       if (primary1) {
         return {
@@ -232,10 +214,7 @@ export function parseGrade(gradeString: string, scaleHint?: ScaleId): ParsedGrad
 
     const danger1 = checkDangerToken(t1);
     if (danger1) {
-      const preferred = [
-        ...(hintScale ? [hintScale] : []),
-        ...(danger1.scale === "UKAdj" ? [ukTech] : [yds]),
-      ];
+      const preferred = [...(hintScale ? [hintScale] : []), ...(danger1.scale === "UKAdj" ? [ukTech] : [yds])];
       const primary0 = checkPrimaryToken(t0, preferred);
       if (primary0) {
         return {
@@ -302,10 +281,7 @@ export function parseGrade(gradeString: string, scaleHint?: ScaleId): ParsedGrad
     remainingTokens.push(part);
   }
 
-  const preferred = [
-    ...(hintScale ? [hintScale] : []),
-    ...(foundDanger?.scale === "UKAdj" ? [ukTech] : [yds]),
-  ];
+  const preferred = [...(hintScale ? [hintScale] : []), ...(foundDanger?.scale === "UKAdj" ? [ukTech] : [yds])];
   let foundPrimary: { grade: string; scale: ScaleId } | undefined;
   for (const part of remainingTokens) {
     const p = checkPrimaryToken(part, preferred);

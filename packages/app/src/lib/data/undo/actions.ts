@@ -1,9 +1,9 @@
-import type { DataTree } from "$lib/types";
+import type { DataTree } from "#lib/types.js";
 import type { OsmFeature, OsmNode, OsmRelation } from "osm-api";
 import type { Undoable } from "./types";
 import type { OsmUser } from "../network/osm.svelte";
-import { snapshot } from "$lib/helpers/svelte.svelte";
-import { reversed } from "$lib/helpers/iterators";
+import { snapshot } from "#lib/helpers/svelte.svelte.js";
+import { reversed } from "#lib/helpers/iterators.js";
 
 /** An undoable action can be done and undone. */
 export class OsmUndoable {
@@ -73,12 +73,7 @@ export class UndoableTagChange extends OsmUndoable implements Undoable {
 
 /** An undoable for deleting a single osm tag from an element. */
 export class UndoableTagDelete extends UndoableTagChange {
-  constructor(
-    osmUser: OsmUser,
-    targetFeature: OsmFeature,
-    targetFeatureSlug: string,
-    tagKey: OsmApi.Keys["keys"],
-  ) {
+  constructor(osmUser: OsmUser, targetFeature: OsmFeature, targetFeatureSlug: string, tagKey: OsmApi.Keys["keys"]) {
     super(osmUser, targetFeature, targetFeatureSlug, tagKey, undefined);
   }
 }
@@ -185,12 +180,7 @@ export class UndoableFeatureSet extends OsmUndoable implements Undoable {
   /**
    * @param newFeature Set this to undefined to reset the feature to its initial state.
    */
-  constructor(
-    osmUser: OsmUser,
-    item: DataTree<OsmFeature>,
-    featureSlug: string,
-    newFeature: OsmFeature | undefined,
-  ) {
+  constructor(osmUser: OsmUser, item: DataTree<OsmFeature>, featureSlug: string, newFeature: OsmFeature | undefined) {
     super(osmUser);
     this.item = item;
     this.featureSlug = featureSlug;

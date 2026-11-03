@@ -64,8 +64,6 @@ export function toClimbingPoint(el: OsmFeature): ClimbingPoint | undefined {
 
 /** Converts the Overpass result of WORLD_CLIMBING_QUERY */
 export function parseWorldClimbingPoints(data: any): WorldClimbingPoints {
-  const points = (data.elements as OsmFeature[])
-    .map(toClimbingPoint)
-    .filter((p) => p !== undefined);
+  const points = (data.elements as OsmFeature[]).map(toClimbingPoint).filter((p) => p !== undefined);
   return { timestamp: data.osm3s?.timestamp_osm_base ?? "", points };
 }

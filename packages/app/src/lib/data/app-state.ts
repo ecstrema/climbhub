@@ -1,8 +1,8 @@
 import { createContext } from "svelte";
 import type { AppDataTree } from "./app-data-tree.svelte";
 import { dataClient } from "./network/data-client";
-import type { BreadcrumbSegment, DataTree } from "$lib/types";
-import type { FromCurrent } from "@/shell/providers/types";
+import type { BreadcrumbSegment, DataTree } from "#lib/types.js";
+import type { FromCurrent } from "#components/shell/providers/types";
 import { UndoManager } from "./undo/undo-stack";
 import {
   UndoableAreaCreate,
@@ -111,9 +111,7 @@ export class AppState {
     const feature = node?.feature;
     if (!feature || feature.type === "geographic") return;
 
-    this.undoStack.do(
-      new UndoableFeatureSet(this.osmUser, node as DataTree<OsmFeature>, targetSlug, undefined),
-    );
+    this.undoStack.do(new UndoableFeatureSet(this.osmUser, node as DataTree<OsmFeature>, targetSlug, undefined));
   }
 }
 

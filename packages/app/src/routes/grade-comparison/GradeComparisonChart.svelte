@@ -4,7 +4,7 @@
   import { Chart, Layer, Axis, Point, AnnotationLine } from "layerchart/svg";
   import { scaleLinear, scalePoint } from "d3-scale";
   import { mode } from "mode-watcher";
-  import { getColorFromGrade } from "$lib/data/network/grade";
+  import { getColorFromGrade } from "#lib/data/network/grade.js";
 
   let { scales }: { scales: Scale<T>[] } = $props();
 
@@ -41,8 +41,7 @@
   const selectedData: Record<T, string | undefined> = $derived.by(() => {
     const res = {} as Record<T, string | undefined>;
     for (const scale of scales) {
-      res[scale.id] =
-        selectedReference !== undefined ? getGradeFromReference(selectedReference, scale) : undefined;
+      res[scale.id] = selectedReference !== undefined ? getGradeFromReference(selectedReference, scale) : undefined;
     }
     return res;
   });
@@ -53,9 +52,7 @@
   // far less vertical room than 9 route scales where the densest (UIAA) has ~80. 45px per
   // grade in the densest scale keeps that scale's labels legible; floor/ceiling just keep
   // very small or very large groups sane.
-  const height = $derived(
-    Math.min(4000, Math.max(350, Math.max(...scales.map((s) => s.gradeMapping.size)) * 45)),
-  );
+  const height = $derived(Math.min(4000, Math.max(350, Math.max(...scales.map((s) => s.gradeMapping.size)) * 45)));
 
   function resetOverrides() {
     overrides = {};
@@ -93,16 +90,7 @@
   </div>
 {/if}
 
-<Chart
-  {data}
-  {height}
-  valueAxis="y"
-  x="id"
-  y="reference"
-  {padding}
-  xScale={scalePoint().padding(0.5)}
-  yReverse
->
+<Chart {data} {height} valueAxis="y" x="id" y="reference" {padding} xScale={scalePoint().padding(0.5)} yReverse>
   {#snippet children({ context })}
     {const referenceFromEvent = $derived((e: PointerEvent | MouseEvent) => {
       // Deliberately not e.offsetY: once a drag captures the pointer on a circle (see
@@ -143,9 +131,7 @@
               cx={x}
               cy={y}
               r={dragging ? 13 : 10}
-              fill={selected || dragging
-                ? "var(--primary)"
-                : getColorFromGrade(d.grade, d.id, mode.current === "dark")}
+              fill={selected || dragging ? "var(--primary)" : getColorFromGrade(d.grade, d.id, mode.current === "dark")}
               stroke-width={2}
               class="stroke-primary-foreground"
               style={editable ? "cursor: grab" : undefined}

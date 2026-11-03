@@ -1,5 +1,5 @@
-import type { DataJSONRecord, DataTree } from "$lib/types";
-import { getParentSlug } from "$lib/helpers/slug";
+import type { DataJSONRecord, DataTree } from "#lib/types.js";
+import { getParentSlug } from "#lib/helpers/slug.js";
 import type { AppState } from "./app-state";
 
 export class AppDataTree {

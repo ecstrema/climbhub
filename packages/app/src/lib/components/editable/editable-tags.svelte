@@ -1,11 +1,11 @@
 <script lang="ts">
-  import * as Table from "@/ui/table";
+  import * as Table from "#components/ui/table";
   import EditableTextarea from "./editable-textarea.svelte";
-  import { featureToTypeOSM, processedTags } from "$lib/data/parse/osm-tags";
+  import { featureToTypeOSM, processedTags } from "#lib/data/parse/osm-tags.js";
   import type { OsmFeature, Tags } from "osm-api";
-  import { cn } from "$lib/utils";
-  import { getAppState } from "$lib/data/app-state";
-  import { Button } from "@/ui/button";
+  import { cn } from "#lib/utils.js";
+  import { getAppState } from "#lib/data/app-state.js";
+  import { Button } from "#components/ui/button/index.js";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import PlusIcon from "@lucide/svelte/icons/plus";
 
@@ -53,11 +53,7 @@
   let newTag = $state<{ key: string; value: string } | undefined>();
   const newKey = $derived(newTag?.key.trim() ?? "");
   const newKeyError = $derived(
-    newKey.length > 255
-      ? "Keys are limited to 255 characters"
-      : newKey in tags
-        ? "This tag already exists"
-        : undefined,
+    newKey.length > 255 ? "Keys are limited to 255 characters" : newKey in tags ? "This tag already exists" : undefined,
   );
 
   function addTag() {

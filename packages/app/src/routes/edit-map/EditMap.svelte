@@ -61,10 +61,7 @@
   let loaded = $state(false);
   const showAllBoundaries = new PersistentState("edit-map:show-all-boundaries", false);
   type BoundaryStatusFilter = "all" | BoundaryState;
-  const boundaryStatusFilter = new PersistentState<BoundaryStatusFilter>(
-    "edit-map:boundary-status",
-    "all",
-  );
+  const boundaryStatusFilter = new PersistentState<BoundaryStatusFilter>("edit-map:boundary-status", "all");
   let showPoints = $state(true);
 
   type PointType = "crag" | "gym" | "ambiguous" | "unassigned";
@@ -122,18 +119,14 @@
   }
 
   type BoundaryFeature = Feature<Polygon | MultiPolygon>;
-  const displayCache = new WeakMap<
-    EditorNode,
-    { revision: number; tolerance: number; features: BoundaryFeature[] }
-  >();
+  const displayCache = new WeakMap<EditorNode, { revision: number; tolerance: number; features: BoundaryFeature[] }>();
 
   /** The features of a leaf, simplified for the display */
   function displayFeatures(node: EditorNode, tolerance: number): BoundaryFeature[] {
     const features = node.boundary?.features ?? [];
     if (!tolerance || node === store.selected) return features;
     const cached = displayCache.get(node);
-    if (cached?.revision === node.revision && cached.tolerance === tolerance)
-      return cached.features;
+    if (cached?.revision === node.revision && cached.tolerance === tolerance) return cached.features;
     // Without topology: neighbouring borders may not match exactly anymore, by less than a pixel
     const rings = (rings: Position[][]) =>
       rings.map((ring) => simplifyRing(ring, tolerance * tolerance, () => false) ?? ring);
@@ -157,10 +150,7 @@
     return [...walk(node)].flatMap((n) => (n.children.length ? [] : displayFeatures(n, tolerance)));
   }
 
-  const labelCache = new WeakMap<
-    EditorNode,
-    { revision: number; tolerance: number; point: Position | undefined }
-  >();
+  const labelCache = new WeakMap<EditorNode, { revision: number; tolerance: number; point: Position | undefined }>();
 
   function regionLabel(node: EditorNode, tolerance: number) {
     const cached = labelCache.get(node);
@@ -177,11 +167,7 @@
     displayedNodes().forEach(({ node, role }, i) => {
       // Only drawn around the selected node, in grey
       const nodeTolerance = role === "context" ? tolerance * 4 : tolerance;
-      const areas = node.children.length
-        ? [...walk(node)].filter(hasFile)
-        : hasFile(node)
-          ? [node]
-          : [];
+      const areas = node.children.length ? [...walk(node)].filter(hasFile) : hasFile(node) ? [node] : [];
       for (const area of areas) {
         for (const feature of displayFeatures(area, nodeTolerance)) {
           features.push({
@@ -387,9 +373,7 @@
       const area = { x0: position[0]!, x1: position[0]!, y0: position[1]!, y1: position[1]! };
       nodes.push(...store.neighbours(node, area));
     }
-    return nodes
-      .map((n) => ({ node: n, refs: findVertices(n.boundary!, position) }))
-      .filter((t) => t.refs.length > 0);
+    return nodes.map((n) => ({ node: n, refs: findVertices(n.boundary!, position) })).filter((t) => t.refs.length > 0);
   }
 
   function refFromFeature(e: MapLayerMouseEvent): VertexRef | undefined {
@@ -559,12 +543,7 @@
         type: "line",
         source: "all-boundaries",
         paint: {
-          "line-color": [
-            "match",
-            ["get", "state"],
-            ...Object.entries(BOUNDARY_STATE_COLORS).flat(),
-            "#64748b",
-          ],
+          "line-color": ["match", ["get", "state"], ...Object.entries(BOUNDARY_STATE_COLORS).flat(), "#64748b"],
           "line-width": 0.6,
           "line-opacity": 0.6,
         },
@@ -591,12 +570,7 @@
         type: "line",
         source: "boundaries",
         paint: {
-          "line-color": [
-            "match",
-            ["get", "state"],
-            ...Object.entries(BOUNDARY_STATE_COLORS).flat(),
-            "#64748b",
-          ],
+          "line-color": ["match", ["get", "state"], ...Object.entries(BOUNDARY_STATE_COLORS).flat(), "#64748b"],
           "line-width": ["match", ["get", "role"], "selected", 2.5, "child", 1.5, 1],
         },
       });
@@ -625,12 +599,7 @@
         source: "points",
         paint: {
           "circle-radius": pointRadius(pointSize.current),
-          "circle-color": [
-            "match",
-            pointTypeExpression,
-            ...POINT_TYPES.flatMap((t) => [t.type, t.color]),
-            "#0f766e",
-          ],
+          "circle-color": ["match", pointTypeExpression, ...POINT_TYPES.flatMap((t) => [t.type, t.color]), "#0f766e"],
           "circle-opacity": pointOpacity(shownPointTypes.current),
           "circle-stroke-opacity": pointOpacity(shownPointTypes.current),
           "circle-stroke-width": ["case", ["==", pointStatus, PointStatus.Assigned], 0, 1],
@@ -690,9 +659,7 @@
       m.on("click", (e) => {
         const hit = m
           .queryRenderedFeatures(e.point, { layers: ["vertices", "midpoints", "points"] })
-          .find(
-            (f) => f.layer.id !== "points" || shownPointTypes.current[pointType(f.properties.i)],
-          );
+          .find((f) => f.layer.id !== "points" || shownPointTypes.current[pointType(f.properties.i)]);
         if (hit?.layer.id === "points") {
           const p = store.points[hit.properties.i];
           if (!p) return;
@@ -703,9 +670,7 @@
             .setHTML(
               `<b>${escapeHtml(p.name ?? "(no name)")}</b> · ${p.kind}<br>` +
                 `<a href="https://www.openstreetmap.org/${type}/${p.id.slice(1)}" target="_blank">${p.id}</a><br>` +
-                (node
-                  ? `in ${escapeHtml(nodeName(node))}`
-                  : `<span style="color:#dc2626">not in any region</span>`),
+                (node ? `in ${escapeHtml(nodeName(node))}` : `<span style="color:#dc2626">not in any region</span>`),
             )
             .addTo(m);
           return;
@@ -811,11 +776,7 @@
       map?.setFilter("all-boundaries", stateFilter);
       map?.setFilter("boundary-line", visibleFilter);
       map?.setFilter("boundary-fill", ["all", ["!=", ["get", "role"], "context"], visibleFilter]);
-      map?.setFilter("boundary-context-fill", [
-        "all",
-        ["==", ["get", "role"], "context"],
-        visibleFilter,
-      ]);
+      map?.setFilter("boundary-context-fill", ["all", ["==", ["get", "role"], "context"], visibleFilter]);
       map?.setFilter("labels", visibleFilter);
     }
   });
@@ -845,9 +806,7 @@
 
 <div class="relative h-full w-full">
   <div bind:this={container} class="h-full w-full"></div>
-  <div
-    class="absolute top-2 left-2 flex flex-col gap-1 rounded-md bg-background/90 p-2 text-xs shadow"
-  >
+  <div class="absolute top-2 left-2 flex flex-col gap-1 rounded-md bg-background/90 p-2 text-xs shadow">
     <label class="flex items-center gap-1.5">
       <input type="checkbox" bind:checked={showPoints} /> Climbing places
     </label>
@@ -856,10 +815,7 @@
     </label>
     <label class="flex items-center justify-between gap-2">
       Areas
-      <select
-        class="rounded border bg-background px-1 py-0.5"
-        bind:value={boundaryStatusFilter.current}
-      >
+      <select class="rounded border bg-background px-1 py-0.5" bind:value={boundaryStatusFilter.current}>
         <option value="all">All</option>
         <option value="new">New</option>
         <option value="modified">Modified</option>
@@ -890,14 +846,7 @@
       {/each}
       <label class="mt-1 flex items-center gap-1.5">
         Size
-        <input
-          type="range"
-          min="1"
-          max="4"
-          step="0.5"
-          class="w-20"
-          bind:value={pointSize.current}
-        />
+        <input type="range" min="1" max="4" step="0.5" class="w-20" bind:value={pointSize.current} />
         <span class="tabular-nums">×{pointSize.current}</span>
       </label>
     </div>

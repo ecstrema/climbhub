@@ -16,6 +16,6 @@
     "@climbhub/common": "workspace:*",
     "@types/bun": "catalog:",
     "typescript": "catalog:",
-    "vitest": "^5.0.1"
+    "vitest": "^5.1.0"
   }
 }

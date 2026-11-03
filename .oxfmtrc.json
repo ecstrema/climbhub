@@ -1,5 +1,6 @@
 {
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
-  "ignorePatterns": [],
+  "ignorePatterns": ["packages/reverse-geocoding-data/**/*.json", "packages/reverse-geocoding-data/**/*.geojson"],
+  "printWidth": 120,
   "svelte": true
 }

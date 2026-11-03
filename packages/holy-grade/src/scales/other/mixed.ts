@@ -3,8 +3,8 @@ import { buildReverseTable, normalizeFromGradeMappings } from "../builder";
 
 const gradeMapping: Scale["gradeMapping"] = new Map();
 for (let n = 1; n < 14; n++) {
-  gradeMapping.set(`M${n}`, 2 * n - 1)
-  gradeMapping.set(`M${n}/${n+1}`, 2 * n)
+  gradeMapping.set(`M${n}`, 2 * n - 1);
+  gradeMapping.set(`M${n}/${n + 1}`, 2 * n);
 }
 
 const alternateNames = new Map<string, string>();

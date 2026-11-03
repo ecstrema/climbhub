@@ -9,12 +9,7 @@ import { BOUNDARY_EXTENSION, DATA_DIR } from "@climbhub/reverse-geocoding-data";
 import { getWorldClimbingPoints, WORLD_CLIMBING_POINTS_FILE } from "@climbhub/climbing-data-gen";
 
 import type { RequestHandler } from "./$types";
-import {
-  MAX_STAGE_AREAS,
-  type BoundaryState,
-  type BoundaryStates,
-  type DataFiles,
-} from "../../../edit-map/types";
+import { MAX_STAGE_AREAS, type BoundaryState, type BoundaryStates, type DataFiles } from "../../../edit-map/types";
 
 const execFileAsync = promisify(execFile);
 const REPO_ROOT = resolve(DATA_DIR, "../../..");
@@ -133,9 +128,7 @@ const post: RequestHandler = async ({ params, request }) => {
   const body: unknown = await request.json();
   const path = body && typeof body === "object" ? (body as { path?: unknown }).path : undefined;
   const confirmedLarge =
-    body &&
-    typeof body === "object" &&
-    (body as { confirmedLarge?: unknown }).confirmedLarge === true;
+    body && typeof body === "object" && (body as { confirmedLarge?: unknown }).confirmedLarge === true;
   if (typeof path !== "string" || !/^world(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)*$/.test(path)) {
     error(400, "Invalid area path");
   }
@@ -143,12 +136,10 @@ const post: RequestHandler = async ({ params, request }) => {
   const world = resolve(DATA_DIR, "world");
   const area = resolve(DATA_DIR, path);
   if (area !== world && !area.startsWith(world + sep)) error(400, "Invalid area path");
-  const target =
-    existsSync(area) && statSync(area).isDirectory() ? area : `${area}${BOUNDARY_EXTENSION}`;
+  const target = existsSync(area) && statSync(area).isDirectory() ? area : `${area}${BOUNDARY_EXTENSION}`;
   const areas = await countBoundaryFiles(target);
   if (areas === 0) error(400, "This selection has no boundary areas to stage");
-  if (areas > MAX_STAGE_AREAS && !confirmedLarge)
-    error(409, `Confirm staging ${areas} areas before continuing`);
+  if (areas > MAX_STAGE_AREAS && !confirmedLarge) error(409, `Confirm staging ${areas} areas before continuing`);
   const gitPath = relative(REPO_ROOT, target).split(sep).join("/");
   try {
     await execFileAsync("git", ["add", "-A", "--", gitPath], { cwd: REPO_ROOT });

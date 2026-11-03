@@ -18,15 +18,7 @@
 // `--redo <path>...`: imports these paths of data/world again, replacing them. A directory is
 //   deleted, and downloaded and imported again like a new region; a file is rebuilt in place, from
 //   raw/.
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  readdirSync,
-  rmSync,
-  statSync,
-  writeFileSync,
-} from "fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "fs";
 import type { Position } from "geojson";
 import osmtogeojson from "osmtogeojson";
 import {
@@ -46,13 +38,9 @@ const DRY = process.argv.includes("--dry");
 const AUDIT = process.argv.includes("--audit");
 /** Codes of the regions imported once, even if their files were deleted or renamed since */
 const IMPORTED_FILE = `${import.meta.dirname}/imported.json`;
-const imported = new Set<string>(
-  existsSync(IMPORTED_FILE) ? JSON.parse(readFileSync(IMPORTED_FILE, "utf8")) : [],
-);
-const saveImported = () =>
-  !DRY && writeFileSync(IMPORTED_FILE, JSON.stringify([...imported].sort(), null, 1) + "\n");
-const pathExists = (path: string) =>
-  existsSync(`${DATA}/${path}`) || existsSync(`${DATA}/${path}.geojson`);
+const imported = new Set<string>(existsSync(IMPORTED_FILE) ? JSON.parse(readFileSync(IMPORTED_FILE, "utf8")) : []);
+const saveImported = () => !DRY && writeFileSync(IMPORTED_FILE, JSON.stringify([...imported].sort(), null, 1) + "\n");
+const pathExists = (path: string) => existsSync(`${DATA}/${path}`) || existsSync(`${DATA}/${path}.geojson`);
 // Before imported.json, a region was done when its path existed
 if (!existsSync(IMPORTED_FILE)) {
   for (const region of REGIONS) if (pathExists(region.path)) imported.add(region.code);
@@ -192,9 +180,7 @@ async function download() {
         last.push(region);
       else requests.push([region]);
     }
-    console.log(
-      `Pass ${pass}: ${pending.length} regions to download in ${requests.length} requests`,
-    );
+    console.log(`Pass ${pass}: ${pending.length} regions to download in ${requests.length} requests`);
     if (DRY || !requests.length) return;
 
     for (const [i, regions] of requests.entries()) {
@@ -211,9 +197,7 @@ async function download() {
         // A group keeps the subdivisions downloaded with it
         const kept = region.children ? elements : own;
         writeFileSync(rawFile(region), JSON.stringify({ elements: kept }));
-        console.log(
-          `  ${region.code}: ${Math.round(JSON.stringify(kept).length / 1024)} KB → ${region.path}`,
-        );
+        console.log(`  ${region.code}: ${Math.round(JSON.stringify(kept).length / 1024)} KB → ${region.path}`);
       }
       try {
         if (!AUDIT) build();
@@ -276,8 +260,7 @@ function bboxMostlyIn(a: number[], b: number[]) {
 }
 
 type Prepared = ReturnType<typeof preparePolygons>;
-const prepare = (feature: any) =>
-  preparePolygons(boundaryPolygons({ type: "FeatureCollection", features: [feature] }));
+const prepare = (feature: any) => preparePolygons(boundaryPolygons({ type: "FeatureCollection", features: [feature] }));
 
 /** Whether most of `own` is inside `other`, sampled on a grid of its bounding box */
 function overlaps(own: Prepared, bbox: number[], other: Prepared) {
@@ -326,10 +309,7 @@ function groupItems(
   const regionVertices = verticesOf(region);
   const regionPrepared = prepare(region);
   const inside = features.filter(
-    (f: any) =>
-      f !== region &&
-      f.properties?.admin_level === childLevel &&
-      isInside(f, regionPrepared, regionVertices),
+    (f: any) => f !== region && f.properties?.admin_level === childLevel && isInside(f, regionPrepared, regionVertices),
   );
   // A disputed area is mapped by both countries (Crimea in Ukraine and Russia...): drop the
   // subdivisions of another country, and of the ones that overlap, keep the one with the ISO3166-2
@@ -342,17 +322,13 @@ function groupItems(
   for (const feature of inside.sort((a: any, b: any) => official(b) - official(a))) {
     const bbox = bboxOf(feature);
     const prepared = prepare(feature);
-    const overlapped = kept.find(
-      (k) => bboxMostlyIn(bbox, k.bbox) && overlaps(prepared, bbox, k.prepared),
-    );
+    const overlapped = kept.find((k) => bboxMostlyIn(bbox, k.bbox) && overlaps(prepared, bbox, k.prepared));
     const foreign = iso(feature)?.includes("-") && !official(feature);
     if (overlapped || foreign) {
       const reason = foreign
         ? `of another country (${iso(feature)})`
         : `overlaps ${overlapped!.feature.properties.name}`;
-      console.log(
-        `  ${base}: skipped ${feature.properties.name} (${feature.properties.id}), ${reason}`,
-      );
+      console.log(`  ${base}: skipped ${feature.properties.name} (${feature.properties.id}), ${reason}`);
       continue;
     }
     children.push(feature);
@@ -366,8 +342,7 @@ function groupItems(
   const used = new Set<string>();
   return children.map((feature: any) => {
     let slug = slugOf(feature.properties, lang);
-    if (used.has(slug))
-      slug = `${slug}-${slugify(codeOf(feature.properties) ?? String(feature.properties.id))}`;
+    if (used.has(slug)) slug = `${slug}-${slugify(codeOf(feature.properties) ?? String(feature.properties.id))}`;
     used.add(slug);
     return { path: `${base}/${slug}`, feature };
   });
@@ -383,9 +358,7 @@ const locked = (p: Position) => existingVertices.has(key(p));
 
 /** The features of the region in raw/, `own` being its relation */
 function rawFeatures(region: Region) {
-  const features: any[] = toBoundary(
-    osmtogeojson(JSON.parse(readFileSync(rawFile(region), "utf8"))),
-  ).features;
+  const features: any[] = toBoundary(osmtogeojson(JSON.parse(readFileSync(rawFile(region), "utf8")))).features;
   return { features, own: features.find((f: any) => isFeatureOf(region, f)) };
 }
 
@@ -409,9 +382,7 @@ function build() {
       : [{ path: region.path, feature: own }];
     if (!isDone(region)) built.push(region);
     // Of a region done, only the files of --redo
-    items.push(
-      ...(isDone(region) ? regionItems.filter((item) => REDO.has(item.path)) : regionItems),
-    );
+    items.push(...(isDone(region) ? regionItems.filter((item) => REDO.has(item.path)) : regionItems));
   }
   if (!items.length) return;
 
@@ -436,16 +407,13 @@ function build() {
         const path = `${dir}/${e.name}`.slice(DATA.length + 1, -".geojson".length);
         if (REDO.has(path)) continue;
         existingPaths.add(path);
-        for (const polygon of boundaryPolygons(
-          JSON.parse(readFileSync(`${dir}/${e.name}`, "utf8")),
-        ))
+        for (const polygon of boundaryPolygons(JSON.parse(readFileSync(`${dir}/${e.name}`, "utf8"))))
           existing.push(...polygon);
       }
     }
   })(DATA);
   items = items.filter((item) => !existingPaths.has(item.path));
-  for (const item of items)
-    console.log(`  ${REDO.has(item.path) ? "redone" : "new"}: ${item.path}`);
+  for (const item of items) console.log(`  ${REDO.has(item.path) ? "redone" : "new"}: ${item.path}`);
 
   existingVertices = new Set();
   existingEdges = new Set();
@@ -499,9 +467,7 @@ function build() {
     for (const i of reducible) tolerances[i] = Math.min(tolerances[i]! * 1.3, MAX_TOLERANCE);
   }
   const total = texts.reduce((s, t) => s + t.length, 0);
-  console.log(
-    `  ${DRY ? "would add" : "added"} ${items.length} files to data/, total ${Math.round(total / 1024)} KB`,
-  );
+  console.log(`  ${DRY ? "would add" : "added"} ${items.length} files to data/, total ${Math.round(total / 1024)} KB`);
 
   if (DRY) return;
   for (const [i, item] of items.entries()) {
@@ -524,16 +490,14 @@ function segmentDistance(p: Position, a: Position, b: Position) {
 
 function ringArea(ring: Position[]) {
   let area = 0;
-  for (let i = 0; i + 1 < ring.length; i++)
-    area += ring[i]![0]! * ring[i + 1]![1]! - ring[i + 1]![0]! * ring[i]![1]!;
+  for (let i = 0; i + 1 < ring.length; i++) area += ring[i]![0]! * ring[i + 1]![1]! - ring[i + 1]![0]! * ring[i]![1]!;
   return Math.abs(area) / 2;
 }
 
 /** In square degrees: only to compare two versions of a boundary */
 const featureArea = (feature: any) =>
   boundaryPolygons({ type: "FeatureCollection", features: [feature] }).reduce(
-    (sum, [outer, ...holes]) =>
-      sum + ringArea(outer!) - holes.reduce((h, ring) => h + ringArea(ring), 0),
+    (sum, [outer, ...holes]) => sum + ringArea(outer!) - holes.reduce((h, ring) => h + ringArea(ring), 0),
     0,
   );
 
@@ -574,8 +538,7 @@ function audit() {
         type: "FeatureCollection",
         features: [file.feature],
       }))
-        for (const ring of polygon)
-          for (let i = 0; i + 1 < ring.length; i++) segments.push([ring[i]!, ring[i + 1]!]);
+        for (const ring of polygon) for (let i = 0; i + 1 < ring.length; i++) segments.push([ring[i]!, ring[i + 1]!]);
       const vertices: Position[] = [];
       for (const polygon of boundaryPolygons({ type: "FeatureCollection", features: [raw] }))
         for (const ring of polygon) vertices.push(...ring);
@@ -583,8 +546,7 @@ function audit() {
       let distance = 0;
       for (let i = 0; i < vertices.length; i += step) {
         let nearest = Infinity;
-        for (const [a, b] of segments)
-          nearest = Math.min(nearest, segmentDistance(vertices[i]!, a, b));
+        for (const [a, b] of segments) nearest = Math.min(nearest, segmentDistance(vertices[i]!, a, b));
         distance = Math.max(distance, nearest);
       }
       if (distance > AUDIT_THRESHOLD)
@@ -600,9 +562,7 @@ function audit() {
   far.sort((a, b) => b.distance - a.distance);
   console.log("  distance  area  file");
   for (const { path, distance, area } of far)
-    console.log(
-      `  ${distance.toFixed(3).padStart(7)}° ${`${Math.round(area * 100)}%`.padStart(5)}  ${path}`,
-    );
+    console.log(`  ${distance.toFixed(3).padStart(7)}° ${`${Math.round(area * 100)}%`.padStart(5)}  ${path}`);
   writeFileSync(`${import.meta.dirname}/audit.json`, JSON.stringify(far));
   console.log(
     `${far.length} of ${compared} files are more than ${AUDIT_THRESHOLD}° from their OSM boundary (${files.size} files without OSM id or not in raw/)`,
@@ -620,9 +580,7 @@ function preview(feature: any): Position[][][] {
       const keep = new Uint8Array(ring.length);
       keep[0] = keep[ring.length - 1] = 1;
       douglasPeucker(ring, 0, ring.length - 1, tolerance * tolerance, keep);
-      return ring
-        .filter((_, i) => keep[i])
-        .map(([x, y]) => [Math.round(x! * 1e3) / 1e3, Math.round(y! * 1e3) / 1e3]);
+      return ring.filter((_, i) => keep[i]).map(([x, y]) => [Math.round(x! * 1e3) / 1e3, Math.round(y! * 1e3) / 1e3]);
     }),
   );
 }
@@ -667,13 +625,7 @@ function segmentDistanceSq(p: Position, a: Position, b: Position) {
   return dx * dx + dy * dy;
 }
 
-function douglasPeucker(
-  points: Position[],
-  first: number,
-  last: number,
-  toleranceSq: number,
-  keep: Uint8Array,
-) {
+function douglasPeucker(points: Position[], first: number, last: number, toleranceSq: number, keep: Uint8Array) {
   const stack: [number, number][] = [[first, last]];
   while (stack.length) {
     const [start, end] = stack.pop()!;
@@ -762,6 +714,5 @@ function simplify(feature: any, tolerances: number[]) {
 if (!AUDIT) build();
 await download();
 if (AUDIT) audit();
-else if (REDO.size && !DRY)
-  console.log(`Not redone (no OSM relation in raw/): ${[...REDO].join(" ")}`);
+else if (REDO.size && !DRY) console.log(`Not redone (no OSM relation in raw/): ${[...REDO].join(" ")}`);
 console.log("DONE");

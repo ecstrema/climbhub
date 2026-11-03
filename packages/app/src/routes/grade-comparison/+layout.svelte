@@ -6,11 +6,35 @@
   let { children }: { children: Snippet } = $props();
 
   const links = [
-    { id: "route", label: "Route", href: resolve("/grade-comparison/route") },
-    { id: "boulder", label: "Boulder", href: resolve("/grade-comparison/boulder") },
-    { id: "ice", label: "Ice", href: resolve("/grade-comparison/ice") },
-    { id: "aid", label: "Aid", href: resolve("/grade-comparison/aid") },
-    { id: "danger", label: "Danger", href: resolve("/grade-comparison/danger") },
+    {
+      id: "route",
+      label: "Route",
+      href: resolve("grade-comparison/route"),
+    },
+
+    {
+      id: "boulder",
+      label: "Boulder",
+      href: resolve("grade-comparison/boulder"),
+    },
+
+    {
+      id: "ice",
+      label: "Ice",
+      href: resolve("grade-comparison/ice"),
+    },
+
+    {
+      id: "aid",
+      label: "Aid",
+      href: resolve("grade-comparison/aid"),
+    },
+
+    {
+      id: "danger",
+      label: "Danger",
+      href: resolve("grade-comparison/danger"),
+    },
   ];
 </script>
 
@@ -34,4 +58,3 @@
     {@render children()}
   </div>
 </div>
-

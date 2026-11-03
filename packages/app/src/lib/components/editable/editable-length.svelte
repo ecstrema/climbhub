@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { getAppState } from "$lib/data/app-state";
-  import { getLength } from "$lib/data/parse/osm-tags";
-  import { cn } from "$lib/utils";
+  import { getAppState } from "#lib/data/app-state.js";
+  import { getLength } from "#lib/data/parse/osm-tags.js";
+  import { cn } from "#lib/utils.js";
   import type { OsmFeature } from "osm-api";
   import EditableTextarea from "./editable-textarea.svelte";
 

@@ -1,14 +1,14 @@
 import type { OsmFeature, OsmChange, UploadPhase, UploadResult, OsmFeatureType } from "osm-api";
-import { isLoggedIn, login, logout, uploadChangeset, getFeature as getFeatureOsm } from "osm-api";
-import { getStaticIdentifier, type OsmIdentifier } from "@climbhub/common";
 
+import { isLoggedIn, login, logout, uploadChangeset, getFeature as getFeatureOsm } from "osm-api";
+
+import { getStaticIdentifier, type OsmIdentifier } from "@climbhub/common";
 import { asset } from "$app/paths";
 import { online } from "svelte/reactivity/window";
-import type { DataTree } from "$lib/types";
+import type { DataTree } from "#lib/types.js";
 import { browser } from "$app/env";
 import { SvelteMap } from "svelte/reactivity";
-import type { TypedMap } from "$lib/helpers/types";
-import { snapshot } from "$lib/helpers/svelte.svelte";
+import type { TypedMap } from "#lib/helpers/types.js";
 
 /**
  * Maps slugs to a feature diff
@@ -185,7 +185,7 @@ export class OsmUser {
     login({
       mode: "popup",
       clientId: "PhOrL2FCMUtJ5v3WrOAfVh5qdI5CIzQ6Wsf_YVpBNtg",
-      redirectUrl: `${window.location.origin}${asset("/osm-login.html")}`,
+      redirectUrl: `${window.location.origin}${asset("osm-login.html")}`,
       scopes: ["read_prefs", "write_api"],
     }).then(() => {
       this.loggedIn = isLoggedIn();
@@ -231,13 +231,7 @@ export class OsmUser {
   }
 
   async submitChanges(comment: string) {
-    if (
-      !browser ||
-      !online.current ||
-      this.submitting ||
-      !this.loggedIn ||
-      this.changes.size === 0
-    ) {
+    if (!browser || !online.current || this.submitting || !this.loggedIn || this.changes.size === 0) {
       return;
     }
 
@@ -262,10 +256,7 @@ export class OsmUser {
           for (const oldId in featureDiff) {
             const { newId, newVersion } = featureDiff[oldId]!;
             if (Number.isInteger(oldId)) {
-              const identifier = getStaticIdentifier(
-                featureType as OsmFeatureType,
-                oldId as unknown as number,
-              );
+              const identifier = getStaticIdentifier(featureType as OsmFeatureType, oldId as unknown as number);
               const feature = mapIdToCreatedFeature[identifier];
               if (!feature) {
                 console.warn(
@@ -338,9 +329,7 @@ export class OsmUser {
     const upstreamDiff = this.#diff(localInitial, upstream);
 
     if (upstreamDiff === "deleted") {
-      console.warn(
-        "Feature has been deleted upstream, but has local changes. Not applying upstream deletion.",
-      );
+      console.warn("Feature has been deleted upstream, but has local changes. Not applying upstream deletion.");
       return;
     }
 

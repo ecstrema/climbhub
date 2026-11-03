@@ -1,5 +1,5 @@
 <script lang="ts">
-  import EditableTags from "@/editable/editable-tags.svelte";
+  import EditableTags from "#components/editable/editable-tags.svelte";
   import type { DataJSON } from "@climbhub/climbing-data-gen";
 
   let {

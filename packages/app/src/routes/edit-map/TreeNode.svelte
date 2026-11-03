@@ -8,13 +8,7 @@
   import { LARGE_BOUNDARY_BYTES } from "@climbhub/reverse-geocoding-data/shared";
 
   import TreeNode from "./TreeNode.svelte";
-  import {
-    isPreciseCoast,
-    hasFile,
-    nodeName,
-    type EditorNode,
-    type EditorStore,
-  } from "./editor.svelte";
+  import { isPreciseCoast, hasFile, nodeName, type EditorNode, type EditorStore } from "./editor.svelte";
 
   const {
     node,
@@ -54,8 +48,7 @@
   const toMerge = $derived(store.mergeSelection.has(node));
   const containsSelected = $derived(store.selectedAncestorIds.has(node.id));
   const open = $derived(
-    manuallyOpen ??
-      (depth < 1 || containsSelected || (filterResult ? filterResult.open.has(node.id) : filter !== ""))
+    manuallyOpen ?? (depth < 1 || containsSelected || (filterResult ? filterResult.open.has(node.id) : filter !== "")),
   );
 
   const visible = $derived(!filterResult ? true : filterResult.visible.has(node.id));
@@ -140,17 +133,12 @@
         >
       {/if}
       {#if info.large}
-        <span
-          class="text-amber-600"
-          title="Larger than {LARGE_BOUNDARY_BYTES / 1024} KB: simplify it"
-        >
+        <span class="text-amber-600" title="Larger than {LARGE_BOUNDARY_BYTES / 1024} KB: simplify it">
           {Math.round(info.size / 1024)} KB
         </span>
       {/if}
       {#if info.ambiguous > 0}
-        <span class="text-amber-600" title="Places inside overlapping regions"
-          >⚠{info.ambiguous}</span
-        >
+        <span class="text-amber-600" title="Places inside overlapping regions">⚠{info.ambiguous}</span>
       {/if}
       {#if !isLeaf && info.own > 0}
         <span class="text-rose-600" title="Places in this region but not in any of its children">
@@ -160,14 +148,10 @@
       <span
         class={clsx(
           "rounded px-1",
-          tooBig
-            ? "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100"
-            : "text-muted-foreground",
+          tooBig ? "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100" : "text-muted-foreground",
           info.total === 0 && "opacity-40",
         )}
-        title={tooBig
-          ? `More than ${store.threshold} places: consider subdividing`
-          : "Climbing places in this region"}
+        title={tooBig ? `More than ${store.threshold} places: consider subdividing` : "Climbing places in this region"}
       >
         {info.total}
       </span>

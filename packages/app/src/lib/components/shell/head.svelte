@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { getAppState } from "$lib/data/app-state";
-  import { getName } from "$lib/data/parse/data";
+  import { getAppState } from "#lib/data/app-state.js";
+  import { getName } from "#lib/data/parse/data.js";
 
   const isDev = import.meta.env.DEV;
 

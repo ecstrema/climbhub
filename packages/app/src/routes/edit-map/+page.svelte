@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { base } from "$app/paths";
-  import { Button } from "@/ui/button";
+  import { resolve } from "$app/paths";
+  import { Button } from "#components/ui/button/index.js";
   import DownloadIcon from "@lucide/svelte/icons/download";
   import SaveIcon from "@lucide/svelte/icons/save";
   import GitPullRequestIcon from "@lucide/svelte/icons/git-pull-request";
@@ -9,10 +9,7 @@
   import LoaderIcon from "@lucide/svelte/icons/loader-circle";
   import CombineIcon from "@lucide/svelte/icons/combine";
   import type { WorldClimbingPoints, WorldDownloadStatus } from "@climbhub/climbing-data-gen";
-  import {
-    parseWorldClimbingPoints,
-    WORLD_CLIMBING_QUERY,
-  } from "@climbhub/climbing-data-gen/world-points";
+  import { parseWorldClimbingPoints, WORLD_CLIMBING_QUERY } from "@climbhub/climbing-data-gen/world-points";
 
   import EditMap from "./EditMap.svelte";
   import NodePanel from "./NodePanel.svelte";
@@ -42,12 +39,11 @@
   async function getClimbing(resource: string): Promise<WorldClimbingPoints> {
     try {
       for (;;) {
-        const res = await fetch(`${base}/api/edit-map/${resource}`);
+        const res = await fetch(resolve(`api/edit-map/${resource}`));
         if (!res.ok) throw new Error(`${resource}: ${res.status} ${await res.text()}`);
         if (res.status !== 202) return await res.json();
         progress = await res.json();
-        if (progress?.error)
-          throw new Error(`Downloading the climbing places failed: ${progress.error}`);
+        if (progress?.error) throw new Error(`Downloading the climbing places failed: ${progress.error}`);
         // A refresh only starts the download, then it is awaited like the first one
         resource = "climbing.json";
         await new Promise((r) => setTimeout(r, 5000));
@@ -71,15 +67,12 @@
       } else {
         status = `Loading the boundaries from GitHub (${REPOSITORY.owner}/${REPOSITORY.repo})…`;
         files = (
-          await loadFromGitHub(
-            (done, total) => (status = `Loading the boundaries from GitHub: ${done}/${total}`),
-          )
+          await loadFromGitHub((done, total) => (status = `Loading the boundaries from GitHub: ${done}/${total}`))
         ).files;
       }
       let points: WorldClimbingPoints = { timestamp: "", points: [] };
       if (DEV) {
-        status =
-          "Loading the climbing places of the world (the first download takes a few minutes)…";
+        status = "Loading the climbing places of the world (the first download takes a few minutes)…";
         points = await getClimbing("climbing.json");
       }
       timestamp = points.timestamp;
@@ -165,9 +158,7 @@
     return [
       "Made with the boundary editor (/edit-map).",
       "",
-      ...[...write.keys()].map(
-        (path) => `- ${path in store!.saved ? "Modified" : "Added"} \`${path}\``,
-      ),
+      ...[...write.keys()].map((path) => `- ${path in store!.saved ? "Modified" : "Added"} \`${path}\``),
       ...(removed.length
         ? [
             "",
@@ -182,11 +173,7 @@
   async function pullRequest() {
     if (!prChanges) return;
     const date = new Date().toISOString().slice(0, 10);
-    downloadBlob(
-      exportChangesZip(prChanges) as BlobPart,
-      `boundaries-${date}.zip`,
-      "application/zip",
-    );
+    downloadBlob(exportChangesZip(prChanges) as BlobPart, `boundaries-${date}.zip`, "application/zip");
     try {
       await navigator.clipboard.writeText(prDescription(prChanges));
       prCopied = true;
@@ -199,11 +186,7 @@
   function download() {
     if (!store) return;
     const date = new Date().toISOString().slice(0, 10);
-    downloadBlob(
-      exportZip(store) as BlobPart,
-      `reverse-geocoding-data-${date}.zip`,
-      "application/zip",
-    );
+    downloadBlob(exportZip(store) as BlobPart, `reverse-geocoding-data-${date}.zip`, "application/zip");
   }
 
   function undo() {
@@ -221,11 +204,7 @@
     if ((e.metaKey || e.ctrlKey) && e.key === "z") {
       e.preventDefault();
       undo();
-    } else if (
-      (e.key === "Delete" || e.key === "Backspace") &&
-      store.selected &&
-      store.vertexSelection.size
-    ) {
+    } else if ((e.key === "Delete" || e.key === "Backspace") && store.selected && store.vertexSelection.size) {
       e.preventDefault();
       store.removeVertices(store.selected, [...store.vertexSelection.values()]);
       store.vertexSelection = new Map();
@@ -253,10 +232,7 @@
   });
 </script>
 
-<svelte:head>
-  <title>{import.meta.env.DEV ? "[DEV] " : ""}Climbhub - Boundary editor</title>
-</svelte:head>
-
+<svelte:head><title>{import.meta.env.DEV ? "[DEV] " : ""}Climbhub - Boundary editor</title></svelte:head>
 <svelte:window {onkeydown} />
 
 {#if loadError}
@@ -280,9 +256,7 @@
           <Button
             size="icon-sm"
             variant="outline"
-            title="Undo (Ctrl+Z){store.undoStack.at(-1)
-              ? `: ${store.undoStack.at(-1)?.label}`
-              : ''}"
+            title="Undo (Ctrl+Z){store.undoStack.at(-1) ? `: ${store.undoStack.at(-1)?.label}` : ''}"
             disabled={!store.undoStack.length}
             onclick={undo}
           >
@@ -305,8 +279,7 @@
               title="Write the changes to packages/reverse-geocoding-data/data"
             >
               {#if saving}<LoaderIcon class="animate-spin" />{:else}<SaveIcon />{/if} Save
-              {#if stats?.modified}<span class="rounded bg-primary-foreground/20 px-1 text-xs"
-                  >{stats.modified}</span
+              {#if stats?.modified}<span class="rounded bg-primary-foreground/20 px-1 text-xs">{stats.modified}</span
                 >{/if}
             </Button>
           {/if}
@@ -338,45 +311,49 @@
             {:else}
               <p class="text-muted-foreground">
                 Proposes the changes to
-                <a
-                  class="underline"
-                  href="https://github.com/{REPOSITORY.owner}/{REPOSITORY.repo}"
-                  target="_blank">{REPOSITORY.owner}/{REPOSITORY.repo}</a
+                <a class="underline" href="https://github.com/{REPOSITORY.owner}/{REPOSITORY.repo}" target="_blank"
+                  >{REPOSITORY.owner}/{REPOSITORY.repo}</a
                 >. Only a GitHub account is needed: GitHub makes the fork.
               </p>
               <ol class="list-decimal space-y-0.5 pl-4">
                 <li>
-                  Click below: the {count} changed file{count === 1 ? "" : "s"} download as a zip, and
-                  GitHub opens.
+                  Click below: the {count} changed file{count === 1 ? "" : "s"} download as a zip, and GitHub opens.
                 </li>
-                <li>Unzip it, and drag its <code>data</code> folder onto the GitHub page.</li>
-                <li>Click <b>Propose changes</b>, then <b>Create pull request</b>.</li>
+
+                <li>
+                  Unzip it, and drag its
+                  <code>data</code>
+                  folder onto the GitHub page.
+                </li>
+
+                <li>
+                  Click
+                  <b>Propose changes</b>
+                  , then
+                  <b>Create pull request</b>
+                  .
+                </li>
+
                 <li>Paste the description{prCopied ? " (copied)" : ""}.</li>
               </ol>
               {#if count > UPLOAD_MAX_FILES}
                 <p class="text-rose-600">
-                  GitHub takes at most {UPLOAD_MAX_FILES} files per upload: drop the folders of data/
-                  one by one.
+                  GitHub takes at most {UPLOAD_MAX_FILES} files per upload: drop the folders of data/ one by one.
                 </p>
               {/if}
               {#if prChanges.delete.length}
                 <p class="text-amber-600">
-                  {prChanges.delete.length} file{prChanges.delete.length === 1 ? " was" : "s were"} deleted
-                  or renamed: the upload page cannot delete files, so they are listed in the description
-                  for the maintainers.
+                  {prChanges.delete.length} file{prChanges.delete.length === 1 ? " was" : "s were"} deleted or renamed: the
+                  upload page cannot delete files, so they are listed in the description for the maintainers.
                 </p>
               {/if}
               <div class="flex items-center gap-2">
-                <Button size="xs" onclick={pullRequest}
-                  ><GitPullRequestIcon /> Create the pull request</Button
-                >
+                <Button size="xs" onclick={pullRequest}><GitPullRequestIcon /> Create the pull request</Button>
                 <Button
                   size="xs"
                   variant="ghost"
-                  onclick={() =>
-                    navigator.clipboard
-                      .writeText(prDescription(prChanges!))
-                      .then(() => (prCopied = true))}>Copy the description</Button
+                  onclick={() => navigator.clipboard.writeText(prDescription(prChanges!)).then(() => (prCopied = true))}
+                  >Copy the description</Button
                 >
               </div>
             {/if}
@@ -385,13 +362,9 @@
         <div class="flex items-center gap-2 text-xs text-muted-foreground">
           <span class="flex-1">
             {stats?.total.toLocaleString()} places ·
-            <span class:text-rose-600={stats?.unassigned}
-              >{stats?.unassigned.toLocaleString()} dropped</span
-            >
+            <span class:text-rose-600={stats?.unassigned}>{stats?.unassigned.toLocaleString()} dropped</span>
             ·
-            <span class:text-amber-600={stats?.ambiguous}
-              >{stats?.ambiguous.toLocaleString()} ambiguous</span
-            >
+            <span class:text-amber-600={stats?.ambiguous}>{stats?.ambiguous.toLocaleString()} ambiguous</span>
           </span>
           <Button
             size="icon-xs"
@@ -413,10 +386,7 @@
             placeholder="Filter regions"
             bind:value={filter}
           />
-          <label
-            class="flex shrink-0 items-center gap-1 text-xs"
-            title="Highlight leaves with more places than this"
-          >
+          <label class="flex shrink-0 items-center gap-1 text-xs" title="Highlight leaves with more places than this">
             max
             <input
               class="w-16 rounded-md border border-input bg-background px-1 py-1 text-sm"
@@ -447,8 +417,6 @@
       {/if}
     </aside>
 
-    <main class="min-w-0 flex-1">
-      <EditMap bind:this={map} {store} />
-    </main>
+    <main class="min-w-0 flex-1"><EditMap bind:this={map} {store} /></main>
   </div>
 {/if}

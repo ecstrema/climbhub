@@ -1,13 +1,13 @@
 <script lang="ts">
-  import EditableName from "@/editable/editable-name.svelte";
-  import EditableDescription from "$lib/components/editable/editable-description.svelte";
-  import EditableTags from "$lib/components/editable/editable-tags.svelte";
-  import EditableGrade from "@/editable/editable-grade.svelte";
-  import EditableLength from "@/editable/editable-length.svelte";
-  import CommonsTopo from "$lib/components/commons-topo.svelte";
-  import type { DataTree } from "$lib/types";
+  import EditableName from "#components/editable/editable-name.svelte";
+  import EditableDescription from "#lib/components/editable/editable-description.svelte";
+  import EditableTags from "#lib/components/editable/editable-tags.svelte";
+  import EditableGrade from "#components/editable/editable-grade.svelte";
+  import EditableLength from "#components/editable/editable-length.svelte";
+  import CommonsTopo from "#lib/components/commons-topo.svelte";
+  import type { DataTree } from "#lib/types.js";
   import type { OsmFeature } from "osm-api";
-  import { getCoordinates, getGrade } from "$lib/data/parse/osm-tags";
+  import { getCoordinates, getGrade } from "#lib/data/parse/osm-tags.js";
 
   let {
     item = $bindable(),

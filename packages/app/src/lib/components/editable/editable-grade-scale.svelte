@@ -1,16 +1,10 @@
 <script lang="ts">
-  import { getAppState } from "$lib/data/app-state";
-  import { type WithSourceTag, scaleIdToTag } from "$lib/data/parse/osm-tags";
-  import type { Grade } from "$lib/types";
-  import { Button } from "@/ui/button";
-  import * as DropdownMenu from "@/ui/dropdown-menu/";
-  import {
-    allRouteScales,
-    convertGrade,
-    getGradeFromReference,
-    getScale,
-    type ScaleId,
-  } from "@climbhub/holy-grade";
+  import { getAppState } from "#lib/data/app-state.js";
+  import { type WithSourceTag, scaleIdToTag } from "#lib/data/parse/osm-tags.js";
+  import type { Grade } from "#lib/types.js";
+  import { Button } from "#components/ui/button/index.js";
+  import * as DropdownMenu from "#components/ui/dropdown-menu/";
+  import { allRouteScales, convertGrade, getGradeFromReference, getScale, type ScaleId } from "@climbhub/holy-grade";
   import type { OsmFeature } from "osm-api";
 
   const {
@@ -53,14 +47,7 @@
 
     const newGrade = convertGrade(grade.v.v, scale, scaleToConvertTo);
     if (!newGrade) {
-      console.log(
-        "Could not convert grade",
-        grade.v.v,
-        "from scale",
-        scale.id,
-        "to scale",
-        scaleToConvertTo.id,
-      );
+      console.log("Could not convert grade", grade.v.v, "from scale", scale.id, "to scale", scaleToConvertTo.id);
       return;
     }
 

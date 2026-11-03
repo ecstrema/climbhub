@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button } from "@/ui/button";
+  import { Button } from "#components/ui/button/index.js";
   import ArrowUpIcon from "@lucide/svelte/icons/arrow-up";
   import CheckIcon from "@lucide/svelte/icons/check";
   import ChevronLeftIcon from "@lucide/svelte/icons/chevron-left";
@@ -37,13 +37,7 @@
     toBoundary,
     type BBox,
   } from "./geometry";
-  import {
-    adminSubdivisionQuery,
-    runOverpassQuery,
-    singleAreaQuery,
-    slugify,
-    splitBySlug,
-  } from "./overpass";
+  import { adminSubdivisionQuery, runOverpassQuery, singleAreaQuery, slugify, splitBySlug } from "./overpass";
   import { downloadBlob } from "./export";
   import { saveToDisk, stageOnDisk } from "./data-source";
   import { BOUNDARY_STATE_COLORS, MAX_STAGE_AREAS, type Boundary } from "./types";
@@ -124,8 +118,7 @@
   async function stageArea() {
     const stageAreas = [...walk(node)].filter(hasFile).length;
     const confirmedLarge =
-      stageAreas > MAX_STAGE_AREAS &&
-      confirm(`Are you sure you want to stage ${stageAreas} areas at once?`);
+      stageAreas > MAX_STAGE_AREAS && confirm(`Are you sure you want to stage ${stageAreas} areas at once?`);
     if (stageAreas > MAX_STAGE_AREAS && !confirmedLarge) return;
 
     await run("stage", async () => {
@@ -164,10 +157,7 @@
 
   function findCoasts() {
     return run("coasts", async () => {
-      const precise = await store.findCoasts(
-        node,
-        (done, total) => (coastProgress = `${done}/${total}`),
-      );
+      const precise = await store.findCoasts(node, (done, total) => (coastProgress = `${done}/${total}`));
       coastProgress = "";
       error = precise.length
         ? `${precise.length} region${precise.length === 1 ? " has" : "s have"} a precise coast, marked ≈ in the tree (points per 10 km)`
@@ -338,9 +328,7 @@
   }
 
   let simplification = $state.raw<{ node: EditorNode; boundary: Boundary }[]>([]);
-  const simplifiedCount = $derived(
-    simplification.reduce((sum, s) => sum + countVertices(s.boundary), 0),
-  );
+  const simplifiedCount = $derived(simplification.reduce((sum, s) => sum + countVertices(s.boundary), 0));
   const originalCount = $derived(simplification.reduce((sum, s) => sum + s.node.vertexCount, 0));
 
   $effect(() => {
@@ -562,16 +550,7 @@
     try {
       if (mergeType === "new") {
         if (!newRegionSlug) return;
-        const created = store.mergeAtPoints(
-          a,
-          b,
-          p1,
-          p2,
-          store.mergeSideIndex,
-          "new",
-          newRegionSlug,
-          newRegionName,
-        );
+        const created = store.mergeAtPoints(a, b, p1, p2, store.mergeSideIndex, "new", newRegionSlug, newRegionName);
         error = `Merged ${a.slug} and ${b.slug} at 2 points into "${created.slug}"`;
         newRegionName = "";
       } else {
@@ -654,13 +633,10 @@
         <h2 class="flex items-center gap-1 text-base font-semibold">
           <span class="truncate">{info.name}</span>
           {#if node.parent}
-            <Button size="icon-xs" variant="ghost" title="Rename" onclick={startRename}
-              ><PencilIcon /></Button
-            >
+            <Button size="icon-xs" variant="ghost" title="Rename" onclick={startRename}><PencilIcon /></Button>
           {/if}
-          <span
-            class="text-xs font-normal capitalize"
-            style:color={BOUNDARY_STATE_COLORS[info.boundaryState]}>{info.boundaryState}</span
+          <span class="text-xs font-normal capitalize" style:color={BOUNDARY_STATE_COLORS[info.boundaryState]}
+            >{info.boundaryState}</span
           >
         </h2>
       {/if}
@@ -736,13 +712,9 @@
     <h3 class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Boundary</h3>
     <p class="text-xs">
       {#if info.children && node.boundary}
-        <b class="text-rose-600">Only leaves have a boundary</b>: the boundary of this region is
-        ignored, its {info.children} children are used.
-        <Button
-          size="xs"
-          variant="ghost"
-          onclick={() => store.setBoundary(node, undefined, "Clear boundary")}
-        >
+        <b class="text-rose-600">Only leaves have a boundary</b>: the boundary of this region is ignored, its {info.children}
+        children are used.
+        <Button size="xs" variant="ghost" onclick={() => store.setBoundary(node, undefined, "Clear boundary")}>
           Clear
         </Button>
       {:else if info.children}
@@ -755,18 +727,16 @@
           class:font-semibold={info.size > LARGE_BOUNDARY_BYTES}
         >
           {Math.round(info.size / 1024).toLocaleString()} KB</span
-        >{#if info.size > LARGE_BOUNDARY_BYTES}: larger than {LARGE_BOUNDARY_BYTES / 1024} KB, simplify
-          it{/if}.
+        >{#if info.size > LARGE_BOUNDARY_BYTES}: larger than {LARGE_BOUNDARY_BYTES / 1024} KB, simplify it{/if}.
       {:else}
-        <b class="text-rose-600">No boundary</b>: this region is not saved. Run a query, import or
-        draw one.
+        <b class="text-rose-600">No boundary</b>: this region is not saved. Run a query, import or draw one.
       {/if}
     </p>
     {#if info.coast && info.coast.revision === node.revision && !info.children}
       <p class="text-xs" class:text-sky-600={isPreciseCoast(node, info.coast)}>
         Coast: {Math.round(info.coast.length).toLocaleString()} km,
-        {info.coast.length ? ((info.coast.vertices / info.coast.length) * 10).toFixed(1) : 0} points per
-        10 km{#if isPreciseCoast(node, info.coast)}: more precise than needed, nothing is in the sea{/if}.
+        {info.coast.length ? ((info.coast.vertices / info.coast.length) * 10).toFixed(1) : 0} points per 10 km{#if isPreciseCoast(node, info.coast)}:
+          more precise than needed, nothing is in the sea{/if}.
       </p>
     {/if}
     <div class="flex flex-wrap items-center gap-1.5">
@@ -805,12 +775,7 @@
           {#if coastReviewTargets.length > 1}
             <div class="flex items-center gap-1 text-muted-foreground">
               <span>{coastReviewIndex + 1} / {coastReviewTargets.length}</span>
-              <Button
-                size="icon-xs"
-                variant="ghost"
-                disabled={coastReviewIndex === 0}
-                onclick={prevCoastTarget}
-              >
+              <Button size="icon-xs" variant="ghost" disabled={coastReviewIndex === 0} onclick={prevCoastTarget}>
                 <ChevronLeftIcon />
               </Button>
               <Button
@@ -855,8 +820,8 @@
         </label>
 
         <p class="text-[11px] text-muted-foreground">
-          Dashed red line on the map. Fully encompasses the region in water. Land borders stay
-          intact. Changes are kept in memory until saved.
+          Dashed red line on the map. Fully encompasses the region in water. Land borders stay intact. Changes are kept
+          in memory until saved.
         </p>
 
         <div class="flex flex-wrap items-center gap-1.5 pt-1">
@@ -885,9 +850,7 @@
 
   <!-- Overpass -->
   <section class="flex flex-col gap-2">
-    <h3 class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-      Overpass query
-    </h3>
+    <h3 class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Overpass query</h3>
     <textarea
       class="{inputClass} h-28 font-mono text-xs"
       bind:value={queryDraft}
@@ -930,9 +893,7 @@
       <Button
         size="xs"
         disabled={!queryDraft || !!running || info.children > 0}
-        title={info.children
-          ? "Only leaves have a boundary"
-          : "Use all the polygons as the boundary of this region"}
+        title={info.children ? "Only leaves have a boundary" : "Use all the polygons as the boundary of this region"}
         onclick={useQueryResult}
       >
         {#if running === "use"}<LoaderIcon class="animate-spin" />{:else}<PlayIcon />{/if}
@@ -975,9 +936,7 @@
       >
       <Button
         size="sm"
-        variant={mergeOpen || store.mergeMode || store.mergeSelection.size > 0
-          ? "default"
-          : "outline"}
+        variant={mergeOpen || store.mergeMode || store.mergeSelection.size > 0 ? "default" : "outline"}
         title="Select and merge multiple regions together (M)"
         onclick={toggleMerge}
       >
@@ -996,31 +955,17 @@
         class="inline-flex h-8 cursor-pointer items-center rounded-md border px-2.5 text-sm font-medium hover:bg-muted"
       >
         Import GeoJSON
-        <input
-          type="file"
-          accept=".geojson,.json,application/geo+json"
-          class="hidden"
-          onchange={importGeoJSON}
-        />
+        <input type="file" accept=".geojson,.json,application/geo+json" class="hidden" onchange={importGeoJSON} />
       </label>
       {#if node.boundary}
         <Button
           size="sm"
           variant="outline"
-          onclick={() =>
-            downloadBlob(
-              JSON.stringify(node.boundary),
-              `${node.slug}.geojson`,
-              "application/geo+json",
-            )}
+          onclick={() => downloadBlob(JSON.stringify(node.boundary), `${node.slug}.geojson`, "application/geo+json")}
         >
           Download
         </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          onclick={() => store.setBoundary(node, undefined, "Clear boundary")}
-        >
+        <Button size="sm" variant="ghost" onclick={() => store.setBoundary(node, undefined, "Clear boundary")}>
           Clear
         </Button>
       {/if}
@@ -1031,16 +976,14 @@
       </p>
     {:else if store.editing}
       <p class="text-xs text-muted-foreground">
-        Drag a vertex to move it, drag a midpoint to add one, right-click a vertex to remove it.
-        Shift+click a vertex to select it, Shift+drag to select the vertices inside a lasso.
+        Drag a vertex to move it, drag a midpoint to add one, right-click a vertex to remove it. Shift+click a vertex to
+        select it, Shift+drag to select the vertices inside a lasso.
         {store.linkVertices ? "Vertices shared with neighbours move together." : ""}
         Polygons left with fewer than 3 vertices are removed.
       </p>
       <div class="flex flex-wrap items-center gap-1.5 text-xs">
         <span class="tabular-nums">{selectionCount} selected</span>
-        <Button size="xs" variant="outline" disabled={!selectionCount} onclick={removeSelection}>
-          Delete (Del)
-        </Button>
+        <Button size="xs" variant="outline" disabled={!selectionCount} onclick={removeSelection}>Delete (Del)</Button>
         <Button
           size="xs"
           variant="ghost"
@@ -1061,27 +1004,18 @@
         <div class="flex flex-col gap-2 rounded-md border p-2 text-xs">
           {#if selectionCount !== 2}
             <p class="text-muted-foreground">
-              Select exactly two vertices of the outline: the region is cut along the line between
-              them.
+              Select exactly two vertices of the outline: the region is cut along the line between them.
             </p>
           {:else if split?.error}
             <p class="text-rose-600">{split.error}</p>
           {:else}
-            <p class="text-muted-foreground">
-              The part in red becomes a new region, next to this one.
-            </p>
+            <p class="text-muted-foreground">The part in red becomes a new region, next to this one.</p>
             <div class="flex items-center gap-1.5">
-              <input
-                class={inputClass}
-                placeholder="Name of the new region"
-                bind:value={splitName}
-              />
+              <input class={inputClass} placeholder="Name of the new region" bind:value={splitName} />
               <code class="shrink-0 text-muted-foreground">{splitSlug || "slug"}</code>
             </div>
             <div class="flex items-center gap-2">
-              <Button size="xs" variant="outline" onclick={() => (splitSwap = !splitSwap)}
-                >Other side</Button
-              >
+              <Button size="xs" variant="outline" onclick={() => (splitSwap = !splitSwap)}>Other side</Button>
               <span class="flex-1"></span>
               <Button size="xs" variant="ghost" onclick={toggleSplit}>Cancel</Button>
               <Button size="xs" disabled={!splitSlug} onclick={applySplit}>Split</Button>
@@ -1145,13 +1079,9 @@
         </div>
 
         {#if selectedList.length > 0}
-          <div
-            class="flex max-h-36 flex-wrap gap-1 overflow-y-auto rounded border bg-background/90 p-1.5"
-          >
+          <div class="flex max-h-36 flex-wrap gap-1 overflow-y-auto rounded border bg-background/90 p-1.5">
             {#each selectedList as sel (sel.id)}
-              <span
-                class="inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-xs font-medium"
-              >
+              <span class="inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-xs font-medium">
                 <span class="max-w-[140px] truncate" title={nodeName(sel)}>{nodeName(sel)}</span>
                 <span class="tabular-nums text-muted-foreground">({sel.total})</span>
                 <button
@@ -1176,47 +1106,30 @@
           </div>
 
           {#if selectedList.length === 2}
-            <div
-              class="flex flex-col gap-1.5 rounded border border-rose-300 bg-rose-100/50 p-2 dark:bg-rose-900/30"
-            >
-              <div
-                class="flex items-center justify-between font-semibold text-rose-950 dark:text-rose-100"
-              >
+            <div class="flex flex-col gap-1.5 rounded border border-rose-300 bg-rose-100/50 p-2 dark:bg-rose-900/30">
+              <div class="flex items-center justify-between font-semibold text-rose-950 dark:text-rose-100">
                 <span>Merge at 2 Points</span>
                 <span class="text-[11px] font-normal text-muted-foreground">
                   {selectedPoints.length}/2 points selected
                 </span>
               </div>
               {#if selectedPoints.length === 2}
-                <p class="text-[11px] text-muted-foreground">
-                  Preview shows the bridge going from Point 1 to Point 2.
-                </p>
+                <p class="text-[11px] text-muted-foreground">Preview shows the bridge going from Point 1 to Point 2.</p>
                 <div class="flex flex-wrap items-center gap-1.5">
                   <Button size="xs" variant="outline" onclick={() => store.mergeSideIndex++}>
                     Flip side / Cycle connection
                   </Button>
-                  <Button
-                    size="xs"
-                    variant="ghost"
-                    onclick={() => (store.vertexSelection = new Map())}
-                  >
+                  <Button size="xs" variant="ghost" onclick={() => (store.vertexSelection = new Map())}>
                     Clear points
                   </Button>
-                  <Button size="xs" variant="default" onclick={applyMergeAt2Points}>
-                    Merge at 2 points
-                  </Button>
+                  <Button size="xs" variant="default" onclick={applyMergeAt2Points}>Merge at 2 points</Button>
                 </div>
               {:else}
                 <p class="text-[11px] text-muted-foreground">
                   Click 2 vertices on the map to bridge the 2 shapes between them.
                 </p>
                 {#if sharedNodesBetweenTwo.length >= 2}
-                  <Button
-                    size="xs"
-                    variant="outline"
-                    class="self-start"
-                    onclick={autoSelectCommonNodes}
-                  >
+                  <Button size="xs" variant="outline" class="self-start" onclick={autoSelectCommonNodes}>
                     Auto-select 2 common nodes ({sharedNodesBetweenTwo.length} found)
                   </Button>
                 {/if}
@@ -1226,9 +1139,7 @@
 
           {#if mergeType === "new"}
             <div class="flex flex-col gap-1.5">
-              <label for="new-region-name" class="font-medium text-muted-foreground"
-                >New region name</label
-              >
+              <label for="new-region-name" class="font-medium text-muted-foreground">New region name</label>
               <div class="flex items-center gap-1.5">
                 <input
                   id="new-region-name"
@@ -1243,20 +1154,14 @@
                   {#if merged}{polygons.length} polygon{polygons.length === 1 ? "" : "s"} ·
                   {/if}{totalPlaces} places
                 </span>
-                <Button
-                  size="xs"
-                  disabled={!newRegionSlug || selectedList.length < 2}
-                  onclick={applyMergeIntoNew}
-                >
+                <Button size="xs" disabled={!newRegionSlug || selectedList.length < 2} onclick={applyMergeIntoNew}>
                   Create "{newRegionSlug || "..."}"
                 </Button>
               </div>
             </div>
           {:else}
             <div class="flex flex-col gap-1.5">
-              <label for="merge-target-region" class="font-medium text-muted-foreground"
-                >Region to keep</label
-              >
+              <label for="merge-target-region" class="font-medium text-muted-foreground">Region to keep</label>
               <select id="merge-target-region" class={inputClass} bind:value={mergeTargetId}>
                 {#each selectedList as opt (opt.id)}
                   <option value={opt.id}>{nodeName(opt)} ({opt.slug})</option>
@@ -1267,11 +1172,7 @@
                   {#if merged}{polygons.length} polygon{polygons.length === 1 ? "" : "s"} ·
                   {/if}{totalPlaces} places
                 </span>
-                <Button
-                  size="xs"
-                  disabled={!mergeTargetId || selectedList.length < 2}
-                  onclick={applyMergeIntoExisting}
-                >
+                <Button size="xs" disabled={!mergeTargetId || selectedList.length < 2} onclick={applyMergeIntoExisting}>
                   Merge into selected
                 </Button>
               </div>
@@ -1315,11 +1216,7 @@
           <span class="flex-1 tabular-nums">
             {originalCount.toLocaleString()} → <b>{simplifiedCount.toLocaleString()}</b> vertices
           </span>
-          <Button
-            size="xs"
-            variant="ghost"
-            onclick={() => ((simplifyOpen = false), (store.preview = undefined))}
-          >
+          <Button size="xs" variant="ghost" onclick={() => ((simplifyOpen = false), (store.preview = undefined))}>
             Cancel
           </Button>
           <Button size="xs" onclick={applySimplification}>Apply</Button>
@@ -1330,9 +1227,7 @@
 
   <!-- Children -->
   <section class="flex flex-col gap-2">
-    <h3 class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-      Add a child region
-    </h3>
+    <h3 class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Add a child region</h3>
     <div class="flex items-center gap-1.5">
       <input class={inputClass} placeholder="Name" bind:value={childName} />
       <code class="shrink-0 text-xs text-muted-foreground">{childSlug || "slug"}</code>
@@ -1346,9 +1241,7 @@
       <Button size="xs" disabled={!childSlug} onclick={addChild}>Add</Button>
     </div>
     {#if node.boundary && !info.children}
-      <p class="text-xs text-muted-foreground">
-        Only leaves have a boundary: this region loses its own.
-      </p>
+      <p class="text-xs text-muted-foreground">Only leaves have a boundary: this region loses its own.</p>
     {/if}
   </section>
 
@@ -1357,8 +1250,6 @@
   {/if}
 
   {#if node.parent}
-    <Button size="sm" variant="destructive" class="self-start" onclick={remove}>
-      Remove this region
-    </Button>
+    <Button size="sm" variant="destructive" class="self-start" onclick={remove}>Remove this region</Button>
   {/if}
 </div>

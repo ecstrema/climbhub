@@ -1,6 +1,6 @@
 <script lang="ts">
-  import * as Sheet from "@/ui/sheet/index.js";
-  import { cn, type WithElementRef } from "$lib/utils.js";
+  import * as Sheet from "#components/ui/sheet/index.js";
+  import { cn, type WithElementRef } from "#lib/utils.js";
   import type { HTMLAttributes } from "svelte/elements";
   import { SIDEBAR_WIDTH_MOBILE } from "./constants.js";
   import { useSidebar } from "./context.svelte.js";
@@ -24,10 +24,7 @@
 
 {#if collapsible === "none"}
   <div
-    class={cn(
-      "bg-sidebar text-sidebar-foreground flex h-full w-(--sidebar-width) flex-col",
-      className,
-    )}
+    class={cn("bg-sidebar text-sidebar-foreground flex h-full w-(--sidebar-width) flex-col", className)}
     bind:this={ref}
     {...restProps}
   >
@@ -40,10 +37,7 @@
       data-sidebar="sidebar"
       data-slot="sidebar"
       data-mobile="true"
-      class={cn(
-        "bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden",
-        className,
-      )}
+      class={cn("bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden", className)}
       style="--sidebar-width: {SIDEBAR_WIDTH_MOBILE};"
       {side}
     >

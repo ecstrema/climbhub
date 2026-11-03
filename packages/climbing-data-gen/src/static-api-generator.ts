@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
+import { readFileSync, readdirSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import { join, dirname } from "path";
 import { createHash } from "crypto";
 
@@ -56,10 +56,7 @@ function writeNodeHashes(outApiDirectory: string, allElements: Map<string, OsmFe
     Array.from(allElements.entries())
       .filter(([, element]) => element.type === "node")
       .sort(([idA], [idB]) => idA.localeCompare(idB))
-      .map(([id, element]) => [
-        id,
-        createHash("sha256").update(JSON.stringify(element)).digest("hex"),
-      ]),
+      .map(([id, element]) => [id, createHash("sha256").update(JSON.stringify(element)).digest("hex")]),
   );
 
   writeFileSync(join(outApiDirectory, "node-hashes.json"), JSON.stringify(hashes));
@@ -137,9 +134,7 @@ function getRepresentativeCoordinates(
   }
   if (element.type === "relation" && element.members?.length > 0) {
     if (!element.members[0]) return;
-    const child = allElements.get(
-      getStaticIdentifier(element.members[0].type, element.members[0].ref),
-    );
+    const child = allElements.get(getStaticIdentifier(element.members[0].type, element.members[0].ref));
     if (child) return getRepresentativeCoordinates(child, allElements);
   }
 }
@@ -209,9 +204,7 @@ function writeStaticApi(
     // Outside of every region of @climbhub/reverse-geocoding-data: not in the API until a region
     // is added there
     if (!location) {
-      outsideRegions.push(
-        `${rootNode.type}/${rootNode.id} (${coordinates.lon},${coordinates.lat})`,
-      );
+      outsideRegions.push(`${rootNode.type}/${rootNode.id} (${coordinates.lon},${coordinates.lat})`);
       continue;
     }
 
@@ -271,13 +264,12 @@ function writeStaticApi(
 
   // Add info to the geographicTree api endpoints by iterating through it.
   writeChildrenDataToGeoTree([options.outApiDirectory], geographicTree, geolocator);
+
+  console.info("Writing static child, deep, and stats endpoints");
+  writeStaticApiMetadata(join(options.outApiDirectory, "world"));
 }
 
-function writeChildrenDataToGeoTree(
-  path: string[],
-  mapTree: MapTree,
-  geolocator: ReverseGeolocator,
-) {
+function writeChildrenDataToGeoTree(path: string[], mapTree: MapTree, geolocator: ReverseGeolocator) {
   for (const [childName, childMapTree] of mapTree.children) {
     const newPath = [...path, childName];
 
@@ -290,4 +282,68 @@ function writeChildrenDataToGeoTree(
 
     writeChildrenDataToGeoTree(newPath, childMapTree, geolocator);
   }
+}
+
+type DataJSONRecord = Record<string, DataJSON>;
+
+interface GeneratedDirectory {
+  data?: DataJSON;
+  totalRoutes: number;
+}
+
+const routeClimbingValues = new Set([
+  "route_bottom",
+  "route_top",
+  "route",
+  "route_start",
+  "boulder",
+  "bouldering",
+  "abseil_route",
+  "abseil",
+  "toprope",
+  "drytooling",
+]);
+
+function isRoute(data: DataJSON | undefined): boolean {
+  if (!data || data.type === "geographic" || !data.tags?.climbing) return false;
+  return data.tags.climbing.split(";").some((value) => routeClimbingValues.has(value.trim()));
+}
+
+function writeStaticApiMetadata(worldDirectory: string) {
+  function visit(directory: string, slug: string): GeneratedDirectory {
+    const dataPath = join(directory, "data.json");
+    const data = existsSync(dataPath) ? (JSON.parse(readFileSync(dataPath, "utf8")) as DataJSON) : undefined;
+    const childDirectories = readdirSync(directory, { withFileTypes: true }).filter((entry) => entry.isDirectory());
+    const children: DataJSONRecord = {};
+    const childResults: { slug: string; directory: string; result: GeneratedDirectory }[] = [];
+    let totalRoutes = 0;
+
+    for (const entry of childDirectories) {
+      const childSlug = slug ? `${slug}/${entry.name}` : entry.name;
+      const childDirectory = join(directory, entry.name);
+      const result = visit(childDirectory, childSlug);
+      childResults.push({ slug: childSlug, directory: childDirectory, result });
+
+      if (!result.data) continue;
+      children[childSlug] = result.data;
+      totalRoutes += isRoute(result.data) ? 1 : result.totalRoutes;
+    }
+
+    writeFileSync(join(directory, "children.json"), JSON.stringify(children));
+    writeFileSync(join(directory, "stats.json"), JSON.stringify({ totalRoutes }));
+
+    const deep: DataJSONRecord = {};
+    for (const child of childResults) {
+      Object.assign(
+        deep,
+        JSON.parse(readFileSync(join(child.directory, "children.json"), "utf8")) as DataJSONRecord,
+        JSON.parse(readFileSync(join(child.directory, "deep.json"), "utf8")) as DataJSONRecord,
+      );
+    }
+    writeFileSync(join(directory, "deep.json"), JSON.stringify(deep));
+
+    return { data, totalRoutes };
+  }
+
+  visit(worldDirectory, "");
 }

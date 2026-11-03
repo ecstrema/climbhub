@@ -1,19 +1,14 @@
-import { readFile } from "fs/promises";
 import { join } from "path";
 
-import { error, json } from "@sveltejs/kit";
-
 import type { RequestHandler } from "./$types";
-import { rootPath, withErrorHandler } from "../utils";
-import type { DataJSON } from "@climbhub/climbing-data-gen";
+import { jsonRawBuffer, readGeneratedJson, rootPath, withErrorHandler } from "../utils";
 
 export const GET: RequestHandler = async ({ params }) => {
   const path = join(rootPath, params.slug, "data.json");
 
   return withErrorHandler(async () => {
-    const data: DataJSON = JSON.parse(await readFile(path, { encoding: "utf-8" }));
-    return json(data);
-  })
+    return jsonRawBuffer(await readGeneratedJson(path));
+  });
 };
 
 export const prerender = true;

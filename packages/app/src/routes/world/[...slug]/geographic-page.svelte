@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { DataTree } from "$lib/types";
+  import type { DataTree } from "#lib/types.js";
   import ChildrenTable from "./children-table.svelte";
   import type { GeographicFolderElement } from "@climbhub/climbing-data-gen";
 

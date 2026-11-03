@@ -14,10 +14,7 @@ const GLOBAL_RETRY_DELAY = 60_000;
 const sleepBeforeGlobalRetry = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** Downloads and caches one worldwide Overpass result instead of splitting it into tiles. */
-export async function downloadClimbingData(
-  outputFilePath: string,
-  { force = false } = {},
-): Promise<string> {
+export async function downloadClimbingData(outputFilePath: string, { force = false } = {}): Promise<string> {
   if (!force && existsSync(outputFilePath)) {
     const cached = JSON.parse(await readFile(outputFilePath, "utf8"));
     if (Array.isArray(cached.elements)) {
@@ -40,8 +37,7 @@ export async function downloadClimbingData(
       break;
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
-      if (attempt >= GLOBAL_RETRIES)
-        throw new Error(`Failed to download worldwide climbing data: ${message}`);
+      if (attempt >= GLOBAL_RETRIES) throw new Error(`Failed to download worldwide climbing data: ${message}`);
       console.warn(
         `Overpass failed (${message.slice(0, 300)}), retrying in ${GLOBAL_RETRY_DELAY / 1000} s (${GLOBAL_RETRIES - attempt} tries left)`,
       );
@@ -244,9 +240,7 @@ export async function downloadOSMData(outputDir: string, worldPointsFile: string
 
   const missing = plan.tiles.filter((key) => !existsSync(getTileFile(outputDir, key)));
   if (missing.length === 0) {
-    console.log(
-      `OSM data of the ${plan.tiles.length} tiles already exists in ${outputDir}. Skipping download.`,
-    );
+    console.log(`OSM data of the ${plan.tiles.length} tiles already exists in ${outputDir}. Skipping download.`);
     return plan.tiles.map((key) => getTileFile(outputDir, key));
   }
   console.log(
@@ -265,9 +259,7 @@ export async function downloadOSMData(outputDir: string, worldPointsFile: string
       const body = await downloadTile(key);
       await writeFileAtomically(getTileFile(outputDir, key), body);
       done++;
-      console.log(
-        `  ${(body.length / 1e6).toFixed(1)} MB in ${((Date.now() - start) / 1000).toFixed(0)} s`,
-      );
+      console.log(`  ${(body.length / 1e6).toFixed(1)} MB in ${((Date.now() - start) / 1000).toFixed(0)} s`);
     } catch (e) {
       if (!(e instanceof TileTooLargeError) || getDepth(key) >= MAX_DEPTH) throw e;
       console.warn(`  Too large for Overpass (${e.message}), splitting it in 4`);

@@ -130,10 +130,7 @@ export interface VertexRef {
 }
 
 /** Calls `fn` for each ring of the boundary, with its address. */
-export function forEachRing(
-  boundary: Boundary,
-  fn: (ring: Position[], ref: Omit<VertexRef, "vertex">) => void,
-) {
+export function forEachRing(boundary: Boundary, fn: (ring: Position[], ref: Omit<VertexRef, "vertex">) => void) {
   boundary.features.forEach((feature, f) => {
     const geometry = feature.geometry;
     if (geometry?.type === "Polygon") {
@@ -213,9 +210,7 @@ export function positionKey(p: Position) {
 function segmentsCross(a: Position, b: Position, c: Position, d: Position) {
   const orientation = (p: Position, q: Position, r: Position) =>
     Math.sign((q[0]! - p[0]!) * (r[1]! - p[1]!) - (q[1]! - p[1]!) * (r[0]! - p[0]!));
-  return (
-    orientation(a, b, c) * orientation(a, b, d) < 0 && orientation(c, d, a) * orientation(c, d, b) < 0
-  );
+  return orientation(a, b, c) * orientation(a, b, d) < 0 && orientation(c, d, a) * orientation(c, d, b) < 0;
 }
 
 function ringArea(ring: Position[]) {
@@ -279,7 +274,13 @@ export function splitBoundary(boundary: Boundary, a: Position, b: Position): [Sp
     else geometry.coordinates[ref.polygon] = halves[keep]!;
     const part: Boundary = {
       type: "FeatureCollection",
-      features: [{ type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: halves[1 - keep]! } }],
+      features: [
+        {
+          type: "Feature",
+          properties: {},
+          geometry: { type: "Polygon", coordinates: halves[1 - keep]! },
+        },
+      ],
     };
     return { kept, part };
   };
@@ -348,13 +349,7 @@ function segmentDistanceSq(p: Position, a: Position, b: Position) {
 }
 
 /** Douglas-Peucker on `points[first..last]`, marking the kept points. Iterative to support huge rings. */
-function douglasPeucker(
-  points: Position[],
-  first: number,
-  last: number,
-  toleranceSq: number,
-  keep: Uint8Array,
-) {
+function douglasPeucker(points: Position[], first: number, last: number, toleranceSq: number, keep: Uint8Array) {
   const stack: [number, number][] = [[first, last]];
   while (stack.length) {
     const [start, end] = stack.pop()!;
@@ -549,9 +544,7 @@ export function toBoundary(geojson: any): Boundary {
           : [];
   return {
     type: "FeatureCollection",
-    features: features.filter(
-      (f) => f?.geometry?.type === "Polygon" || f?.geometry?.type === "MultiPolygon",
-    ),
+    features: features.filter((f) => f?.geometry?.type === "Polygon" || f?.geometry?.type === "MultiPolygon"),
   };
 }
 
@@ -596,7 +589,7 @@ export function dissolvePolygons(polygons: Rings): Rings | undefined {
   for (const polygon of polygons) {
     for (const [r, ring] of polygon.entries()) {
       // Outer rings counterclockwise, holes clockwise: the inside is always on the left
-      const reversed = (signedRingArea(ring) < 0) === (r === 0);
+      const reversed = signedRingArea(ring) < 0 === (r === 0);
       const n = ring.length - 1;
       for (let i = 0; i < n; i++) {
         let [a, b] = [ring[i]!, ring[i + 1]!];
@@ -821,11 +814,7 @@ export function mergeAdjacentPolygonsWithCommonNodes(polygons: Rings): Rings {
         let bestMerged: Position[] | undefined;
         let maxArea = Math.max(Math.abs(signedRingArea(ringA)), Math.abs(signedRingArea(ringB)));
 
-        const testPoints = [
-          shared[0]!,
-          shared[shared.length - 1]!,
-          shared[Math.floor(shared.length / 2)]!,
-        ];
+        const testPoints = [shared[0]!, shared[shared.length - 1]!, shared[Math.floor(shared.length / 2)]!];
         for (let pA = 0; pA < testPoints.length; pA++) {
           for (let pB = pA + 1; pB < testPoints.length; pB++) {
             const res = mergeRingsAtPoints(ringA, ringB, testPoints[pA]!, testPoints[pB]!);
@@ -874,7 +863,8 @@ export function mergeBoundariesAtPoints(
       const ring = polys[i]![0]!;
       const idx = findClosestVertex(ring, mid);
       const v = ring[idx]!;
-      const dx = v[0]! - mid[0]!, dy = v[1]! - mid[1]!;
+      const dx = v[0]! - mid[0]!,
+        dy = v[1]! - mid[1]!;
       const d = dx * dx + dy * dy;
       if (d < bestDist) {
         bestDist = d;
@@ -893,10 +883,7 @@ export function mergeBoundariesAtPoints(
   if (!merged) return;
 
   const mergedPoly: Position[][] = [merged.ring, ...polyA.slice(1), ...polyB.slice(1)];
-  const remainingPolys = [
-    ...polysA.filter((_, i) => i !== polyIdxA),
-    ...polysB.filter((_, i) => i !== polyIdxB),
-  ];
+  const remainingPolys = [...polysA.filter((_, i) => i !== polyIdxA), ...polysB.filter((_, i) => i !== polyIdxB)];
   const allPolys = [mergedPoly, ...remainingPolys];
 
   const properties = boundaryA.features[0]?.properties ?? boundaryB.features[0]?.properties ?? {};

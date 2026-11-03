@@ -1,8 +1,8 @@
 <script lang="ts">
   import SettingsIcon from "@lucide/svelte/icons/settings";
-  import * as DropdownMenu from "@/ui/dropdown-menu";
-  import { Button } from "@/ui/button";
-  import * as Tooltip from "@/ui/tooltip";
+  import * as DropdownMenu from "#components/ui/dropdown-menu";
+  import { Button } from "#components/ui/button/index.js";
+  import * as Tooltip from "#components/ui/tooltip";
   import { Tooltip as BitsUiTooltip } from "bits-ui";
 
   import { setMode, userPrefersMode } from "mode-watcher";
@@ -16,11 +16,8 @@
     type ScaleId,
   } from "@climbhub/holy-grade";
   import type { FromCurrent } from "./providers/types";
-  import {
-    getPreferredBoulderGradingScale,
-    getPreferredRouteGradingScale,
-  } from "./providers/settings.svelte";
-  import { getAppState } from "$lib/data/app-state";
+  import { getPreferredBoulderGradingScale, getPreferredRouteGradingScale } from "./providers/settings.svelte";
+  import { getAppState } from "#lib/data/app-state.js";
 
   const appState = getAppState();
 
@@ -88,19 +85,11 @@
       </DropdownMenu.Sub>
       <DropdownMenu.Sub>
         <DropdownMenu.SubTrigger>Route Grading Scale</DropdownMenu.SubTrigger>
-        {@render preferredScaleMenu(
-          getPreferredRouteGradingScale(),
-          allRouteScales,
-          getExampleRouteGrades,
-        )}
+        {@render preferredScaleMenu(getPreferredRouteGradingScale(), allRouteScales, getExampleRouteGrades)}
       </DropdownMenu.Sub>
       <DropdownMenu.Sub>
         <DropdownMenu.SubTrigger>Boulder Grading Scale</DropdownMenu.SubTrigger>
-        {@render preferredScaleMenu(
-          getPreferredBoulderGradingScale(),
-          allBoulderScales,
-          getExampleBoulderGrades,
-        )}
+        {@render preferredScaleMenu(getPreferredBoulderGradingScale(), allBoulderScales, getExampleBoulderGrades)}
       </DropdownMenu.Sub>
     </DropdownMenu.Group>
   </DropdownMenu.Content>

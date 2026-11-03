@@ -1,9 +1,9 @@
 <script lang="ts">
   import { mode } from "mode-watcher";
-  import { getPreferredRouteGradingScale } from "@/shell/providers/settings.svelte";
+  import { getPreferredRouteGradingScale } from "#components/shell/providers/settings.svelte";
   import { getScale, convertGrade } from "@climbhub/holy-grade";
-  import type { Grade } from "$lib/types";
-  import { getColorFromGrade } from "$lib/data/network/grade";
+  import type { Grade } from "#lib/types.js";
+  import { getColorFromGrade } from "#lib/data/network/grade.js";
 
   const {
     grade,

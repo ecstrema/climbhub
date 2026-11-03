@@ -1,27 +1,14 @@
-// Disables access to DOM typings like `HTMLElement` which are not available
-// inside a service worker and instantiates the correct globals
-/// <reference no-default-lib="true"/>
-/// <reference lib="esnext" />
-/// <reference lib="webworker" />
-
-// Ensures that the `$service-worker` import has proper type definitions
-// oxlint-disable-next-line typescript/triple-slash-reference
-/// <reference types="@sveltejs/kit" />
-
-// Only necessary if you have an import from `$env/static/public`
-/// <reference types="../.svelte-kit/ambient.d.ts" />
-
-import { build, files, version } from "$service-worker";
-
-// This gives `self` the correct types
-const self = globalThis.self as unknown as ServiceWorkerGlobalScope;
+import { self } from "$app/service-worker";
+import { version } from "$app/env";
+import { immutable, assets } from "$app/manifest";
+import { resolve } from "$app/paths";
 
 // Create a unique cache name for this deployment
 const APP_CACHE = `APP-${version}`;
 
 const ASSETS = [
-  ...build, // the app itself, without any json file
-  ...files, // everything in `static`
+  ...immutable.map((a) => resolve(a.path)), // the app itself
+  ...assets.map((a) => resolve(a.path)), // everything in `static`
 ];
 
 self.addEventListener("install", (event) => {

@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { cn } from "$lib/utils.js";
+  import { cn } from "#lib/utils.js";
   import type { HTMLTextareaAttributes } from "svelte/elements";
   import EditableTooltip from "./editable-tooltip.svelte";
-  import { getAppState } from "$lib/data/app-state";
+  import { getAppState } from "#lib/data/app-state.js";
 
   const appState = getAppState();
 

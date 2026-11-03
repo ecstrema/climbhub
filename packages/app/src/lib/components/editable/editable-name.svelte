@@ -11,10 +11,4 @@
   } = $props();
 </script>
 
-<EditableTag
-  tagKey="name"
-  {feature}
-  {featureSlug}
-  placeholder="Enter Name..."
-  class="text-2xl font-semibold"
-/>
+<EditableTag tagKey="name" {feature} {featureSlug} placeholder="Enter Name..." class="text-2xl font-semibold" />

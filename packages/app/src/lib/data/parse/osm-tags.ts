@@ -13,7 +13,7 @@ import {
   type ScaleId,
 } from "@climbhub/holy-grade";
 import type { Tags } from "osm-api";
-import type { Grade } from "$lib/types";
+import type { Grade } from "#lib/types.js";
 
 export type ProcessedTags = Partial<Record<OsmApi.Keys["keys"], (value: string) => boolean>>;
 
@@ -194,12 +194,7 @@ const routeClimbingValues = new Set([
 ]);
 const areaClimbingValues = new Set(["area", "crag"]);
 const gymClimbingValues = new Set(["indoor_wall", "artificial_wall", "wall", "gym"]);
-const gymLeisureValues = new Set([
-  "sports_centre",
-  "sports_hall",
-  "fitness_centre",
-  "sport_centre",
-]);
+const gymLeisureValues = new Set(["sports_centre", "sports_hall", "fitness_centre", "sport_centre"]);
 
 function hasClimbingValue(value: string | undefined, acceptedValues: ReadonlySet<string>) {
   if (!value) return false;

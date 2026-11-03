@@ -17,9 +17,7 @@ export function runOverpassQuery(query: string, signal?: AbortSignal): Promise<B
 
 function enqueue<T>(request: () => Promise<T>): Promise<T> {
   const result = queue.then(request);
-  queue = result
-    .catch(() => {})
-    .then(() => new Promise((resolve) => setTimeout(resolve, DELAY_BETWEEN_REQUESTS)));
+  queue = result.catch(() => {}).then(() => new Promise((resolve) => setTimeout(resolve, DELAY_BETWEEN_REQUESTS)));
   return result;
 }
 

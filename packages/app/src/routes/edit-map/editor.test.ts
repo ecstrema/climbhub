@@ -34,11 +34,7 @@ describe("EditorStore", () => {
 
   it("distinguishes new, modified, staged, and committed boundary states", () => {
     const store = new EditorStore(files, []);
-    const [area, b, c] = [
-      find(store, "world/a"),
-      find(store, "world/a/b"),
-      find(store, "world/a/c"),
-    ];
+    const [area, b, c] = [find(store, "world/a"), find(store, "world/a/b"), find(store, "world/a/c")];
     store.setGitStates({
       "world/a/b.geojson": "staged",
       "world/a/c.geojson": "committed",
@@ -93,10 +89,7 @@ describe("EditorStore", () => {
         geometry: { type: "Polygon", coordinates: [ring] },
       });
     };
-    const store = new EditorStore(
-      { "world/a.geojson": dense(0, 100), "world/b.geojson": dense(1, 1) },
-      [],
-    );
+    const store = new EditorStore({ "world/a.geojson": dense(0, 100), "world/b.geojson": dense(1, 1) }, []);
     const [a, b] = [find(store, "world/a"), find(store, "world/b")];
     const precise = await store.findCoasts(store.root);
     // 3 sides of 111 km on the sea, the 4th is the border with b
@@ -122,10 +115,7 @@ describe("EditorStore", () => {
         geometry: { type: "Polygon", coordinates: [ring] },
       });
     };
-    const store = new EditorStore(
-      { "world/a.geojson": dense(0, 50), "world/b.geojson": dense(1, 10) },
-      [],
-    );
+    const store = new EditorStore({ "world/a.geojson": dense(0, 50), "world/b.geojson": dense(1, 10) }, []);
     const a = find(store, "world/a");
     const origVertices = a.vertexCount;
     const result = store.simplifiedCoasts([a], { tolerance: 0.1, offsetDegrees: 0.2 });
@@ -140,7 +130,6 @@ describe("EditorStore", () => {
     store.undo();
     expect(a.vertexCount).toBe(origVertices);
   });
-
 
   it("renaming moves the files, and the undo moves them back", () => {
     const store = new EditorStore(files, []);
@@ -268,9 +257,7 @@ describe("EditorStore", () => {
       r,
       {
         type: "FeatureCollection",
-        features: [
-          { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [wide] } },
-        ],
+        features: [{ type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [wide] } }],
       },
       "test",
     );
@@ -296,11 +283,7 @@ describe("EditorStore", () => {
         { id: "n3", lon: 5.5, lat: 5.5, kind: "crag" },
       ],
     );
-    const [b, c, e] = [
-      find(store, "world/a/b"),
-      find(store, "world/a/c"),
-      find(store, "world/d/e"),
-    ];
+    const [b, c, e] = [find(store, "world/a/b"), find(store, "world/a/c"), find(store, "world/d/e")];
     const before = store.files();
     store.selected = c;
     store.merge(b, [c, e]);

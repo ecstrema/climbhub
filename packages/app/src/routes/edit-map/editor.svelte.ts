@@ -461,8 +461,7 @@ export class EditorStore {
   measureCoast(node: EditorNode, samples = 300): CoastInfo {
     const offset = 0.01;
     let segments = 0;
-    for (const polygon of boundaryPolygons(node.boundary))
-      for (const ring of polygon) segments += ring.length - 1;
+    for (const polygon of boundaryPolygons(node.boundary)) for (const ring of polygon) segments += ring.length - 1;
     const step = Math.max(1, Math.floor(segments / samples));
     let length = 0;
     let vertices = 0;
@@ -512,12 +511,7 @@ export class EditorStore {
   // Geometry edits
   // ---------------------------------------------------------------------------------------------
 
-  private pushUndo(
-    label: string,
-    nodes: EditorNode[],
-    removed?: EditorNode[],
-    created?: EditorNode[],
-  ) {
+  private pushUndo(label: string, nodes: EditorNode[], removed?: EditorNode[], created?: EditorNode[]) {
     const entry: UndoEntry = {
       label,
       removed,
@@ -538,12 +532,7 @@ export class EditorStore {
    * `removed` are the nodes of `nodes` that the operation removes from the tree.
    * `created` are newly created nodes to be detached on undo.
    */
-  beginEdit(
-    label: string,
-    nodes: EditorNode[],
-    removed?: EditorNode[],
-    created?: EditorNode[],
-  ) {
+  beginEdit(label: string, nodes: EditorNode[], removed?: EditorNode[], created?: EditorNode[]) {
     this.pushUndo(label, nodes, removed, created);
     const before = nodes.map((n) => ({ ...n.ownBBox }));
     return () => this.afterEdit(nodes, before);
@@ -615,10 +604,7 @@ export class EditorStore {
   removeVertices(node: EditorNode, positions: Position[]) {
     if (!node.boundary || !positions.length) return;
     const keys = new Set(positions.map(positionKey));
-    const area = positions.reduce(
-      (b, [x, y]) => mergeBBox(b, { x0: x!, x1: x!, y0: y!, y1: y! }),
-      emptyBBox(),
-    );
+    const area = positions.reduce((b, [x, y]) => mergeBBox(b, { x0: x!, x1: x!, y0: y!, y1: y! }), emptyBBox());
     const candidates = [node, ...(this.linkVertices ? this.neighbours(node, area) : [])];
     const targets = candidates.filter((n) =>
       boundaryPolygons(n.boundary).some((polygon) =>
@@ -709,12 +695,7 @@ export class EditorStore {
     parent.children.push(newNode);
     parent.children.sort(bySlug);
 
-    const done = this.beginEdit(
-      `Merge ${nodes.length} regions into ${slug}`,
-      [newNode, ...nodes],
-      nodes,
-      [newNode],
-    );
+    const done = this.beginEdit(`Merge ${nodes.length} regions into ${slug}`, [newNode, ...nodes], nodes, [newNode]);
 
     newNode.boundary = mergedBoundary;
     for (const node of nodes) this.detach(node, false);
@@ -776,11 +757,7 @@ export class EditorStore {
     } else {
       const keep = target === "A" ? nodeA : nodeB;
       const remove = target === "A" ? nodeB : nodeA;
-      const done = this.beginEdit(
-        `Merge ${remove.slug} into ${keep.slug} at 2 points`,
-        [keep, remove],
-        [remove],
-      );
+      const done = this.beginEdit(`Merge ${remove.slug} into ${keep.slug} at 2 points`, [keep, remove], [remove]);
       keep.boundary = res.boundary;
       this.detach(remove, false);
       this.mergeSelection = new Set();
@@ -855,10 +832,7 @@ export class EditorStore {
    * in the water that fully encompasses the original region, while keeping borders with
    * neighbouring regions 100% intact and not overlapping any neighbour.
    */
-  simplifiedCoasts(
-    nodes: EditorNode[],
-    options: { tolerance?: number; offsetDegrees?: number } = {},
-  ) {
+  simplifiedCoasts(nodes: EditorNode[], options: { tolerance?: number; offsetDegrees?: number } = {}) {
     const withBoundary = nodes.filter((n) => n.boundary);
     const area = withBoundary.reduce((b, n) => mergeBBox(b, n.ownBBox), emptyBBox());
     const group = new Set(withBoundary);
@@ -903,7 +877,6 @@ export class EditorStore {
     done();
   }
 
-
   // ---------------------------------------------------------------------------------------------
   // Structure and configuration edits
   // ---------------------------------------------------------------------------------------------
@@ -930,8 +903,7 @@ export class EditorStore {
   rename(node: EditorNode, slug: string) {
     const parent = node.parent;
     if (!parent) throw new Error("The world cannot be renamed");
-    if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug))
-      throw new Error(`Invalid slug "${slug}": a-z, 0-9 and -`);
+    if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)) throw new Error(`Invalid slug "${slug}": a-z, 0-9 and -`);
     if (slug === node.slug) return;
     if (parent.children.some((c) => c.slug === slug)) {
       throw new Error(`${nodePath(parent)}/${slug} already exists`);
@@ -975,9 +947,7 @@ export class EditorStore {
     // The entries removing nodes put them back: they stay valid while their parents exist
     this.undoStack = this.undoStack.filter((e) =>
       e.nodes.every((n) =>
-        e.removed?.includes(n.node)
-          ? this.nodesById.has(n.node.parent!.id)
-          : this.nodesById.has(n.node.id),
+        e.removed?.includes(n.node) ? this.nodesById.has(n.node.parent!.id) : this.nodesById.has(n.node.id),
       ),
     );
   }
@@ -1027,8 +997,7 @@ export class EditorStore {
     const files: DataFiles = {};
     for (const node of walk(this.root)) {
       if (!hasFile(node)) continue;
-      files[nodeFile(node)] =
-        !node.dirty && node.raw !== undefined ? node.raw : JSON.stringify(node.boundary);
+      files[nodeFile(node)] = !node.dirty && node.raw !== undefined ? node.raw : JSON.stringify(node.boundary);
     }
     return files;
   }
@@ -1051,12 +1020,7 @@ export class EditorStore {
   boundaryState(node: EditorNode): BoundaryState {
     const cached = this.stateCache.get(node);
     if (hasFile(node)) {
-      if (
-        cached &&
-        cached.dirty === node.dirty &&
-        cached.raw === node.raw &&
-        cached.gitVersion === this.gitVersion
-      ) {
+      if (cached && cached.dirty === node.dirty && cached.raw === node.raw && cached.gitVersion === this.gitVersion) {
         return cached.state;
       }
       const path = nodeFile(node);
@@ -1076,11 +1040,7 @@ export class EditorStore {
       return state;
     }
 
-    if (
-      cached &&
-      cached.revision === node.revision &&
-      cached.gitVersion === this.gitVersion
-    ) {
+    if (cached && cached.revision === node.revision && cached.gitVersion === this.gitVersion) {
       return cached.state;
     }
 

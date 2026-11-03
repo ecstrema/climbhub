@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { cn, type WithElementRef } from "$lib/utils.js";
+  import { cn, type WithElementRef } from "#lib/utils.js";
   import type { HTMLAttributes } from "svelte/elements";
   import { useSidebar } from "./context.svelte.js";
 
@@ -33,9 +33,7 @@
       return;
     }
 
-    const rootFontSize = Number.parseFloat(
-      window.getComputedStyle(document.documentElement).fontSize,
-    );
+    const rootFontSize = Number.parseFloat(window.getComputedStyle(document.documentElement).fontSize);
     const minWidth = 12 * rootFontSize;
     const maxWidth = Math.max(minWidth, 32 * rootFontSize);
     const side = sidebarElement.dataset.side === "right" ? "right" : "left";

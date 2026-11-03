@@ -186,168 +186,163 @@ describe("Grade mapping uniqueness rule", () => {
         if (grades.length > 1) {
           // If grades share a rank, they MUST be equivalent notations in YDS
           expect(scale.id).toBe("YDS");
-          const isYdsEquivalentPair = grades.every(
-            (g) =>
-              /5\.\d+[-+]?$/.test(g) ||
-              /5\.\d+[a-d](\/[a-d])?$/.test(g)
-          );
+          const isYdsEquivalentPair = grades.every((g) => /5\.\d+[-+]?$/.test(g) || /5\.\d+[a-d](\/[a-d])?$/.test(g));
           expect(isYdsEquivalentPair).toBe(true);
         }
       }
     }
   });
 
-describe("parseGrade / parseGradeWithDanger", () => {
-  it("parses UK trad grades with adjectival danger and technical difficulty", () => {
-    expect(parseGrade("E1 5b")).toEqual({
-      primary: { grade: "5b", scale: "UKTech" },
-      danger: { grade: "E1", scale: "UKAdj" },
-      raw: "E1 5b",
+  describe("parseGrade / parseGradeWithDanger", () => {
+    it("parses UK trad grades with adjectival danger and technical difficulty", () => {
+      expect(parseGrade("E1 5b")).toEqual({
+        primary: { grade: "5b", scale: "UKTech" },
+        danger: { grade: "E1", scale: "UKAdj" },
+        raw: "E1 5b",
+      });
+
+      expect(parseGrade("5b E1")).toEqual({
+        primary: { grade: "5b", scale: "UKTech" },
+        danger: { grade: "E1", scale: "UKAdj" },
+        raw: "5b E1",
+      });
+
+      expect(parseGrade("HVS 5a")).toEqual({
+        primary: { grade: "5a", scale: "UKTech" },
+        danger: { grade: "HVS", scale: "UKAdj" },
+        raw: "HVS 5a",
+      });
+
+      expect(parseGrade("VS 4c")).toEqual({
+        primary: { grade: "4c", scale: "UKTech" },
+        danger: { grade: "VS", scale: "UKAdj" },
+        raw: "VS 4c",
+      });
+
+      expect(parseGrade("E3 6a")).toEqual({
+        primary: { grade: "6a", scale: "UKTech" },
+        danger: { grade: "E3", scale: "UKAdj" },
+        raw: "E3 6a",
+      });
+
+      expect(parseGrade("E1/5b")).toEqual({
+        primary: { grade: "5b", scale: "UKTech" },
+        danger: { grade: "E1", scale: "UKAdj" },
+        raw: "E1/5b",
+      });
     });
 
-    expect(parseGrade("5b E1")).toEqual({
-      primary: { grade: "5b", scale: "UKTech" },
-      danger: { grade: "E1", scale: "UKAdj" },
-      raw: "5b E1",
+    it("parses YDS grades with protection/danger ratings", () => {
+      expect(parseGrade("5.10a R")).toEqual({
+        primary: { grade: "5.10a", scale: "YDS" },
+        danger: { grade: "R", scale: "YDSDanger" },
+        raw: "5.10a R",
+      });
+
+      expect(parseGrade("5.11b PG-13")).toEqual({
+        primary: { grade: "5.11b", scale: "YDS" },
+        danger: { grade: "PG-13", scale: "YDSDanger" },
+        raw: "5.11b PG-13",
+      });
+
+      expect(parseGrade("5.11b PG13")).toEqual({
+        primary: { grade: "5.11b", scale: "YDS" },
+        danger: { grade: "PG-13", scale: "YDSDanger" },
+        raw: "5.11b PG13",
+      });
+
+      expect(parseGrade("5.12c X")).toEqual({
+        primary: { grade: "5.12c", scale: "YDS" },
+        danger: { grade: "X", scale: "YDSDanger" },
+        raw: "5.12c X",
+      });
+
+      expect(parseGrade("5.10d R/X")).toEqual({
+        primary: { grade: "5.10d", scale: "YDS" },
+        danger: { grade: "R/X", scale: "YDSDanger" },
+        raw: "5.10d R/X",
+      });
+
+      expect(parseGrade("5.10a (PG-13)")).toEqual({
+        primary: { grade: "5.10a", scale: "YDS" },
+        danger: { grade: "PG-13", scale: "YDSDanger" },
+        raw: "5.10a (PG-13)",
+      });
+
+      expect(parseGrade("5.10a, R")).toEqual({
+        primary: { grade: "5.10a", scale: "YDS" },
+        danger: { grade: "R", scale: "YDSDanger" },
+        raw: "5.10a, R",
+      });
+
+      expect(parseGrade("5.10a/R")).toEqual({
+        primary: { grade: "5.10a", scale: "YDS" },
+        danger: { grade: "R", scale: "YDSDanger" },
+        raw: "5.10a/R",
+      });
     });
 
-    expect(parseGrade("HVS 5a")).toEqual({
-      primary: { grade: "5a", scale: "UKTech" },
-      danger: { grade: "HVS", scale: "UKAdj" },
-      raw: "HVS 5a",
+    it("parses bouldering and ice grades with danger ratings", () => {
+      expect(parseGrade("V7 X")).toEqual({
+        primary: { grade: "V7", scale: "Hueco" },
+        danger: { grade: "X", scale: "YDSDanger" },
+        raw: "V7 X",
+      });
+
+      expect(parseGrade("7A R")).toEqual({
+        primary: { grade: "7A", scale: "FB" },
+        danger: { grade: "R", scale: "YDSDanger" },
+        raw: "7A R",
+      });
+
+      expect(parseGrade("WI5 R")).toEqual({
+        primary: { grade: "WI5", scale: "WI" },
+        danger: { grade: "R", scale: "YDSDanger" },
+        raw: "WI5 R",
+      });
+
+      expect(parseGrade("M8 X")).toEqual({
+        primary: { grade: "M8", scale: "Mixed" },
+        danger: { grade: "X", scale: "YDSDanger" },
+        raw: "M8 X",
+      });
     });
 
-    expect(parseGrade("VS 4c")).toEqual({
-      primary: { grade: "4c", scale: "UKTech" },
-      danger: { grade: "VS", scale: "UKAdj" },
-      raw: "VS 4c",
+    it("parses standalone danger and standalone primary grades", () => {
+      expect(parseGrade("E2")).toEqual({
+        danger: { grade: "E2", scale: "UKAdj" },
+        raw: "E2",
+      });
+
+      expect(parseGrade("PG-13")).toEqual({
+        danger: { grade: "PG-13", scale: "YDSDanger" },
+        raw: "PG-13",
+      });
+
+      expect(parseGrade("6a")).toEqual({
+        primary: { grade: "6a", scale: "French" },
+        raw: "6a",
+      });
+
+      expect(parseGrade("5.10a")).toEqual({
+        primary: { grade: "5.10a", scale: "YDS" },
+        raw: "5.10a",
+      });
     });
 
-    expect(parseGrade("E3 6a")).toEqual({
-      primary: { grade: "6a", scale: "UKTech" },
-      danger: { grade: "E3", scale: "UKAdj" },
-      raw: "E3 6a",
+    it("supports scaleHint parameter", () => {
+      expect(parseGrade("6a", "French")?.primary?.scale).toBe("French");
+      expect(parseGrade("5b", "UKTech")?.primary?.scale).toBe("UKTech");
+      expect(parseGrade("5b", "French")?.primary?.scale).toBe("French");
     });
 
-    expect(parseGrade("E1/5b")).toEqual({
-      primary: { grade: "5b", scale: "UKTech" },
-      danger: { grade: "E1", scale: "UKAdj" },
-      raw: "E1/5b",
+    it("returns undefined for invalid strings", () => {
+      expect(parseGrade("")).toBeUndefined();
+      expect(parseGrade("not a grade")).toBeUndefined();
+    });
+
+    it("parseGradeWithDanger is an alias for parseGrade", () => {
+      expect(parseGradeWithDanger("E1 5b")).toEqual(parseGrade("E1 5b"));
     });
   });
-
-  it("parses YDS grades with protection/danger ratings", () => {
-    expect(parseGrade("5.10a R")).toEqual({
-      primary: { grade: "5.10a", scale: "YDS" },
-      danger: { grade: "R", scale: "YDSDanger" },
-      raw: "5.10a R",
-    });
-
-    expect(parseGrade("5.11b PG-13")).toEqual({
-      primary: { grade: "5.11b", scale: "YDS" },
-      danger: { grade: "PG-13", scale: "YDSDanger" },
-      raw: "5.11b PG-13",
-    });
-
-    expect(parseGrade("5.11b PG13")).toEqual({
-      primary: { grade: "5.11b", scale: "YDS" },
-      danger: { grade: "PG-13", scale: "YDSDanger" },
-      raw: "5.11b PG13",
-    });
-
-    expect(parseGrade("5.12c X")).toEqual({
-      primary: { grade: "5.12c", scale: "YDS" },
-      danger: { grade: "X", scale: "YDSDanger" },
-      raw: "5.12c X",
-    });
-
-    expect(parseGrade("5.10d R/X")).toEqual({
-      primary: { grade: "5.10d", scale: "YDS" },
-      danger: { grade: "R/X", scale: "YDSDanger" },
-      raw: "5.10d R/X",
-    });
-
-    expect(parseGrade("5.10a (PG-13)")).toEqual({
-      primary: { grade: "5.10a", scale: "YDS" },
-      danger: { grade: "PG-13", scale: "YDSDanger" },
-      raw: "5.10a (PG-13)",
-    });
-
-    expect(parseGrade("5.10a, R")).toEqual({
-      primary: { grade: "5.10a", scale: "YDS" },
-      danger: { grade: "R", scale: "YDSDanger" },
-      raw: "5.10a, R",
-    });
-
-    expect(parseGrade("5.10a/R")).toEqual({
-      primary: { grade: "5.10a", scale: "YDS" },
-      danger: { grade: "R", scale: "YDSDanger" },
-      raw: "5.10a/R",
-    });
-  });
-
-  it("parses bouldering and ice grades with danger ratings", () => {
-    expect(parseGrade("V7 X")).toEqual({
-      primary: { grade: "V7", scale: "Hueco" },
-      danger: { grade: "X", scale: "YDSDanger" },
-      raw: "V7 X",
-    });
-
-    expect(parseGrade("7A R")).toEqual({
-      primary: { grade: "7A", scale: "FB" },
-      danger: { grade: "R", scale: "YDSDanger" },
-      raw: "7A R",
-    });
-
-    expect(parseGrade("WI5 R")).toEqual({
-      primary: { grade: "WI5", scale: "WI" },
-      danger: { grade: "R", scale: "YDSDanger" },
-      raw: "WI5 R",
-    });
-
-    expect(parseGrade("M8 X")).toEqual({
-      primary: { grade: "M8", scale: "Mixed" },
-      danger: { grade: "X", scale: "YDSDanger" },
-      raw: "M8 X",
-    });
-  });
-
-  it("parses standalone danger and standalone primary grades", () => {
-    expect(parseGrade("E2")).toEqual({
-      danger: { grade: "E2", scale: "UKAdj" },
-      raw: "E2",
-    });
-
-    expect(parseGrade("PG-13")).toEqual({
-      danger: { grade: "PG-13", scale: "YDSDanger" },
-      raw: "PG-13",
-    });
-
-    expect(parseGrade("6a")).toEqual({
-      primary: { grade: "6a", scale: "French" },
-      raw: "6a",
-    });
-
-    expect(parseGrade("5.10a")).toEqual({
-      primary: { grade: "5.10a", scale: "YDS" },
-      raw: "5.10a",
-    });
-  });
-
-  it("supports scaleHint parameter", () => {
-    expect(parseGrade("6a", "French")?.primary?.scale).toBe("French");
-    expect(parseGrade("5b", "UKTech")?.primary?.scale).toBe("UKTech");
-    expect(parseGrade("5b", "French")?.primary?.scale).toBe("French");
-  });
-
-  it("returns undefined for invalid strings", () => {
-    expect(parseGrade("")).toBeUndefined();
-    expect(parseGrade("not a grade")).toBeUndefined();
-  });
-
-  it("parseGradeWithDanger is an alias for parseGrade", () => {
-    expect(parseGradeWithDanger("E1 5b")).toEqual(parseGrade("E1 5b"));
-  });
-});
-
 });

@@ -1,11 +1,11 @@
 <script lang="ts">
-  import EditableName from "@/editable/editable-name.svelte";
-  import EditableDescription from "$lib/components/editable/editable-description.svelte";
-  import EditableTags from "$lib/components/editable/editable-tags.svelte";
-  import CommonsTopo from "$lib/components/commons-topo.svelte";
-  import type { DataTree } from "$lib/types";
+  import EditableName from "#components/editable/editable-name.svelte";
+  import EditableDescription from "#lib/components/editable/editable-description.svelte";
+  import EditableTags from "#lib/components/editable/editable-tags.svelte";
+  import CommonsTopo from "#lib/components/commons-topo.svelte";
+  import type { DataTree } from "#lib/types.js";
   import type { OsmFeature } from "osm-api";
-  import { getCoordinates } from "$lib/data/parse/osm-tags";
+  import { getCoordinates } from "#lib/data/parse/osm-tags.js";
   import BuildingIcon from "@lucide/svelte/icons/building";
 
   let {

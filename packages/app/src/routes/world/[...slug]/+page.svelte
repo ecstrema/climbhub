@@ -5,14 +5,14 @@
   import GymPage from "./gym-page.svelte";
   import RoutePage from "./route-page.svelte";
   import type { GeographicFolderElement } from "@climbhub/climbing-data-gen";
-  import type { DataTree } from "$lib/types";
-  import { featureToType } from "$lib/data/parse/data";
+  import type { DataTree } from "#lib/types.js";
+  import { featureToType } from "#lib/data/parse/data.js";
   import type { OsmFeature } from "osm-api";
   import { resolve } from "$app/paths";
   import type { PageProps } from "./$types";
-  import OsmMissingFeature from "@/shell/osm-missing-feature.svelte";
+  import OsmMissingFeature from "#components/shell/osm-missing-feature.svelte";
   import { getStaticIdentifier } from "@climbhub/common";
-  import { getAppState } from "$lib/data/app-state";
+  import { getAppState } from "#lib/data/app-state.js";
 
   let { params }: PageProps = $props();
 

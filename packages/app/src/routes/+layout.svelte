@@ -1,6 +1,6 @@
 <script lang="ts">
   import { updated } from "$app/state";
-  import { Button } from "@/ui/button";
+  import { Button } from "#components/ui/button/index.js";
 
   // Sveltekit checks for updates on navigation. We need this for idle pages.
   $effect(() => {

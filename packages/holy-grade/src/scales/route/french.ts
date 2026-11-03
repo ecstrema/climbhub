@@ -8,19 +8,7 @@ import { buildReverseTable, normalizeFromGradeMappings } from "../builder";
 // text back in here.
 
 const gradeMapping: GradeMapping = new Map([]);
-const variantsPerNumber: string[] = [
-  "a",
-  "a/+",
-  "a+",
-  "a+/b",
-  "b",
-  "b/+",
-  "b+",
-  "b+/c",
-  "c",
-  "c/+",
-  "c+",
-];
+const variantsPerNumber: string[] = ["a", "a/+", "a+", "a+/b", "b", "b/+", "b+", "b+/c", "c", "c/+", "c+"];
 for (let n = 1; n <= 9; n++) {
   for (let qualifierIndex = 0; qualifierIndex < variantsPerNumber.length; qualifierIndex++) {
     const qualifier = variantsPerNumber[qualifierIndex];

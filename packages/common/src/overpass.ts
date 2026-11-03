@@ -4,9 +4,7 @@ export const OVERPASS_ENDPOINTS = [
   "https://overpass-api.de/api/interpreter",
 ] as const;
 
-export async function tryOverpassInstances<T>(
-  request: (endpoint: string) => Promise<T>,
-): Promise<T> {
+export async function tryOverpassInstances<T>(request: (endpoint: string) => Promise<T>): Promise<T> {
   const failures: string[] = [];
 
   for (const endpoint of OVERPASS_ENDPOINTS) {

@@ -25,6 +25,7 @@ declare global {
         | "type"
         | "official_name"
         | "description"
+        | "wikimedia_commons"
         // for changesets
         | "created_by"
         | "comment";
@@ -39,8 +40,6 @@ declare global {
 }
 
 export declare const OVERPASS_ENDPOINTS: readonly string[];
-export declare function tryOverpassInstances<T>(
-  request: (endpoint: string) => Promise<T>,
-): Promise<T>;
+export declare function tryOverpassInstances<T>(request: (endpoint: string) => Promise<T>): Promise<T>;
 
 export {};

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getAppState } from "$lib/data/app-state";
+  import { getAppState } from "#lib/data/app-state.js";
   import EditableTextarea from "./editable-textarea.svelte";
   import type { OsmFeature } from "osm-api";
   import type { ComponentProps } from "svelte";

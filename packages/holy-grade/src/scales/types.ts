@@ -42,15 +42,7 @@ export interface Scale<T extends ScaleId = ScaleId> {
   usageCount?: number;
 }
 
-export type RouteScaleId =
-  | "French"
-  | "YDS"
-  | "UIAA"
-  | "Saxon"
-  | "UKTech"
-  | "Scandinavian"
-  | "Ewbank"
-  | "Polish";
+export type RouteScaleId = "French" | "YDS" | "UIAA" | "Saxon" | "UKTech" | "Scandinavian" | "Ewbank" | "Polish";
 export type BoulderScaleId = "FB" | "Hueco";
 export type IceScaleId = "WI" | "Mixed" | "DryTooling";
 export type AidScaleId = "Aid";
@@ -71,5 +63,3 @@ export interface ParsedGrade {
   /** The raw input string, trimmed */
   raw: string;
 }
-
-

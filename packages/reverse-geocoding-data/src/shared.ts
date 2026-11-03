@@ -10,17 +10,19 @@ export const DATA_DIR_IN_REPO = "packages/reverse-geocoding-data/data";
 export const LARGE_BOUNDARY_BYTES = 50 * 1024;
 
 export function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    // Letters that are not an accented letter, so that NFD does not keep their base letter
-    .replace(/ß/g, "ss")
-    .replace(/æ/g, "ae")
-    .replace(/œ/g, "oe")
-    .replace(/ø/g, "o")
-    .replace(/ł/g, "l")
-    .replace(/đ/g, "d")
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[–—\s]+/g, "-")
-    .replace(/[^a-z0-9-]/g, "");
+  return (
+    text
+      .toLowerCase()
+      // Letters that are not an accented letter, so that NFD does not keep their base letter
+      .replace(/ß/g, "ss")
+      .replace(/æ/g, "ae")
+      .replace(/œ/g, "oe")
+      .replace(/ø/g, "o")
+      .replace(/ł/g, "l")
+      .replace(/đ/g, "d")
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/[–—\s]+/g, "-")
+      .replace(/[^a-z0-9-]/g, "")
+  );
 }
