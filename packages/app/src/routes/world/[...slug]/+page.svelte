@@ -12,6 +12,9 @@
   import OsmMissingFeature from "#components/shell/osm-missing-feature.svelte";
   import { getStaticIdentifier } from "@climbhub/common";
   import { getAppState } from "#lib/data/app-state.js";
+  import { afterNavigate, replaceState } from "$app/navigation";
+  import { page } from "$app/state";
+  import { untrack } from "svelte";
 
   let { params }: PageProps = $props();
 
@@ -19,8 +22,38 @@
 
   const appState = getAppState();
 
-  let item = $derived(appState.currentNode.current);
+  let queriedItem = $state<{ item: DataTree<OsmFeature>; slug: string }>();
+  let lastQueryId: string | null | undefined;
+  $effect(() => {
+    const id = page.url.searchParams.get("id");
+    // The tree walk must not subscribe this effect to every node
+    const found = untrack(() => {
+      if (!id) return undefined;
+      const feature = appState.currentNode.current.feature;
+      if (feature.type !== "geographic" && `${feature.type}-${feature.id}` === id) return undefined;
+      return appState.findOsmItemById(id);
+    });
+    if (found) queriedItem = found;
+    else if (id !== lastQueryId) queriedItem = undefined;
+    lastQueryId = id;
+  });
+  let item = $derived(queriedItem?.item ?? appState.currentNode.current);
+  const itemSlug = $derived(queriedItem?.slug ?? slug);
   const itemType = $derived(featureToType(item.feature));
+
+  // Shared links carry the OSM id so the item can be found if its path changes.
+  // Not an effect: replaceState updates page.url, which would re-trigger it.
+  afterNavigate(() => {
+    untrack(() => {
+      if (item.feature.type === "geographic") return;
+      const id = `${item.feature.type}-${item.feature.id}`;
+      if (page.url.searchParams.get("id") === id && !page.url.searchParams.has("osm")) return;
+      const url = new URL(page.url.href);
+      url.searchParams.delete("osm");
+      url.searchParams.set("id", id);
+      replaceState(url, page.state);
+    });
+  });
 
   const isFeatureDeletedUpstream = $derived.by(() => {
     if (item.feature.type === "geographic") return false;
@@ -44,11 +77,11 @@
 {:else if itemType === "geographic"}
   <GeographicPage bind:item={item as DataTree<GeographicFolderElement>} />
 {:else if itemType === "area"}
-  <AreaPage bind:item={item as DataTree<OsmFeature>} {slug} />
+  <AreaPage bind:item={item as DataTree<OsmFeature>} slug={itemSlug} />
 {:else if itemType === "route"}
-  <RoutePage bind:item={item as DataTree<OsmFeature>} {slug} />
+  <RoutePage bind:item={item as DataTree<OsmFeature>} slug={itemSlug} />
 {:else if itemType === "gym"}
-  <GymPage bind:item={item as DataTree<OsmFeature>} {slug} />
+  <GymPage bind:item={item as DataTree<OsmFeature>} slug={itemSlug} />
 {:else}
-  <ComponentParseFailed feature={item.feature} featureSlug={slug} />
+  <ComponentParseFailed feature={item.feature} featureSlug={itemSlug} />
 {/if}

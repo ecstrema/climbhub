@@ -17,7 +17,7 @@
   const { children, params, data }: WithChildren<LayoutProps> & { data: LayoutLoadType } = $props();
 </script>
 
-<AppProvider slug={params.slug} currentItem={data.currentItem} additionalDataJSON={data.additionalData}>
+<AppProvider slug={data.slug} currentItem={data.currentItem} additionalDataJSON={data.additionalData}>
   <Head />
   <Sidebar.Provider>
     <AppSidebar />

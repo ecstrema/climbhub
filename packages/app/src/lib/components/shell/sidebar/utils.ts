@@ -3,6 +3,7 @@ import { getGradeReference } from "#lib/data/parse/osm-tags.js";
 import type { DataTree } from "#lib/types.js";
 import type { OsmFeature } from "osm-api";
 import { getStaticIdentifier, type BasicOsmType } from "@climbhub/common";
+import { resolve } from "$app/paths";
 import { createContext } from "svelte";
 import { SvelteMap } from "svelte/reactivity";
 import type { FromCurrent } from "../providers/types";
@@ -10,8 +11,17 @@ import type { FromCurrent } from "../providers/types";
 export type SortedChildren = Record<ItemType | "other", string[]>;
 export type ReorderableType = "route" | "area";
 
+export function getItemUrl(parentSlug: string, feature: OsmFeature): string {
+  const pathSlug = parentSlug
+    .split("/")
+    .map((segment) => segment.replace(/~relation--?\d+$/, ""))
+    .join("/");
+  return `${resolve("/world/[...slug]", { slug: pathSlug })}?id=${feature.type}-${feature.id}`;
+}
+
 const ORDER_STORAGE_KEY = "climbhub:sidebar-orders";
 const orderOverrides = new SvelteMap<string, Partial<Record<ReorderableType, string[]>>>();
+const dropTargets = new SvelteMap<string, "before" | "after">();
 let draggedChild: { parentSlug: string; type: ReorderableType; slug: string } | undefined;
 
 export function restoreSidebarOrders() {
@@ -47,6 +57,7 @@ export function getSidebarChildren(item: DataTree, parentSlug: string): SortedCh
 
 export function startSidebarDrag(parentSlug: string, type: ReorderableType, slug: string) {
   draggedChild = { parentSlug, type, slug };
+  dropTargets.clear();
 }
 
 export function canDropSidebarChild(parentSlug: string, type: ReorderableType, slug: string): boolean {
@@ -56,7 +67,27 @@ export function canDropSidebarChild(parentSlug: string, type: ReorderableType, s
     draggedChild.slug !== slug;
 }
 
-export function dropSidebarChild(parent: DataTree, parentSlug: string, type: ReorderableType, targetSlug: string) {
+export function getSidebarDropPosition(slug: string): "before" | "after" | undefined {
+  return dropTargets.get(slug);
+}
+
+export function setSidebarDropPosition(slug: string, position: "before" | "after") {
+  if (dropTargets.size === 1 && dropTargets.get(slug) === position) return;
+  dropTargets.clear();
+  dropTargets.set(slug, position);
+}
+
+export function clearSidebarDropPosition(slug: string) {
+  dropTargets.delete(slug);
+}
+
+export function dropSidebarChild(
+  parent: DataTree,
+  parentSlug: string,
+  type: ReorderableType,
+  targetSlug: string,
+  insertAfter: boolean,
+): string[] | undefined {
   if (!canDropSidebarChild(parentSlug, type, targetSlug)) return;
   const ordered = getSidebarChildren(parent, parentSlug)?.[type];
   if (!ordered) return;
@@ -66,24 +97,41 @@ export function dropSidebarChild(parent: DataTree, parentSlug: string, type: Reo
   const targetIndex = next.indexOf(targetSlug);
   if (sourceIndex === -1 || targetIndex === -1) return;
   const [moved] = next.splice(sourceIndex, 1);
-  next.splice(sourceIndex < targetIndex ? targetIndex - 1 : targetIndex, 0, moved!);
+  const insertionIndex = targetIndex + (sourceIndex < targetIndex ? -1 : 0) + (insertAfter ? 1 : 0);
+  next.splice(insertionIndex, 0, moved!);
 
-  orderOverrides.set(parentSlug, { ...orderOverrides.get(parentSlug), [type]: next });
-  try {
-    localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(Object.fromEntries(orderOverrides)));
-  } catch {
-    // The in-memory order still works when storage is unavailable.
+  const overrides = orderOverrides.get(parentSlug);
+  if (parent.feature.type === "relation") {
+    if (overrides?.[type]) {
+      const { [type]: _removed, ...remaining } = overrides;
+      if (Object.keys(remaining).length > 0) orderOverrides.set(parentSlug, remaining);
+      else orderOverrides.delete(parentSlug);
+      persistSidebarOrders();
+    }
+  } else {
+    orderOverrides.set(parentSlug, { ...overrides, [type]: next });
+    persistSidebarOrders();
   }
+  return next;
 }
 
 export function endSidebarDrag() {
   draggedChild = undefined;
+  dropTargets.clear();
 }
 
 function applyOrder(children: string[], order: string[] | undefined): string[] {
   if (!order?.length) return children;
   const available = new Set(children);
   return [...order.filter((slug) => available.has(slug)), ...children.filter((slug) => !order.includes(slug))];
+}
+
+function persistSidebarOrders() {
+  try {
+    localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(Object.fromEntries(orderOverrides)));
+  } catch {
+    // The in-memory order still works when storage is unavailable.
+  }
 }
 
 /** Sorts the children and gives back the ordered item slugs */

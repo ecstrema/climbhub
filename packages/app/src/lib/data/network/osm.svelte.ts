@@ -1,4 +1,4 @@
-import type { Key, OsmFeature, OsmChange, UploadPhase, UploadResult, OsmFeatureType } from "osm-api";
+import type { Key, OsmFeature, OsmChange, UploadPhase, UploadResult, OsmFeatureType, OsmRelation } from "osm-api";
 
 import { isLoggedIn, login, logout, uploadChangeset, getFeature as getFeatureOsm } from "osm-api";
 
@@ -9,6 +9,7 @@ import type { DataTree } from "#lib/types.js";
 import { browser } from "$app/env";
 import { SvelteMap } from "svelte/reactivity";
 import type { TypedMap } from "#lib/helpers/types.js";
+import { snapshot } from "#lib/helpers/svelte.svelte.js";
 
 /**
  * Maps slugs to a feature diff
@@ -56,6 +57,7 @@ export type FeatureDiff =
       lat?: Diff<number | undefined>;
       lon?: Diff<number | undefined>;
       type?: Diff<OsmFeatureType>;
+      members?: Diff<OsmRelation["members"]>;
     }>;
 
 /**
@@ -174,6 +176,13 @@ export class OsmUser {
     const res: FeatureDiff = new Map();
 
     if (initial.type !== final.type) res.set("type", { initial: initial.type, final: final.type });
+    if (
+      initial.type === "relation" &&
+      final.type === "relation" &&
+      !sameRelationMembers(initial.members, final.members)
+    ) {
+      res.set("members", { initial: initial.members, final: final.members });
+    }
     // @ts-expect-error This is only valid for nodes, but will work for all types
     if (initial.lat !== final.lat) res.set("lat", { initial: initial.lat, final: final.lat });
     // @ts-expect-error This is only valid for nodes, but will work for all types
@@ -297,6 +306,9 @@ export class OsmUser {
   /** Integrate the final feature into initial, in a shallow fashion, so the item keeps its reactive properties. */
   #shallowIntegrateChanges(initial: OsmFeature, final: OsmFeature) {
     if (initial.type !== final.type) initial.type = final.type;
+    if (initial.type === "relation" && final.type === "relation") {
+      initial.members = snapshot(final.members);
+    }
     // @ts-expect-error This is only valid for nodes, but will work for all types
     if (initial.lat !== final.lat) initial.lat = final.lat;
     // @ts-expect-error This is only valid for nodes, but will work for all types
@@ -368,6 +380,16 @@ export class OsmUser {
     integrateProperty("type");
     integrateProperty("lat");
     integrateProperty("lon");
+
+    const upstreamMembers = upstreamDiff.get("members");
+    if (upstreamMembers && localFinal.type === "relation") {
+      const localMembers = localDiff.get("members");
+      if (!localMembers || sameRelationMembers(localMembers.final, upstreamMembers.final)) {
+        localFinal.members = snapshot(upstreamMembers.final);
+      } else {
+        console.warn("Relation members changed upstream and locally. Keeping local.");
+      }
+    }
 
     const upstreamTags = upstreamDiff.get("tags");
 
@@ -445,4 +467,12 @@ export class OsmUser {
     }
     item.feature = refreshedFeature;
   }
+}
+
+function sameRelationMembers(a: OsmRelation["members"], b: OsmRelation["members"]): boolean {
+  return a.length === b.length && a.every((member, index) => sameRelationMember(member, b[index]!));
+}
+
+function sameRelationMember(a: OsmRelation["members"][number], b: OsmRelation["members"][number]): boolean {
+  return a.type === b.type && a.ref === b.ref && a.role === b.role;
 }

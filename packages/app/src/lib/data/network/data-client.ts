@@ -25,6 +25,13 @@ class DataClient {
     this.#localNodes.delete(slug);
   }
 
+  getLocalSlugByOsmId(id: string): string | undefined {
+    for (const [slug, node] of this.#localNodes) {
+      const feature = node.feature;
+      if (feature.type !== "geographic" && `${feature.type}-${feature.id}` === id) return slug;
+    }
+  }
+
   private async localReady(): Promise<boolean> {
     if (!browser) return false;
     if (localDb.status === "ready") return true;

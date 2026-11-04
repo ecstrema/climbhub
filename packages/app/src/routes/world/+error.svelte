@@ -14,9 +14,9 @@
   let nearest = $state<{ slug: string; feature: DataJSON } | undefined>();
   let searching = $state(true);
 
-  /** Current slug of the OSM feature referenced by the last segment of the slug, if it still exists. */
-  async function findByOsmId(candidate: string): Promise<string | undefined> {
-    const osm = parseOsmPathSegment(candidate.split("/").at(-1) ?? "");
+  /** Current slug of the OSM feature referenced by a path segment or an `id` query value, if it still exists. */
+  async function findByOsmId(reference: string): Promise<string | undefined> {
+    const osm = parseOsmPathSegment(reference);
     if (!osm) return undefined;
     const res = await fetch(`${resolve("/").replace(/\/$/, "")}/api/${osmIndexFile(osm.type, osm.id)}`);
     if (!res.ok) return undefined;
@@ -26,23 +26,21 @@
 
   // The page itself may have moved: its OSM id is found again. Otherwise walks up until a page exists.
   onMount(async () => {
-    let candidate: string | undefined = slug;
+    const id = page.url.searchParams.get("id");
+    const movedTo = id ? await findByOsmId(id) : undefined;
+    if (movedTo !== undefined && (await dataClient.getNode(movedTo))) {
+      await goto(resolve("/world/[...slug]", { slug: movedTo }), { replaceState: true });
+      return;
+    }
+
+    let candidate = getParentSlug(slug);
     while (candidate !== undefined) {
-      const movedTo = await findByOsmId(candidate);
-      if (movedTo !== undefined && (await dataClient.getNode(movedTo))) {
-        if (candidate === slug) {
-          await goto(resolve("/world/[...slug]", { slug: movedTo }), { replaceState: true });
-          return;
-        }
-        nearest = { slug: movedTo, feature: (await dataClient.getNode(movedTo))! };
-        break;
-      }
-      candidate = getParentSlug(candidate);
-      const feature = candidate === undefined ? undefined : await dataClient.getNode(candidate);
-      if (candidate !== undefined && feature) {
+      const feature = await dataClient.getNode(candidate);
+      if (feature) {
         nearest = { slug: candidate, feature };
         break;
       }
+      candidate = getParentSlug(candidate);
     }
     searching = false;
   });

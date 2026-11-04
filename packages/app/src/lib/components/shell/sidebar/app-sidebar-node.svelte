@@ -22,14 +22,18 @@
   import { getAppState } from "#lib/data/app-state.js";
   import {
     canDropSidebarChild,
+    clearSidebarDropPosition,
     dropSidebarChild,
     endSidebarDrag,
+    getItemUrl,
+    getSidebarDropPosition,
     getSearchFilter,
+    setSidebarDropPosition,
     startSidebarDrag,
     type ReorderableType,
   } from "./utils";
   import { getParentSlug } from "#lib/helpers/slug.js";
-  import { goto } from "$app/navigation";
+  import { replaceState } from "$app/navigation";
   import GripVerticalIcon from "@lucide/svelte/icons/grip-vertical";
 
   let {
@@ -46,7 +50,11 @@
   const breadcrumbSlugs = $derived(appState.breadcrumbs.slugs);
   const tree = $derived(appState.tree);
 
-  const isCurrentPage = $derived((page.params.slug ?? "") === slug);
+  const isCurrentPage = $derived(
+    (page.params.slug ?? "") === slug ||
+      (item.feature.type !== "geographic" &&
+        page.url.searchParams.get("id") === `${item.feature.type}-${item.feature.id}`),
+  );
   // Check if this specific node is part of the active path being viewed
   const isActivePath = $derived(isCurrentPage || breadcrumbSlugs.some((s) => s === slug));
 
@@ -96,6 +104,7 @@
     itemType === "route" ? "route" : itemType === "area" ? "area" : undefined,
   );
   const parentSlug = $derived(getParentSlug(slug) ?? "");
+  const dropPosition = $derived(getSidebarDropPosition(slug));
 
   let ref = $state<HTMLElement | null>(null);
 
@@ -113,13 +122,28 @@
     if (!reorderType || !canDropSidebarChild(parentSlug, reorderType, slug)) return;
     event.preventDefault();
     if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+    const target = event.currentTarget as HTMLElement;
+    const bounds = target.getBoundingClientRect();
+    setSidebarDropPosition(slug, event.clientY >= bounds.top + bounds.height / 2 ? "after" : "before");
+  }
+
+  function onDragLeave(event: DragEvent) {
+    const target = event.currentTarget as HTMLElement;
+    const relatedTarget = event.relatedTarget as Node | null;
+    if (relatedTarget && target.contains(relatedTarget)) return;
+    clearSidebarDropPosition(slug);
   }
 
   function onDrop(event: DragEvent) {
     if (!reorderType || !canDropSidebarChild(parentSlug, reorderType, slug)) return;
     event.preventDefault();
     const parent = appState.tree.getReactiveNode(parentSlug);
-    if (parent) dropSidebarChild(parent, parentSlug, reorderType, slug);
+    if (parent) {
+      const orderedSlugs = dropSidebarChild(parent, parentSlug, reorderType, slug, dropPosition === "after");
+      if (orderedSlugs && parent.feature.type === "relation") {
+        appState.reorderRelationChildren(parentSlug, reorderType, orderedSlugs);
+      }
+    }
     endSidebarDrag();
   }
 
@@ -129,12 +153,18 @@
 
   async function addRoute() {
     const newSlug = appState.createRoute(item, slug);
-    await goto(resolve("/world/[...slug]", { slug: newSlug }));
+    const feature = item.children?.[newSlug]?.feature;
+    if (feature && feature.type !== "geographic") {
+      replaceState(getItemUrl(slug, feature), page.state);
+    }
   }
 
   async function addSector() {
     const newSlug = appState.createArea(item, slug);
-    await goto(resolve("/world/[...slug]", { slug: newSlug }));
+    const feature = item.children?.[newSlug]?.feature;
+    if (feature && feature.type !== "geographic") {
+      replaceState(getItemUrl(slug, feature), page.state);
+    }
   }
 
   $effect(() => {
@@ -149,13 +179,18 @@
     bind:ref={ref as HTMLButtonElement}
     isActive={isCurrentPage}
     href={link}
-    draggable={reorderType !== undefined}
     ondragstart={onDragStart}
     ondragover={onDragOver}
+    ondragleave={onDragLeave}
     ondrop={onDrop}
     ondragend={onDragEnd}
-    class="data-[active=true]:bg-accent truncate w-full"
+    class={clsx("data-[active=true]:bg-accent truncate w-full", dropPosition && "relative")}
   >
+    {#if dropPosition === "before"}
+      <span class="pointer-events-none absolute inset-x-1 top-0 z-10 h-0.5 bg-primary" aria-hidden="true"></span>
+    {:else if dropPosition === "after"}
+      <span class="pointer-events-none absolute inset-x-1 bottom-0 z-10 h-0.5 bg-primary" aria-hidden="true"></span>
+    {/if}
     {#if itemType === "route"}
       {@const grade = getGrade((item.feature as OsmFeature).tags || {})}
       {#if grade}
@@ -168,7 +203,9 @@
     {/if}
     <span>{name || "No name"}</span>
     {#if reorderType}
-      <GripVerticalIcon class="ml-auto size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+      <span class="ml-auto flex shrink-0 cursor-grab active:cursor-grabbing" draggable title="Drag to reorder">
+        <GripVerticalIcon class="size-3.5 text-muted-foreground" aria-hidden="true" />
+      </span>
     {/if}
   </Sidebar.MenuButton>
 {:else}
@@ -186,12 +223,18 @@
         <Sidebar.MenuItem bind:ref={ref as HTMLLIElement} {...props} class="group/button">
           <Sidebar.MenuButton
             href={link}
-            draggable={reorderType !== undefined}
             ondragstart={onDragStart}
             ondragover={onDragOver}
+            ondragleave={onDragLeave}
             ondrop={onDrop}
             ondragend={onDragEnd}
+            class={clsx(dropPosition && "relative")}
           >
+            {#if dropPosition === "before"}
+              <span class="pointer-events-none absolute inset-x-1 top-0 z-10 h-0.5 bg-primary" aria-hidden="true"></span>
+            {:else if dropPosition === "after"}
+              <span class="pointer-events-none absolute inset-x-1 bottom-0 z-10 h-0.5 bg-primary" aria-hidden="true"></span>
+            {/if}
             <ChevronRightIcon class={clsx("transition-transform", open && "rotate-90")} />
             {#if itemType === "geographic"}
               <EarthIcon />
@@ -199,7 +242,9 @@
 
             <span class="truncate grow">{name || "No name"}</span>
             {#if reorderType}
-              <GripVerticalIcon class="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+              <span class="flex shrink-0 cursor-grab active:cursor-grabbing" draggable title="Drag to reorder">
+                <GripVerticalIcon class="size-3.5 text-muted-foreground" aria-hidden="true" />
+              </span>
             {/if}
           </Sidebar.MenuButton>
 

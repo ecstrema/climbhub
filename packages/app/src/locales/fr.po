@@ -28040,3 +28040,40 @@ msgstr ""
 #: src/routes/settings/+page.svelte
 msgid "Compare boulder grades"
 msgstr ""
+
+#: src/routes/+layout.svelte
+msgid "New climbing data is available. Download it in the background?"
+msgstr ""
+
+#: src/routes/world/+error.svelte
+msgid "Page not found | Climbhub"
+msgstr ""
+
+#: src/routes/world/+error.svelte
+msgid "This page doesn't exist anymore"
+msgstr ""
+
+#: src/routes/world/+error.svelte
+msgid "Something went wrong"
+msgstr ""
+
+#: src/routes/world/+error.svelte
+msgid "The closest page that still exists is <0/>."
+msgstr ""
+
+#: src/routes/world/+error.svelte
+msgid "<0/> could not be found. It may have been moved, renamed or removed."
+msgstr ""
+
+#: src/routes/world/+error.svelte
+msgid "Go to the closest page"
+msgstr ""
+
+#: src/routes/world/+error.svelte
+msgid "Go to the world"
+msgstr ""
+
+#: src/lib/components/shell/sidebar/app-sidebar-node.svelte
+#: src/lib/components/shell/sidebar/app-sidebar-node.svelte
+msgid "Drag to reorder"
+msgstr ""

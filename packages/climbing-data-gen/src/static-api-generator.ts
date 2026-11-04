@@ -6,7 +6,7 @@ import { ReverseGeolocator } from "./reverse-geolocation.ts";
 import type { Coordinates, DataJSON, GeographicFolderElement, OverpassRequest } from "./types.ts";
 import { ensureDirExists, slugify } from "@climbhub/reverse-geocoding-data";
 import type { OsmFeature } from "osm-api";
-import { getStaticIdentifier, osmIndexFile, osmPathSegment } from "@climbhub/common";
+import { getStaticIdentifier, osmIndexFile } from "@climbhub/common";
 
 export type StaticApiGeneratorOptions = {
   outApiDirectory: string;
@@ -149,8 +149,7 @@ function getName(el: OsmFeature): string | undefined {
 }
 
 function getPathName(el: OsmFeature): string {
-  const name = getName(el);
-  return osmPathSegment(name && slugify(name), el.type, el.id);
+  return slugify(getName(el) || `${el.type}:${el.id}`);
 }
 
 function getOsmPath(els: OsmFeature[]) {

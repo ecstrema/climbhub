@@ -102,6 +102,35 @@ export class UndoableMove extends OsmUndoable implements Undoable {
   }
 }
 
+/** Reorder the members of an OSM relation. */
+export class UndoableRelationMembersSet extends OsmUndoable implements Undoable {
+  previous: OsmRelation["members"];
+
+  constructor(
+    osmUser: OsmUser,
+    private item: DataTree<OsmRelation>,
+    private featureSlug: string,
+    private next: OsmRelation["members"],
+  ) {
+    super(osmUser);
+    this.previous = snapshot(item.feature.members);
+  }
+
+  #set(members: OsmRelation["members"]) {
+    const featureBefore = snapshot(this.item.feature);
+    this.item.feature.members = snapshot(members);
+    this.osmUser.markAsDirty(featureBefore, this.featureSlug, this.item.feature);
+  }
+
+  do() {
+    this.#set(this.next);
+  }
+
+  undo() {
+    this.#set(this.previous);
+  }
+}
+
 /** An undoable for deleting a single osm tag from an element. */
 export class UndoableTagDelete extends UndoableTagChange {
   constructor(osmUser: OsmUser, targetFeature: OsmFeature, targetFeatureSlug: string, tagKey: Key) {

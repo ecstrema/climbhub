@@ -12,10 +12,7 @@
 
 <svelte:head>
   <title>Climbhub</title>
-  <meta
-    name="description"
-    content="Explore climbing routes and areas by region."
-  />
+  <meta name="description" content="Explore climbing routes and areas by region." />
 </svelte:head>
 
 <div class="min-h-screen bg-background text-foreground">
@@ -29,10 +26,7 @@
         >
           All routes
         </a>
-        <a
-          href={resolve("/settings")}
-          class="text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
+        <a href={resolve("/settings")} class="text-sm text-muted-foreground transition-colors hover:text-foreground">
           Settings
         </a>
       </nav>

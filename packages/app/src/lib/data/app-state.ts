@@ -8,12 +8,15 @@ import {
   UndoableAreaCreate,
   UndoableFeatureSet,
   UndoableMove,
+  UndoableRelationMembersSet,
   UndoableRouteCreate,
   UndoableTagChange,
   UndoableTagDelete,
 } from "./undo/actions";
 import { OsmUser } from "./network/osm.svelte";
-import type { Key, OsmFeature } from "osm-api";
+import type { Key, OsmFeature, OsmRelation } from "osm-api";
+import { getStaticIdentifier, type BasicOsmType } from "@climbhub/common";
+import { featureToType } from "./parse/data.js";
 
 export interface Breadcrumbs {
   slugs: string[];
@@ -133,6 +136,62 @@ export class AppState {
     return action.slug;
   }
 
+  findOsmItemById(id: string): { item: DataTree<OsmFeature>; slug: string } | undefined {
+    const pending = [{ item: this.tree.root, slug: "" }];
+    const visited = new Set<DataTree>();
+
+    while (pending.length > 0) {
+      const current = pending.pop()!;
+      if (visited.has(current.item)) continue;
+      visited.add(current.item);
+
+      const feature = current.item.feature;
+      if (feature.type !== "geographic" && `${feature.type}-${feature.id}` === id) {
+        return { item: current.item as DataTree<OsmFeature>, slug: current.slug };
+      }
+
+      for (const [childSlug, child] of Object.entries(current.item.children ?? {})) {
+        pending.push({ item: child, slug: childSlug });
+      }
+    }
+  }
+
+  reorderRelationChildren(parentSlug: string, type: "route" | "area", orderedSlugs: string[]) {
+    const parent = this.tree.getReactiveNode(parentSlug);
+    if (!parent || parent.feature.type !== "relation") return;
+    const relation = parent.feature;
+
+    const slugByIdentifier = new Map<string, string>();
+    for (const [childSlug, child] of Object.entries(parent.children ?? {})) {
+      if (child.feature.type !== "geographic" && featureToType(child.feature) === type) {
+        slugByIdentifier.set(getStaticIdentifier(child.feature.type, child.feature.id), childSlug);
+      }
+    }
+
+    const orderedSlugSet = new Set(orderedSlugs);
+    const memberPositions: number[] = [];
+    const membersBySlug = new Map<string, OsmRelation["members"]>();
+    parent.feature.members.forEach((member, index) => {
+      const childSlug = slugByIdentifier.get(getStaticIdentifier(member.type as BasicOsmType, member.ref));
+      if (!childSlug || !orderedSlugSet.has(childSlug)) return;
+      memberPositions.push(index);
+      const members = membersBySlug.get(childSlug) ?? [];
+      members.push(member);
+      membersBySlug.set(childSlug, members);
+    });
+
+    const orderedMembers = orderedSlugs.flatMap((childSlug) => membersBySlug.get(childSlug) ?? []);
+    if (memberPositions.length === 0 || memberPositions.length !== orderedMembers.length) return;
+
+    const nextMembers = [...relation.members];
+    memberPositions.forEach((position, index) => {
+      nextMembers[position] = orderedMembers[index]!;
+    });
+    if (nextMembers.every((member, index) => sameRelationMember(member, relation.members[index]!))) return;
+
+    this.undoStack.do(new UndoableRelationMembersSet(this.osmUser, parent as DataTree<OsmRelation>, parentSlug, nextMembers));
+  }
+
   /** Reset a feature to before it was modified by the user */
   resetFeature(targetSlug: string) {
     const node = this.tree.getReactiveNode(targetSlug);
@@ -141,6 +200,10 @@ export class AppState {
 
     this.undoStack.do(new UndoableFeatureSet(this.osmUser, node as DataTree<OsmFeature>, targetSlug, undefined));
   }
+}
+
+function sameRelationMember(a: OsmRelation["members"][number], b: OsmRelation["members"][number]): boolean {
+  return a.type === b.type && a.ref === b.ref && a.role === b.role;
 }
 
 export const [getAppState, setAppState] = createContext<AppState>();

@@ -5,8 +5,12 @@ import { error } from "@sveltejs/kit";
 import { dataClient } from "#lib/data/network/data-client.js";
 import { dataTreeFromJsonRecord } from "#lib/data/parse/data.js";
 import { getParentSlugs } from "#lib/helpers/slug.js";
+import { osmIndexFile, parseOsmPathSegment } from "@climbhub/common";
+import { resolve } from "$app/paths";
+import { building } from "$app/env";
 
 export interface LayoutLoadType {
+  slug: string;
   currentItem: DataTree;
   additionalData: DataJSONRecord;
   // We can't return this here as during ssr, the promise would be awaited, and we would create big html files.
@@ -14,8 +18,10 @@ export interface LayoutLoadType {
   // parentChildren: Promise<DataJSONRecord>;
 }
 
-export const load: LayoutLoad<LayoutLoadType> = async ({ params, fetch }) => {
-  const slug = params.slug ?? "";
+export const load: LayoutLoad<LayoutLoadType> = async ({ params, fetch, url }) => {
+  const pathSlug = params.slug ?? "";
+  const id = building ? null : url.searchParams.get("id");
+  const slug = (await getSlugFromId(id)) ?? pathSlug;
   const slugs = getParentSlugs(slug);
 
   // Start all fetching at the same time
@@ -32,6 +38,7 @@ export const load: LayoutLoad<LayoutLoadType> = async ({ params, fetch }) => {
   }
 
   const result: LayoutLoadType = {
+    slug,
     currentItem: {
       feature: self,
     },
@@ -86,5 +93,19 @@ export const load: LayoutLoad<LayoutLoadType> = async ({ params, fetch }) => {
       console.warn(`Failed to fetch stats for slug: ${slug}`);
       return undefined;
     }
+  }
+
+  async function getSlugFromId(id: string | null): Promise<string | undefined> {
+    if (!id) return undefined;
+    const localSlug = dataClient.getLocalSlugByOsmId(id);
+    if (localSlug) return localSlug;
+
+    const osm = parseOsmPathSegment(id);
+    if (!osm) return undefined;
+    const base = resolve("/").replace(/\/$/, "");
+    const response = await fetch(`${base}/api/${osmIndexFile(osm.type, osm.id)}`);
+    if (!response.ok) return undefined;
+    const index: Record<string, string> = await response.json();
+    return index[osm.id];
   }
 };

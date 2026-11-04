@@ -13,7 +13,7 @@ export interface FilterSearch {
   cancel(): void;
 }
 
-/** Marks that this browser has a database for the current version, so the worker is only loaded when useful */
+/** Marks that this browser has a local database and records its dataset version. */
 const MARKER_KEY = "climbhub:db-version";
 
 /** The whole dataset in SQLite (FTS5) in a worker, in the browser's private file storage when available. */
@@ -68,15 +68,19 @@ class LocalDb {
     return worker;
   }
 
-  /** True when a previous visit already downloaded this version of the data */
+  /** True when a previous visit stored a local database version marker */
   get hasMarker(): boolean {
-    return browser && localStorage.getItem(MARKER_KEY) === version;
+    return browser && localStorage.getItem(MARKER_KEY) !== null;
+  }
+
+  get dataVersion(): string | undefined {
+    return browser ? (localStorage.getItem(MARKER_KEY) ?? undefined) : undefined;
   }
 
   /** Opens the database and checks whether it holds the current data. Safe to call repeatedly. */
   init(): Promise<void> {
     if (!browser) return Promise.resolve();
-    this.initPromise ??= this.send({ type: "status", version }, "status")
+    this.initPromise ??= this.send({ type: "status", version: this.dataVersion ?? version }, "status")
       .then((res) => {
         this.persistent = res.persistent;
         this.status = res.ready ? "ready" : "empty";
@@ -103,6 +107,30 @@ class LocalDb {
     } catch (err) {
       console.error("Failed to build the local database:", err);
       this.status = "error";
+    }
+  }
+
+  /** Rebuilds the local database only when the published dataset has changed. */
+  async refresh(dataVersion: string): Promise<void> {
+    await this.init();
+    if (this.status !== "ready") return;
+
+    const current = await this.send({ type: "status", version: dataVersion }, "status");
+    if (current.ready) {
+      localStorage.setItem(MARKER_KEY, dataVersion);
+      return;
+    }
+
+    this.status = "downloading";
+    this.loaded = 0;
+    this.total = undefined;
+    try {
+      await this.send({ type: "build", version: dataVersion, url: apiUrl("", "download.json") }, "status");
+      localStorage.setItem(MARKER_KEY, dataVersion);
+      this.status = "ready";
+    } catch (err) {
+      console.error("Failed to refresh the local database:", err);
+      this.status = "ready";
     }
   }
 

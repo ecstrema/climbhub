@@ -1,6 +1,8 @@
 <script lang="ts">
   import { navigating, updated } from "$app/state";
   import { localDb } from "#lib/data/db/local-db.svelte.js";
+  import { apiUrl } from "#lib/data/network/api-url.js";
+  import { settings } from "#lib/data/settings.svelte.js";
   import { Button } from "#components/ui/button/index.js";
 
   const downloading = $derived(localDb.status === "downloading");
@@ -29,7 +31,30 @@
   import { initLocale } from "#lib/i18n.svelte.js";
   const { children } = $props();
 
-  onMount(initLocale);
+  const DATA_REFRESH_INTERVAL = 6 * 60 * 60 * 1000;
+
+  async function refreshLocalData() {
+    if (localDb.status === "unknown" && localDb.hasMarker) await localDb.init();
+    if (!localDb.ready || !localDb.persistent) return;
+
+    try {
+      const response = await fetch(apiUrl("", "data-version.json"), { cache: "no-store" });
+      if (!response.ok) return;
+      const { version: dataVersion } = (await response.json()) as { version: string };
+      if (!dataVersion || dataVersion === localDb.dataVersion) return;
+      if (settings.lowData && !window.confirm("New climbing data is available. Download it in the background?")) return;
+      await localDb.refresh(dataVersion);
+    } catch (error) {
+      console.error("Failed to check for updated climbing data:", error);
+    }
+  }
+
+  onMount(() => {
+    initLocale();
+    void refreshLocalData();
+    const interval = setInterval(refreshLocalData, DATA_REFRESH_INTERVAL);
+    return () => clearInterval(interval);
+  });
 </script>
 
 <ModeWatcher />
