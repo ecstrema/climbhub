@@ -32,7 +32,7 @@ jobs:
           test -s packages/app/build/world.html
           test -s packages/app/build/grade-comparison.html
           test -s packages/app/build/edit-map.html
-          test -s packages/app/build/api/world/deep.json
+          test -s packages/app/build/api/world/data.json
           for continent in africa americas asia europe oceania; do
             test -f "packages/app/build/api/world/$continent/data.json"
           done
