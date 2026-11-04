@@ -1,11 +1,12 @@
 import { readFileSync, readdirSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import { join, dirname } from "path";
+import { createHash } from "crypto";
 
 import { ReverseGeolocator } from "./reverse-geolocation.ts";
 import type { Coordinates, DataJSON, GeographicFolderElement, OverpassRequest } from "./types.ts";
 import { ensureDirExists, slugify } from "@climbhub/reverse-geocoding-data";
 import type { OsmFeature } from "osm-api";
-import { getStaticIdentifier } from "@climbhub/common";
+import { getStaticIdentifier, osmIndexFile, osmPathSegment } from "@climbhub/common";
 
 export type StaticApiGeneratorOptions = {
   outApiDirectory: string;
@@ -148,7 +149,8 @@ function getName(el: OsmFeature): string | undefined {
 }
 
 function getPathName(el: OsmFeature): string {
-  return slugify(getName(el) || `${el.type}:${el.id}`);
+  const name = getName(el);
+  return osmPathSegment(name && slugify(name), el.type, el.id);
 }
 
 function getOsmPath(els: OsmFeature[]) {
@@ -175,6 +177,8 @@ function writeStaticApi(
   // Create the geographic hierarchy
   const geographicTree: MapTree = { children: new Map() };
 
+  // Current slug of every OSM feature, by index file
+  const osmIndex = new Map<string, Record<string, string>>();
   let noTags = 0;
   let emptyTags = 0;
   let cliffs = 0;
@@ -236,6 +240,10 @@ function writeStaticApi(
       visited.add(pathString);
 
       writeDataJson(options, pathString, el);
+      const indexFile = osmIndexFile(el.type, el.id);
+      const bucket = osmIndex.get(indexFile) ?? {};
+      bucket[el.id] = pathString.slice("world/".length);
+      osmIndex.set(indexFile, bucket);
     }
   }
   console.info("no tags:", noTags);
@@ -246,6 +254,12 @@ function writeStaticApi(
       `${outsideRegions.length} root elements are outside of every region, and skipped:`,
       outsideRegions.slice(0, 20).join(", ") + (outsideRegions.length > 20 ? ", ..." : ""),
     );
+  }
+
+  for (const [file, bucket] of osmIndex) {
+    const target = join(options.outApiDirectory, file);
+    ensureDirExists(dirname(target));
+    writeFileSync(target, JSON.stringify(bucket));
   }
 
   // Add info to the geographicTree api endpoints by iterating through it.
@@ -329,5 +343,10 @@ function writeStaticApiMetadata(worldDirectory: string) {
   }
 
   visit(worldDirectory, "");
-  writeFileSync(join(worldDirectory, "download.json"), JSON.stringify(download));
+  const downloadJson = JSON.stringify(download);
+  writeFileSync(join(worldDirectory, "download.json"), downloadJson);
+  writeFileSync(
+    join(worldDirectory, "data-version.json"),
+    JSON.stringify({ version: createHash("sha256").update(downloadJson).digest("hex") }),
+  );
 }
