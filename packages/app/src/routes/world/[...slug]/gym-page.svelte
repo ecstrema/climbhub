@@ -11,10 +11,9 @@
   import PhoneIcon from "@lucide/svelte/icons/phone";
   import GlobeIcon from "@lucide/svelte/icons/globe";
   import CircleDollarSignIcon from "@lucide/svelte/icons/circle-dollar-sign";
-  import ClockIcon from "@lucide/svelte/icons/clock";
   import LocationMap from "#lib/components/location-map.svelte";
   import MapLinks from "#lib/components/map-links.svelte";
-  import OpeningHours from "#lib/components/opening-hours.svelte";
+  import EditableOpeningHours from "#lib/components/editable/editable-opening-hours.svelte";
   import { getFee, getFeeCharge, getWebsite } from "#lib/data/parse/gym-tags.js";
 
   let {
@@ -31,7 +30,6 @@
   const website = $derived(getWebsite(feature.tags ?? {}));
   const fee = $derived(getFee(feature.tags ?? {}));
   const charge = $derived(getFeeCharge(feature.tags ?? {}));
-  const openingHours = $derived(feature.tags?.opening_hours?.trim());
 </script>
 
 <div class="flex gap-2 items-center">
@@ -67,15 +65,7 @@
   </p>
 {/if}
 
-{#if openingHours}
-  <div class="flex flex-col gap-1">
-    <p class="flex items-center gap-2 text-sm">
-      <ClockIcon class="size-4 text-muted-foreground" aria-hidden="true" />
-      <span class="text-muted-foreground">Opening hours</span>
-    </p>
-    <OpeningHours value={openingHours} />
-  </div>
-{/if}
+<EditableOpeningHours {feature} featureSlug={slug} />
 
 {#if coordinates}
   <p class="text-sm text-muted-foreground">{coordinates.lat}, {coordinates.lon}</p>

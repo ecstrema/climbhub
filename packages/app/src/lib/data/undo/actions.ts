@@ -71,6 +71,36 @@ export class UndoableTagChange extends OsmUndoable implements Undoable {
   }
 }
 
+/** An undoable for moving a node. */
+export class UndoableMove extends OsmUndoable implements Undoable {
+  previous: { lat: number; lon: number };
+
+  constructor(
+    osmUser: OsmUser,
+    private targetFeature: OsmNode,
+    private targetFeatureSlug: string,
+    private next: { lat: number; lon: number },
+  ) {
+    super(osmUser);
+    this.previous = { lat: targetFeature.lat, lon: targetFeature.lon };
+  }
+
+  #set(position: { lat: number; lon: number }) {
+    const featureBefore = snapshot(this.targetFeature);
+    this.targetFeature.lat = position.lat;
+    this.targetFeature.lon = position.lon;
+    this.osmUser.markAsDirty(featureBefore, this.targetFeatureSlug, this.targetFeature);
+  }
+
+  do() {
+    this.#set(this.next);
+  }
+
+  undo() {
+    this.#set(this.previous);
+  }
+}
+
 /** An undoable for deleting a single osm tag from an element. */
 export class UndoableTagDelete extends UndoableTagChange {
   constructor(osmUser: OsmUser, targetFeature: OsmFeature, targetFeatureSlug: string, tagKey: Key) {

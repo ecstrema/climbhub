@@ -7,6 +7,7 @@ import { UndoManager } from "./undo/undo-stack";
 import {
   UndoableAreaCreate,
   UndoableFeatureSet,
+  UndoableMove,
   UndoableRouteCreate,
   UndoableTagChange,
   UndoableTagDelete,
@@ -96,6 +97,15 @@ export class AppState {
     if (!feature || feature.type === "geographic") return;
 
     this.undoStack.do(new UndoableTagChange(this.osmUser, feature, targetSlug, tagKey, newValue));
+  }
+
+  /** Applies {@link UndoableMove}. Only nodes can be moved. */
+  setCoordinates(targetSlug: string, position: { lat: number; lon: number }) {
+    const node = this.tree.getReactiveNode(targetSlug);
+    const feature = node?.feature;
+    if (!feature || feature.type !== "node") return;
+
+    this.undoStack.do(new UndoableMove(this.osmUser, feature, targetSlug, position));
   }
 
   /** Applies {@link UndoableTagDelete} to remove the tag completely */
