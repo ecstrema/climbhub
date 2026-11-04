@@ -5,6 +5,7 @@ import type { AreaStats, DataJSONRecord } from "#lib/types.js";
 import { localDb } from "../db/local-db.svelte";
 import type { TopLevelPoint } from "../db/types";
 import { settings } from "../settings.svelte";
+import type { DataTree } from "#lib/types.js";
 
 /**
  * Gets the data from the local SQLite database when it holds the whole dataset, and from the
@@ -14,6 +15,15 @@ import { settings } from "../settings.svelte";
  */
 class DataClient {
   private autoDownloadStarted = false;
+  #localNodes = new Map<string, DataTree>();
+
+  registerLocalNode(slug: string, node: DataTree) {
+    this.#localNodes.set(slug, node);
+  }
+
+  unregisterLocalNode(slug: string) {
+    this.#localNodes.delete(slug);
+  }
 
   private async localReady(): Promise<boolean> {
     if (!browser) return false;
@@ -52,6 +62,8 @@ class DataClient {
   }
 
   async getNode(slug: string, customFetch: typeof fetch = globalThis.fetch): Promise<DataJSON | undefined> {
+    const localNode = this.#localNodes.get(slug);
+    if (localNode) return localNode.feature as DataJSON;
     if (await this.localReady()) {
       const data = await localDb.getNode(slug);
       if (data) return data;
@@ -60,6 +72,12 @@ class DataClient {
   }
 
   async getChildren(slug: string, customFetch: typeof fetch = globalThis.fetch): Promise<DataJSONRecord | undefined> {
+    const localNode = this.#localNodes.get(slug);
+    if (localNode) {
+      return Object.fromEntries(
+        Object.entries(localNode.children ?? {}).map(([childSlug, child]) => [childSlug, child.feature as DataJSON]),
+      );
+    }
     if (await this.localReady()) return localDb.getChildren(slug);
     return this.fetchJson<DataJSONRecord>(slug, "children.json", customFetch);
   }
@@ -70,6 +88,7 @@ class DataClient {
   }
 
   async getStats(slug: string, customFetch: typeof fetch = globalThis.fetch): Promise<AreaStats | undefined> {
+    if (this.#localNodes.has(slug)) return undefined;
     if (await this.localReady()) return localDb.getStats(slug);
     return this.fetchJson<AreaStats>(slug, "stats.json", customFetch);
   }

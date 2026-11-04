@@ -4,9 +4,88 @@ import type { DataTree } from "#lib/types.js";
 import type { OsmFeature } from "osm-api";
 import { getStaticIdentifier, type BasicOsmType } from "@climbhub/common";
 import { createContext } from "svelte";
+import { SvelteMap } from "svelte/reactivity";
 import type { FromCurrent } from "../providers/types";
 
 export type SortedChildren = Record<ItemType | "other", string[]>;
+export type ReorderableType = "route" | "area";
+
+const ORDER_STORAGE_KEY = "climbhub:sidebar-orders";
+const orderOverrides = new SvelteMap<string, Partial<Record<ReorderableType, string[]>>>();
+let draggedChild: { parentSlug: string; type: ReorderableType; slug: string } | undefined;
+
+export function restoreSidebarOrders() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(ORDER_STORAGE_KEY) ?? "{}");
+    if (!stored || typeof stored !== "object" || Array.isArray(stored)) return;
+    for (const [parentSlug, orders] of Object.entries(stored)) {
+      if (!orders || typeof orders !== "object" || Array.isArray(orders)) continue;
+      const validOrders: Partial<Record<ReorderableType, string[]>> = {};
+      for (const type of ["route", "area"] as const) {
+        const order = (orders as Record<string, unknown>)[type];
+        if (Array.isArray(order) && order.every((slug) => typeof slug === "string")) {
+          validOrders[type] = order;
+        }
+      }
+      orderOverrides.set(parentSlug, validOrders);
+    }
+  } catch {
+    // Unreadable settings are ignored.
+  }
+}
+
+export function getSidebarChildren(item: DataTree, parentSlug: string): SortedChildren | undefined {
+  const children = sortChildren(item);
+  if (!children) return;
+  const overrides = orderOverrides.get(parentSlug);
+  return {
+    ...children,
+    route: applyOrder(children.route, overrides?.route),
+    area: applyOrder(children.area, overrides?.area),
+  };
+}
+
+export function startSidebarDrag(parentSlug: string, type: ReorderableType, slug: string) {
+  draggedChild = { parentSlug, type, slug };
+}
+
+export function canDropSidebarChild(parentSlug: string, type: ReorderableType, slug: string): boolean {
+  return !!draggedChild &&
+    draggedChild.parentSlug === parentSlug &&
+    draggedChild.type === type &&
+    draggedChild.slug !== slug;
+}
+
+export function dropSidebarChild(parent: DataTree, parentSlug: string, type: ReorderableType, targetSlug: string) {
+  if (!canDropSidebarChild(parentSlug, type, targetSlug)) return;
+  const ordered = getSidebarChildren(parent, parentSlug)?.[type];
+  if (!ordered) return;
+
+  const next = [...ordered];
+  const sourceIndex = next.indexOf(draggedChild!.slug);
+  const targetIndex = next.indexOf(targetSlug);
+  if (sourceIndex === -1 || targetIndex === -1) return;
+  const [moved] = next.splice(sourceIndex, 1);
+  next.splice(sourceIndex < targetIndex ? targetIndex - 1 : targetIndex, 0, moved!);
+
+  orderOverrides.set(parentSlug, { ...orderOverrides.get(parentSlug), [type]: next });
+  try {
+    localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(Object.fromEntries(orderOverrides)));
+  } catch {
+    // The in-memory order still works when storage is unavailable.
+  }
+}
+
+export function endSidebarDrag() {
+  draggedChild = undefined;
+}
+
+function applyOrder(children: string[], order: string[] | undefined): string[] {
+  if (!order?.length) return children;
+  const available = new Set(children);
+  return [...order.filter((slug) => available.has(slug)), ...children.filter((slug) => !order.includes(slug))];
+}
+
 /** Sorts the children and gives back the ordered item slugs */
 export function sortChildren(item: DataTree): SortedChildren | undefined {
   if (!item.children) return;

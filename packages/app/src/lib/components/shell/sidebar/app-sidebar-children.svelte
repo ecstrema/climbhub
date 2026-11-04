@@ -3,10 +3,12 @@
   import { Button } from "#components/ui/button/index.js";
 
   import AppSidebarNode from "./app-sidebar-node.svelte";
-  import { getSearchFilter, sortChildren } from "./utils";
+  import { getSearchFilter, getSidebarChildren } from "./utils";
   import type { OsmRelation, OsmWay } from "osm-api";
   import { featureToType } from "#lib/data/parse/data.js";
   import { getAppState } from "#lib/data/app-state.js";
+  import { goto } from "$app/navigation";
+  import { resolve } from "$app/paths";
 
   let {
     item = $bindable(),
@@ -16,13 +18,23 @@
     slug: string;
   } = $props();
 
-  const orderedChildren = $derived.by(() => sortChildren(item));
+  const orderedChildren = $derived.by(() => getSidebarChildren(item, slug));
 
   const itemType = $derived(featureToType(item.feature));
 
   const searchFilter = getSearchFilter();
 
   const appState = getAppState();
+
+  async function addRoute() {
+    const newSlug = appState.createRoute(item as DataTree<OsmWay | OsmRelation>, slug);
+    await goto(resolve("/world/[...slug]", { slug: newSlug }));
+  }
+
+  async function addSector() {
+    const newSlug = appState.createArea(item as DataTree<OsmWay | OsmRelation>, slug);
+    await goto(resolve("/world/[...slug]", { slug: newSlug }));
+  }
 </script>
 
 {#each orderedChildren?.geographic as slug (slug)}
@@ -50,22 +62,8 @@
 
   {#if appState.osmUser.loggedIn && itemType === "area"}
     <div class="flex gap-2 self-end">
-      <Button
-        variant="outline"
-        size="xs"
-        class="font-normal"
-        onclick={() => appState.createRoute(item as DataTree<OsmWay | OsmRelation>, slug)}
-      >
-        Add Route
-      </Button>
-      <Button
-        variant="outline"
-        size="xs"
-        class="font-normal"
-        onclick={() => appState.createArea(item as DataTree<OsmWay | OsmRelation>, slug)}
-      >
-        Add Sector
-      </Button>
+      <Button variant="outline" size="xs" class="font-normal" onclick={addRoute}>Add Route</Button>
+      <Button variant="outline" size="xs" class="font-normal" onclick={addSector}>Add Sector</Button>
     </div>
   {/if}
 {/if}

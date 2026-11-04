@@ -19,7 +19,17 @@
   import { page } from "$app/state";
   import clsx from "clsx";
   import { getAppState } from "#lib/data/app-state.js";
-  import { getSearchFilter } from "./utils";
+  import {
+    canDropSidebarChild,
+    dropSidebarChild,
+    endSidebarDrag,
+    getSearchFilter,
+    startSidebarDrag,
+    type ReorderableType,
+  } from "./utils";
+  import { getParentSlug } from "#lib/helpers/slug.js";
+  import { goto } from "$app/navigation";
+  import GripVerticalIcon from "@lucide/svelte/icons/grip-vertical";
 
   let {
     slug,
@@ -81,11 +91,50 @@
   const name = $derived(getName(item.feature));
 
   const itemType = $derived(featureToType(item.feature));
+  const reorderType = $derived<ReorderableType | undefined>(
+    itemType === "route" ? "route" : itemType === "area" ? "area" : undefined,
+  );
+  const parentSlug = $derived(getParentSlug(slug) ?? "");
 
   let ref = $state<HTMLElement | null>(null);
 
   // The action menu is costly to mount for every node, so it only exists once the node is hovered or focused.
   let interacted = $state(false);
+
+  function onDragStart(event: DragEvent) {
+    if (!reorderType) return;
+    startSidebarDrag(parentSlug, reorderType, slug);
+    event.dataTransfer?.setData("text/plain", slug);
+    if (event.dataTransfer) event.dataTransfer.effectAllowed = "move";
+  }
+
+  function onDragOver(event: DragEvent) {
+    if (!reorderType || !canDropSidebarChild(parentSlug, reorderType, slug)) return;
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+  }
+
+  function onDrop(event: DragEvent) {
+    if (!reorderType || !canDropSidebarChild(parentSlug, reorderType, slug)) return;
+    event.preventDefault();
+    const parent = appState.tree.getReactiveNode(parentSlug);
+    if (parent) dropSidebarChild(parent, parentSlug, reorderType, slug);
+    endSidebarDrag();
+  }
+
+  function onDragEnd() {
+    endSidebarDrag();
+  }
+
+  async function addRoute() {
+    const newSlug = appState.createRoute(item, slug);
+    await goto(resolve("/world/[...slug]", { slug: newSlug }));
+  }
+
+  async function addSector() {
+    const newSlug = appState.createArea(item, slug);
+    await goto(resolve("/world/[...slug]", { slug: newSlug }));
+  }
 
   $effect(() => {
     if (isCurrentPage && ref) {
@@ -99,6 +148,11 @@
     bind:ref={ref as HTMLButtonElement}
     isActive={isCurrentPage}
     href={link}
+    draggable={reorderType !== undefined}
+    ondragstart={onDragStart}
+    ondragover={onDragOver}
+    ondrop={onDrop}
+    ondragend={onDragEnd}
     class="data-[active=true]:bg-accent truncate w-full"
   >
     {#if itemType === "route"}
@@ -112,6 +166,9 @@
       <BuildingIcon />
     {/if}
     <span>{name || "No name"}</span>
+    {#if reorderType}
+      <GripVerticalIcon class="ml-auto size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+    {/if}
   </Sidebar.MenuButton>
 {:else}
   <Collapsible.Root
@@ -126,13 +183,23 @@
     <Collapsible.Trigger>
       {#snippet child({ props })}
         <Sidebar.MenuItem bind:ref={ref as HTMLLIElement} {...props} class="group/button">
-          <Sidebar.MenuButton href={link}>
+          <Sidebar.MenuButton
+            href={link}
+            draggable={reorderType !== undefined}
+            ondragstart={onDragStart}
+            ondragover={onDragOver}
+            ondrop={onDrop}
+            ondragend={onDragEnd}
+          >
             <ChevronRightIcon class={clsx("transition-transform", open && "rotate-90")} />
             {#if itemType === "geographic"}
               <EarthIcon />
             {/if}
 
             <span class="truncate grow">{name || "No name"}</span>
+            {#if reorderType}
+              <GripVerticalIcon class="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+            {/if}
           </Sidebar.MenuButton>
 
           {#if item.stats}
@@ -151,9 +218,11 @@
                 {/snippet}
               </DropdownMenu.Trigger>
               <DropdownMenu.Content side="right" align="start">
-                <DropdownMenu.Item>Add area</DropdownMenu.Item>
-                <DropdownMenu.Item>Add route</DropdownMenu.Item>
-                <DropdownMenu.Separator />
+                {#if appState.osmUser.loggedIn && itemType === "area"}
+                  <DropdownMenu.Item onclick={addSector}>Add sector</DropdownMenu.Item>
+                  <DropdownMenu.Item onclick={addRoute}>Add route</DropdownMenu.Item>
+                  <DropdownMenu.Separator />
+                {/if}
                 <DropdownMenu.Item>Download images</DropdownMenu.Item>
                 <DropdownMenu.Separator />
                 <DropdownMenu.Item>Delete area</DropdownMenu.Item>

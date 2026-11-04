@@ -4,6 +4,7 @@ import type { Undoable } from "./types";
 import type { OsmUser } from "../network/osm.svelte";
 import { snapshot } from "#lib/helpers/svelte.svelte.js";
 import { reversed } from "#lib/helpers/iterators.js";
+import { dataClient } from "../network/data-client.js";
 
 /** An undoable action can be done and undone. */
 export class OsmUndoable {
@@ -145,11 +146,13 @@ export class UndoableNodeCreate extends OsmUndoable implements Undoable {
   do() {
     this.parent.children ??= {};
     this.parent.children[this.slug] = this.item;
+    dataClient.registerLocalNode(this.slug, this.parent.children[this.slug]!);
 
     this.osmUser.markAsDirty(undefined, this.slug, this.item.feature);
   }
 
   undo() {
+    dataClient.unregisterLocalNode(this.slug);
     if (this.parent.children) {
       delete this.parent.children[this.slug];
       this.osmUser.markAsDirty(this.item.feature, this.slug, undefined);

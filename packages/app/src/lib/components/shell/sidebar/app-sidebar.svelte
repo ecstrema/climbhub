@@ -10,7 +10,7 @@
 
   import Input from "#components/ui/input/input.svelte";
   import type { DataTree } from "#lib/types.js";
-  import { setSearchFilter, type SearchFilter } from "./utils";
+  import { restoreSidebarOrders, setSearchFilter, type SearchFilter } from "./utils";
   import { getAppState } from "#lib/data/app-state.js";
   import { localDb, type FilterSearch } from "#lib/data/db/local-db.svelte.js";
   import { settings } from "#lib/data/settings.svelte.js";
@@ -36,6 +36,7 @@
   let restored = $state(false);
 
   onMount(() => {
+    restoreSidebarOrders();
     try {
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "null");
       if (stored) {
