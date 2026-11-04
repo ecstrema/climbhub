@@ -43,7 +43,10 @@ async function dataTree() {
 }
 
 /** Reads data/ from the head of the branch */
-export async function loadFromGitHub(onProgress?: (done: number, total: number) => void) {
+export async function loadFromGitHub(
+  onProgress?: (done: number, total: number) => void,
+  onFile?: (path: string, text: string) => void,
+) {
   const { commit, prefix, entries } = await dataTree();
   const files: DataFiles = {};
   let done = 0;
@@ -54,7 +57,9 @@ export async function loadFromGitHub(onProgress?: (done: number, total: number) 
       for (let entry = queue.shift(); entry; entry = queue.shift()) {
         const res = await fetch(`https://raw.githubusercontent.com/${UPSTREAM}/${commit}/${entry.path}`);
         if (!res.ok) throw new Error(`${entry.path}: ${res.status} ${res.statusText}`);
-        files[entry.path.slice(prefix.length)] = await res.text();
+        const path = entry.path.slice(prefix.length);
+        files[path] = await res.text();
+        onFile?.(path, files[path]);
         onProgress?.(++done, entries.length);
       }
     }),

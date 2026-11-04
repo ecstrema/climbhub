@@ -11,7 +11,10 @@
   import type { WorldClimbingPoints, WorldDownloadStatus } from "@climbhub/climbing-data-gen";
   import { parseWorldClimbingPoints, WORLD_CLIMBING_QUERY } from "@climbhub/climbing-data-gen/world-points";
 
+  import type { Feature } from "geojson";
+  import { BOUNDARY_EXTENSION } from "@climbhub/reverse-geocoding-data/shared";
   import EditMap from "./EditMap.svelte";
+  import LoadingMap from "./LoadingMap.svelte";
   import NodePanel from "./NodePanel.svelte";
   import TreeNode from "./TreeNode.svelte";
   import { EditorStore, type DataChanges, type EditorNode } from "./editor.svelte";
@@ -34,6 +37,10 @@
   const filterResult = $derived(store?.filterTree(filter));
   let refreshing = $state(false);
   let progress = $state<WorldDownloadStatus>();
+  /** Boundaries received so far from GitHub, drawn on a temporary map */
+  const streamed: Feature[] = [];
+  let streamedVersion = $state(0);
+  let loadPercent = $state<number>();
 
   /** The server downloads the climbing places in the background: poll until they are ready. */
   async function getClimbing(resource: string): Promise<WorldClimbingPoints> {
@@ -67,8 +74,21 @@
       } else {
         status = `Loading the boundaries from GitHub (${REPOSITORY.owner}/${REPOSITORY.repo})…`;
         files = (
-          await loadFromGitHub((done, total) => (status = `Loading the boundaries from GitHub: ${done}/${total}`))
+          await loadFromGitHub(
+            (done, total) => {
+              status = `Loading the boundaries from GitHub: ${done}/${total}`;
+              loadPercent = (done / total) * 100;
+            },
+            (path, text) => {
+              if (!path.startsWith("world/") || !path.endsWith(BOUNDARY_EXTENSION)) return;
+              try {
+                streamed.push(...JSON.parse(text).features);
+                streamedVersion++;
+              } catch {}
+            },
+          )
         ).files;
+        loadPercent = undefined;
       }
       let points: WorldClimbingPoints = { timestamp: "", points: [] };
       if (DEV) {
@@ -239,8 +259,26 @@
 <svelte:head><title>{import.meta.env.DEV ? "[DEV] " : ""}Climbhub - Boundary editor</title></svelte:head>
 <svelte:window {onkeydown} />
 
+{#if !store && !loadError}
+  <div class="fixed inset-x-0 top-0 z-50 h-0.5 overflow-hidden bg-primary/20" role="progressbar" aria-label="Loading">
+    {#if loadPercent !== undefined}
+      <div class="h-full bg-primary transition-[width]" style:width="{loadPercent}%"></div>
+    {:else}
+      <div class="loader-bar h-full w-1/3 bg-primary"></div>
+    {/if}
+  </div>
+{/if}
+
 {#if loadError}
   <pre class="p-6 text-sm whitespace-pre-wrap text-destructive">{loadError}</pre>
+{:else if !store && !DEV}
+  <div class="relative h-dvh w-full">
+    <LoadingMap features={streamed} version={streamedVersion} />
+    <p class="absolute top-3 left-3 flex items-center gap-2 rounded-md bg-background/90 px-3 py-2 text-sm shadow">
+      <LoaderIcon class="size-4 animate-spin" />
+      {status}
+    </p>
+  </div>
 {:else if !store}
   <div class="flex flex-col gap-1 p-6 text-sm">
     <p class="flex items-center gap-2"><LoaderIcon class="size-4 animate-spin" /> {status}</p>
@@ -424,3 +462,17 @@
     <main class="min-w-0 flex-1"><EditMap bind:this={map} {store} /></main>
   </div>
 {/if}
+
+<style>
+  .loader-bar {
+    animation: loader-slide 1.1s ease-in-out infinite;
+  }
+  @keyframes loader-slide {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(300%);
+    }
+  }
+</style>
