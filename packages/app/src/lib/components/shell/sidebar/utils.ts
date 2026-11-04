@@ -61,10 +61,9 @@ export function startSidebarDrag(parentSlug: string, type: ReorderableType, slug
 }
 
 export function canDropSidebarChild(parentSlug: string, type: ReorderableType, slug: string): boolean {
-  return !!draggedChild &&
-    draggedChild.parentSlug === parentSlug &&
-    draggedChild.type === type &&
-    draggedChild.slug !== slug;
+  return (
+    !!draggedChild && draggedChild.parentSlug === parentSlug && draggedChild.type === type && draggedChild.slug !== slug
+  );
 }
 
 export function getSidebarDropPosition(slug: string): "before" | "after" | undefined {

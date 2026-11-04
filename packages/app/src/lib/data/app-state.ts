@@ -189,7 +189,9 @@ export class AppState {
     });
     if (nextMembers.every((member, index) => sameRelationMember(member, relation.members[index]!))) return;
 
-    this.undoStack.do(new UndoableRelationMembersSet(this.osmUser, parent as DataTree<OsmRelation>, parentSlug, nextMembers));
+    this.undoStack.do(
+      new UndoableRelationMembersSet(this.osmUser, parent as DataTree<OsmRelation>, parentSlug, nextMembers),
+    );
   }
 
   /** Reset a feature to before it was modified by the user */

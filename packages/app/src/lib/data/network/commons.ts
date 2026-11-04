@@ -10,7 +10,10 @@ type CommonsToken = { access_token: string; expires_at: number };
 
 function randomValue() {
   const bytes = crypto.getRandomValues(new Uint8Array(32));
-  return btoa(String.fromCharCode(...bytes)).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "");
+  return btoa(String.fromCharCode(...bytes))
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replace(/=+$/, "");
 }
 
 function readToken(): CommonsToken | undefined {
@@ -146,15 +149,18 @@ export async function uploadCommonsFile(
   form.set("format", "json");
   form.set("filename", metadata.filename);
   form.set("comment", "Uploaded from Climbhub");
-  form.set("text", [
-    "{{Information",
-    `|description=${escapeTemplateValue(metadata.description)}`,
-    `|source=${escapeTemplateValue(metadata.source)}`,
-    `|author=${escapeTemplateValue(metadata.author)}`,
-    `|date=${new Date().toISOString().slice(0, 10)}`,
-    "}}",
-    `{{${metadata.license}}}`,
-  ].join("\n"));
+  form.set(
+    "text",
+    [
+      "{{Information",
+      `|description=${escapeTemplateValue(metadata.description)}`,
+      `|source=${escapeTemplateValue(metadata.source)}`,
+      `|author=${escapeTemplateValue(metadata.author)}`,
+      `|date=${new Date().toISOString().slice(0, 10)}`,
+      "}}",
+      `{{${metadata.license}}}`,
+    ].join("\n"),
+  );
   form.set("token", csrfToken);
   form.set("file", file, metadata.filename);
 
@@ -172,9 +178,5 @@ export async function uploadCommonsFile(
 }
 
 function escapeTemplateValue(value: string) {
-  return value
-    .replaceAll("\r", " ")
-    .replaceAll("\n", " ")
-    .replaceAll("|", "{{!}}")
-    .replaceAll("}", "&#125;");
+  return value.replaceAll("\r", " ").replaceAll("\n", " ").replaceAll("|", "{{!}}").replaceAll("}", "&#125;");
 }

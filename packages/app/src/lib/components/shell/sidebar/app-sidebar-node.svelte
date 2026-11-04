@@ -231,9 +231,11 @@
             class={clsx(dropPosition && "relative")}
           >
             {#if dropPosition === "before"}
-              <span class="pointer-events-none absolute inset-x-1 top-0 z-10 h-0.5 bg-primary" aria-hidden="true"></span>
+              <span class="pointer-events-none absolute inset-x-1 top-0 z-10 h-0.5 bg-primary" aria-hidden="true"
+              ></span>
             {:else if dropPosition === "after"}
-              <span class="pointer-events-none absolute inset-x-1 bottom-0 z-10 h-0.5 bg-primary" aria-hidden="true"></span>
+              <span class="pointer-events-none absolute inset-x-1 bottom-0 z-10 h-0.5 bg-primary" aria-hidden="true"
+              ></span>
             {/if}
             <ChevronRightIcon class={clsx("transition-transform", open && "rotate-90")} />
             {#if itemType === "geographic"}

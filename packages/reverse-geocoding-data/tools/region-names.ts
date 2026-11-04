@@ -10,10 +10,38 @@ export type RegionName = { path: string } & Record<(typeof LANGUAGES)[number], s
 
 const RAW = `${import.meta.dirname}/../import/raw`;
 const CONTINENTS: Record<string, Record<string, string>> = {
-  "americas/north": { en: "North America", de: "Nordamerika", fr: "Amérique du Nord", es: "Norteamérica", it: "America del Nord", pt: "América do Norte" },
-  "americas/south": { en: "South America", de: "Südamerika", fr: "Amérique du Sud", es: "Sudamérica", it: "America del Sud", pt: "América do Sul" },
-  "americas/central": { en: "Central America", de: "Mittelamerika", fr: "Amérique centrale", es: "Centroamérica", it: "America centrale", pt: "América Central" },
-  "americas/antilles": { en: "Antilles", de: "Antillen", fr: "Antilles", es: "Antillas", it: "Antille", pt: "Antilhas" },
+  "americas/north": {
+    en: "North America",
+    de: "Nordamerika",
+    fr: "Amérique du Nord",
+    es: "Norteamérica",
+    it: "America del Nord",
+    pt: "América do Norte",
+  },
+  "americas/south": {
+    en: "South America",
+    de: "Südamerika",
+    fr: "Amérique du Sud",
+    es: "Sudamérica",
+    it: "America del Sud",
+    pt: "América do Sul",
+  },
+  "americas/central": {
+    en: "Central America",
+    de: "Mittelamerika",
+    fr: "Amérique centrale",
+    es: "Centroamérica",
+    it: "America centrale",
+    pt: "América Central",
+  },
+  "americas/antilles": {
+    en: "Antilles",
+    de: "Antillen",
+    fr: "Antilles",
+    es: "Antillas",
+    it: "Antille",
+    pt: "Antilhas",
+  },
   world: { en: "World", de: "Welt", fr: "Monde", es: "Mundo", it: "Mondo", pt: "Mundo" },
   africa: { en: "Africa", de: "Afrika", fr: "Afrique", es: "África", it: "Africa", pt: "África" },
   americas: { en: "Americas", de: "Amerika", fr: "Amériques", es: "América", it: "Americhe", pt: "Américas" },
@@ -48,7 +76,12 @@ function groupTags(path: string): { tags?: Tags; code?: string } {
   const region = regionByPath.get(path);
   if (!region) {
     // A country made of its subdivisions: its code is their prefix
-    const child = REGIONS.find((r) => r.code.includes("-") && !`world/${r.path}`.slice(path.length + 1).includes("/") && `world/${r.path}`.startsWith(`${path}/`));
+    const child = REGIONS.find(
+      (r) =>
+        r.code.includes("-") &&
+        !`world/${r.path}`.slice(path.length + 1).includes("/") &&
+        `world/${r.path}`.startsWith(`${path}/`),
+    );
     return { code: child?.code.split("-")[0] };
   }
   const file = `${RAW}/${region.code}.json`;
@@ -58,7 +91,9 @@ function groupTags(path: string): { tags?: Tags; code?: string } {
     .find(
       (e) =>
         e.type === "relation" &&
-        (region.osm ? e.id === region.osm : e.tags?.["ISO3166-2"] === region.code || e.tags?.["ISO3166-1"] === region.code),
+        (region.osm
+          ? e.id === region.osm
+          : e.tags?.["ISO3166-2"] === region.code || e.tags?.["ISO3166-1"] === region.code),
     );
   return { tags: relation?.tags, code: region.code };
 }
