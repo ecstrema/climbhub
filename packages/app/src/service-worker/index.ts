@@ -27,8 +27,7 @@ self.addEventListener("activate", (event) => {
   // Remove previous cached data from disk
   async function deleteOldCaches() {
     for (const key of await caches.keys()) {
-      // Delete old app caches AND the old CLIMBING_DATA cache,
-      // which is now handled by IndexedDB on the main thread.
+      // Delete old app caches
       if (key !== APP_CACHE) {
         await caches.delete(key);
       }
@@ -43,8 +42,7 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(event.request.url);
 
-  // Bypass the service worker completely for climbing data.
-  // The main thread (IndexedDB / custom client) will handle this.
+  // Climbing data is handled by the local SQLite database, or fetched directly in low data mode.
   if (url.pathname.startsWith("/climbhub/api/world")) {
     return;
   }

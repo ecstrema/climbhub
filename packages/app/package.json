@@ -19,8 +19,8 @@
   "dependencies": {
     "@climbhub/holy-grade": "workspace:*",
     "@friendofsvelte/state": "^0.2.0",
+    "@sqlite.org/sqlite-wasm": "^3.54.1-build1",
     "d3-scale": "^4.0.3",
-    "idb": "^8.0.4",
     "layerchart": "^2.9.2",
     "mode-watcher": "^1.1.0",
     "osm-api": "catalog:",

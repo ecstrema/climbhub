@@ -1,6 +1,10 @@
 <script lang="ts">
-  import { updated } from "$app/state";
+  import { navigating, updated } from "$app/state";
+  import { localDb } from "#lib/data/db/local-db.svelte.js";
   import { Button } from "#components/ui/button/index.js";
+
+  const downloading = $derived(localDb.status === "downloading");
+  const downloadPercent = $derived(localDb.total ? Math.min(100, (localDb.loaded / localDb.total) * 100) : undefined);
 
   // Sveltekit checks for updates on navigation. We need this for idle pages.
   $effect(() => {
@@ -26,6 +30,16 @@
 
 <ModeWatcher />
 
+{#if downloading && downloadPercent !== undefined}
+  <div class="fixed top-0 inset-x-0 h-0.5 z-50 bg-primary/20" role="progressbar" aria-label="Downloading data">
+    <div class="h-full bg-primary transition-[width]" style:width="{downloadPercent}%"></div>
+  </div>
+{:else if downloading || navigating.to}
+  <div class="fixed top-0 inset-x-0 h-0.5 z-50 overflow-hidden bg-primary/20" role="progressbar" aria-label="Loading">
+    <div class="loader-bar h-full w-1/3 bg-primary"></div>
+  </div>
+{/if}
+
 {@render children()}
 
 {#if updated.current && !dismissed}
@@ -42,4 +56,15 @@
 {/if}
 
 <style>
+  .loader-bar {
+    animation: loader-slide 1.1s ease-in-out infinite;
+  }
+  @keyframes loader-slide {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(300%);
+    }
+  }
 </style>

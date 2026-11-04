@@ -7,7 +7,7 @@
   import { Separator } from "#components/ui/separator/index.js";
   import * as Sidebar from "#components/ui/sidebar/index.js";
   import AppProvider from "#components/shell/providers/app-provider.svelte";
-  import SettingsMenu from "#components/shell/app-settings-menu.svelte";
+  import ProfileButton from "#components/shell/app-settings-menu.svelte";
 
   import type { LayoutProps } from "./$types";
   import Head from "#components/shell/head.svelte";
@@ -29,7 +29,7 @@
 
         <AppTopNavigation />
         <div class="grow"></div>
-        <SettingsMenu />
+        <ProfileButton />
       </header>
 
       <div class="flex flex-1 flex-col gap-4 p-4">

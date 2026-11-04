@@ -8,7 +8,6 @@
   import type { DataTree } from "#lib/types.js";
   import { featureToType } from "#lib/data/parse/data.js";
   import type { OsmFeature } from "osm-api";
-  import { resolve } from "$app/paths";
   import type { PageProps } from "./$types";
   import OsmMissingFeature from "#components/shell/osm-missing-feature.svelte";
   import { getStaticIdentifier } from "@climbhub/common";
@@ -53,8 +52,3 @@
 {:else}
   <ComponentParseFailed feature={item.feature} featureSlug={slug} />
 {/if}
-
-<!-- TODO: We need this else sveltekit complains that some endpoints are never used. -->
-<a class="hidden" href={resolve("/api/world/[...slug]/deep.json", { slug })}> Download </a>
-<a class="hidden" href={resolve("/api/world/[...slug]/stats.json", { slug })}> Stats </a>
-<a class="hidden" href={resolve("/api/world/[...slug]/data.json", { slug })}> Data </a>
