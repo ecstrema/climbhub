@@ -139,6 +139,7 @@
 
   let {
     markers,
+    bounds,
     dots = [],
     zoom = 15,
     class: className = "",
@@ -146,6 +147,8 @@
   }: {
     /** The map is centered on the first marker */
     markers: LocationMarker[];
+    /** Fits the view to a bounding box, instead of centering on the first marker */
+    bounds?: { x0: number; x1: number; y0: number; y1: number } | undefined;
     /** Small dots with their label on hover */
     dots?: LocationDot[];
     zoom?: number;
@@ -193,6 +196,17 @@
       return marker;
     });
     const focus = markers[0];
+    if (bounds) {
+      positioned = true;
+      map.fitBounds(
+        [
+          [bounds.x0, bounds.y0],
+          [bounds.x1, bounds.y1],
+        ],
+        { padding: 20, animate: false },
+      );
+      return;
+    }
     if (!focus || (dragged?.lat === focus.lat && dragged.lon === focus.lon)) return;
     // Navigating to a place that is already in view keeps the user's position and zoom
     if (positioned && map.getBounds().contains([focus.lon, focus.lat])) return;
@@ -217,6 +231,7 @@
 
   $effect(() => {
     markers;
+    bounds;
     dots;
     render();
   });

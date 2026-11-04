@@ -20,6 +20,8 @@ export interface OverpassRequest {
 export interface GeographicFolderElement {
   type: "geographic";
   name: string;
+  /** Bounding box of the region, in degrees */
+  bbox?: { x0: number; x1: number; y0: number; y1: number };
 }
 
 export type DataJSON = OsmFeature | GeographicFolderElement;

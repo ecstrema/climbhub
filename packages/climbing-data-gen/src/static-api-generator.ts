@@ -262,6 +262,7 @@ function writeChildrenDataToGeoTree(path: string[], mapTree: MapTree, geolocator
     const data: GeographicFolderElement = {
       type: "geographic",
       name: geolocator.getName(newPath.slice(1)),
+      bbox: geolocator.getBBox(newPath.slice(1)),
     };
 
     writeFileSync(join(newPath.join("/"), "data.json"), JSON.stringify(data satisfies DataJSON));

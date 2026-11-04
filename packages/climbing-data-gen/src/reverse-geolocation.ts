@@ -119,6 +119,11 @@ export class ReverseGeolocator {
     return path.at(-1)!;
   }
 
+  /** Bounding box of a region, from the index. The path starts with "world". */
+  public getBBox(path: string[]) {
+    return this.getIndexNodeForPath(path)?._bbox;
+  }
+
   /**
    * Retrieves GeoJSON features from memory, or loads them from disk if missing.
    * Manages memory using a Least Recently Used (LRU) eviction strategy.
