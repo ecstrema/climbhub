@@ -14774,29 +14774,23 @@ msgstr "Vanuatu"
 msgid "Wallis & Futuna"
 msgstr "Wallis e Futuna"
 
-#: src/routes/+page.svelte
-msgid "Areas and routes across the continent"
-msgstr "Zone e vie in tutto il continente"
+#~ msgid "Areas and routes across the continent"
+#~ msgstr "Zone e vie in tutto il continente"
 
-#: src/routes/+page.svelte
-msgid "From local crags to big walls"
-msgstr "Dalle falesie locali alle grandi pareti"
+#~ msgid "From local crags to big walls"
+#~ msgstr "Dalle falesie locali alle grandi pareti"
 
-#: src/routes/+page.svelte
-msgid "Find climbing areas across Asia"
-msgstr "Trova zone di arrampicata in tutta l'Asia"
+#~ msgid "Find climbing areas across Asia"
+#~ msgstr "Trova zone di arrampicata in tutta l'Asia"
 
-#: src/routes/+page.svelte
-msgid "Explore established and new areas"
-msgstr "Esplora zone consolidate e nuove"
+#~ msgid "Explore established and new areas"
+#~ msgstr "Esplora zone consolidate e nuove"
 
-#: src/routes/+page.svelte
-msgid "Browse climbing around the Pacific"
-msgstr "Scopri l'arrampicata intorno al Pacifico"
+#~ msgid "Browse climbing around the Pacific"
+#~ msgstr "Scopri l'arrampicata intorno al Pacifico"
 
-#: src/routes/+page.svelte
-msgid "Explore climbing areas and routes around the world, and compare grades across climbing styles."
-msgstr "Esplora zone e vie di arrampicata in tutto il mondo e confronta i gradi tra gli stili di arrampicata."
+#~ msgid "Explore climbing areas and routes around the world, and compare grades across climbing styles."
+#~ msgstr "Esplora zone e vie di arrampicata in tutto il mondo e confronta i gradi tra gli stili di arrampicata."
 
 #: src/routes/+page.svelte
 #: src/routes/+page.svelte
@@ -14808,62 +14802,47 @@ msgstr ""
 msgid "Main navigation"
 msgstr "Navigazione principale"
 
-#: src/routes/+page.svelte
-msgid "World map"
-msgstr "Mappa del mondo"
+#~ msgid "World map"
+#~ msgstr "Mappa del mondo"
 
-#: src/routes/+page.svelte
-#: src/routes/+page.svelte
-msgid "Grade comparison"
-msgstr "Confronto dei gradi"
+#~ msgid "Grade comparison"
+#~ msgstr "Confronto dei gradi"
 
-#: src/routes/+page.svelte
-msgid "Climbing areas, routes, and grades"
-msgstr "Zone, vie e gradi di arrampicata"
+#~ msgid "Climbing areas, routes, and grades"
+#~ msgstr "Zone, vie e gradi di arrampicata"
 
-#: src/routes/+page.svelte
-msgid "Climbing starts here."
-msgstr "L'arrampicata inizia qui."
+#~ msgid "Climbing starts here."
+#~ msgstr "L'arrampicata inizia qui."
 
-#: src/routes/+page.svelte
-msgid "Browse places to climb, explore route details, and compare the grading systems you know."
-msgstr "Cerca luoghi dove arrampicare, scopri i dettagli delle vie e confronta i sistemi di graduazione che conosci."
+#~ msgid "Browse places to climb, explore route details, and compare the grading systems you know."
+#~ msgstr "Cerca luoghi dove arrampicare, scopri i dettagli delle vie e confronta i sistemi di graduazione che conosci."
 
-#: src/routes/+page.svelte
-msgid "Explore Climbhub"
-msgstr "Esplora Climbhub"
+#~ msgid "Explore Climbhub"
+#~ msgstr "Esplora Climbhub"
 
-#: src/routes/+page.svelte
-msgid "Explore by region"
-msgstr "Esplora per regione"
+#~ msgid "Explore by region"
+#~ msgstr "Esplora per regione"
 
-#: src/routes/+page.svelte
-msgid "Full map <0/>"
-msgstr "Mappa completa <0/>"
+#~ msgid "Full map <0/>"
+#~ msgstr "Mappa completa <0/>"
 
-#: src/routes/+page.svelte
-msgid "Start with a continent, then browse areas and routes."
-msgstr "Parti da un continente, poi sfoglia zone e vie."
+#~ msgid "Start with a continent, then browse areas and routes."
+#~ msgstr "Parti da un continente, poi sfoglia zone e vie."
 
-#: src/routes/+page.svelte
-msgid "Example grades: 5a, 5.9, and V2"
-msgstr "Gradi di esempio: 5a, 5.9 e V2"
+#~ msgid "Example grades: 5a, 5.9, and V2"
+#~ msgstr "Gradi di esempio: 5a, 5.9 e V2"
 
-#: src/routes/+page.svelte
-msgid "5a"
-msgstr ""
+#~ msgid "5a"
+#~ msgstr ""
 
-#: src/routes/+page.svelte
-msgid "V2"
-msgstr ""
+#~ msgid "V2"
+#~ msgstr ""
 
-#: src/routes/+page.svelte
-msgid "See how route, boulder, ice, and aid grades relate across scales."
-msgstr "Scopri come si corrispondono i gradi di vie, boulder, ghiaccio e artificiale tra le scale."
+#~ msgid "See how route, boulder, ice, and aid grades relate across scales."
+#~ msgstr "Scopri come si corrispondono i gradi di vie, boulder, ghiaccio e artificiale tra le scale."
 
-#: src/routes/+page.svelte
-msgid "Compare route grades <0/>"
-msgstr "Confronta i gradi delle vie <0/>"
+#~ msgid "Compare route grades <0/>"
+#~ msgstr "Confronta i gradi delle vie <0/>"
 
 #: src/routes/+layout.svelte
 msgid "Downloading data"
@@ -15148,6 +15127,7 @@ msgstr "Preferenze"
 
 #: src/lib/components/shell/app-settings-menu.svelte
 #: src/lib/components/shell/app-top-navigation.svelte
+#: src/routes/+page.svelte
 #: src/routes/settings/+page.svelte
 msgid "Settings"
 msgstr "Impostazioni"
@@ -16418,8 +16398,9 @@ msgstr "Lingua dell'interfaccia e dei nomi delle regioni"
 #~ msgid "Full map "
 #~ msgstr ""
 
-#~ msgid "Compare route grades "
-#~ msgstr ""
+#: src/routes/settings/+page.svelte
+msgid "Compare route grades"
+msgstr ""
 
 #~ msgid "Uploaded "
 #~ msgstr ""
@@ -28035,3 +28016,27 @@ msgstr "America centrale"
 #: src/lib/data/region-names.svelte.js
 msgid "South America"
 msgstr "America del Sud"
+
+#: src/routes/+page.svelte
+msgid "Explore climbing routes and areas by region."
+msgstr ""
+
+#: src/routes/+page.svelte
+msgid "All routes"
+msgstr ""
+
+#: src/routes/+page.svelte
+msgid "Explore routes"
+msgstr ""
+
+#: src/routes/+page.svelte
+msgid "Browse climbing areas by region."
+msgstr ""
+
+#: src/routes/+page.svelte
+msgid "Regions"
+msgstr ""
+
+#: src/routes/settings/+page.svelte
+msgid "Compare boulder grades"
+msgstr ""
