@@ -31,7 +31,11 @@ export interface WorldClimbingPoints {
 export const WORLD_CLIMBING_QUERY = `
 [out:json][timeout:600];
 // Every climbing place, except individual routes
-nwr["sport"="climbing"]["climbing"!~"^route"];
+(
+  nwr["sport"="climbing"]["climbing"!~"^route"];
+  nwr["leisure"="pitch"];
+  nwr["climbing"~"^(area|crag|boulder)(;.*)?$"];
+);
 out tags center qt;`;
 function getKind(tags: Record<string, string>): ClimbingPointKind {
   switch (tags.climbing) {
@@ -43,7 +47,13 @@ function getKind(tags: Record<string, string>): ClimbingPointKind {
       return "boulder";
   }
   if (tags.type === "site") return "area";
-  if (tags.leisure === "sports_centre" || tags.leisure === "fitness_centre") return "gym";
+  if (
+    tags.leisure === "pitch" ||
+    ((tags.leisure === "sports_centre" || tags.leisure === "sports_hall" || tags.leisure === "fitness_centre") &&
+      tags.sport === "climbing")
+  ) {
+    return "gym";
+  }
   return "other";
 }
 

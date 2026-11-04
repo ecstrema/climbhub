@@ -6,7 +6,11 @@ import { postOverpass, type WorldClimbingPoints } from "./world.ts";
 
 const WORLD_CLIMBING_DATA_QUERY = `
 [out:json][timeout:600];
-nwr["sport"="climbing"];
+(
+  nwr["sport"="climbing"];
+  nwr["leisure"="pitch"];
+  nwr["climbing"~"^(area|crag|boulder|route_bottom|bolt|route_top|route|abseil_route)(;.*)?$"];
+);
 out center meta;`;
 const GLOBAL_RETRIES = 10;
 const GLOBAL_RETRY_DELAY = 60_000;
@@ -119,9 +123,13 @@ function getTileFile(dir: string, key: string) {
 function getQuery({ west, south, east, north }: BBox) {
   return `
 [out:json][timeout:${QUERY_TIMEOUT}];
-// Find all nodes, ways, and relations explicitly tagged with sport=climbing in the tile. Only this
-// statement is restricted to the tile: their parents and children are complete.
-nwr["sport"="climbing"](${south},${west},${north},${east});
+// Find climbing sites and standalone climbing features in the tile. Only these statements are
+// restricted to the tile: their parents and children are complete.
+(
+  nwr["sport"="climbing"](${south},${west},${north},${east});
+  nwr["leisure"="pitch"](${south},${west},${north},${east});
+  nwr["climbing"~"^(area|crag|boulder|route_bottom|bolt|route_top|route|abseil_route)(;.*)?$"](${south},${west},${north},${east});
+);
 
 // Union block: Get parent elements of routes and ways (this catches 'type=site' relations
 // that group the climbing routes but lack the sport tag themselves)

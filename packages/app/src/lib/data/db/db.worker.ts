@@ -142,8 +142,12 @@ function buildFilterQuery(filters: SearchFilters): { sql: string; bind: (string 
     bind.push(filters.gradeMax);
   }
   if (filters.styles.length > 0) {
-    where.push(`(${filters.styles.map(() => "json_extract(data, ?) = 'yes'").join(" OR ")})`);
-    bind.push(...filters.styles.map((style) => tagPath(`climbing:${style}`)));
+    where.push(
+      `(${filters.styles
+        .map(() => "(json_extract(data, ?) = 'yes' OR CAST(json_extract(data, ?) AS REAL) > 0)")
+        .join(" OR ")})`,
+    );
+    bind.push(...filters.styles.flatMap((style) => [tagPath(`climbing:${style}`), tagPath(`climbing:${style}`)]));
   }
   for (const { key, value } of filters.tags) {
     if (value) {

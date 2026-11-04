@@ -4,6 +4,7 @@
   import EditableTags from "#lib/components/editable/editable-tags.svelte";
   import EditableGrade from "#components/editable/editable-grade.svelte";
   import EditableLength from "#components/editable/editable-length.svelte";
+  import ClimbingStyles from "#components/climbing-styles.svelte";
   import CommonsTopo from "#lib/components/commons-topo.svelte";
   import type { DataTree } from "#lib/types.js";
   import type { OsmFeature } from "osm-api";
@@ -28,6 +29,8 @@
   <EditableGrade {feature} {grade} featureSlug={slug} />
   <EditableLength {feature} featureSlug={slug} />
 </div>
+
+<ClimbingStyles {feature} />
 
 {#if coordinates}
   <p class="text-sm text-muted-foreground">{coordinates.lat}, {coordinates.lon}</p>

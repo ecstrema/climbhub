@@ -2,13 +2,9 @@ import type { OsmFeature } from "osm-api";
 import type { Coordinates } from "@climbhub/climbing-data-gen";
 import {
   allScales,
-  fb,
-  french,
   getReference,
   getScale,
   parseGrade,
-  uiaa,
-  yds,
   type Scale,
   type ScaleId,
 } from "@climbhub/holy-grade";
@@ -44,52 +40,68 @@ export function getNameOSM(tags: Tags): string | undefined {
   return tags.name;
 }
 
-const YDSValidator = allowFromNormalize(yds.normalize);
-const FrenchValidator = allowFromNormalize(french.normalize);
-const FBValidator = allowFromNormalize(fb.normalize);
-const UIAAValidator = allowFromNormalize(uiaa.normalize);
+const climbingStyleLabels = [
+  ["sport", "Sport"],
+  ["trad", "Trad"],
+  ["boulder", "Boulder"],
+  ["toprope", "Top rope"],
+  ["speed", "Speed"],
+  ["multipitch", "Multi-pitch"],
+  ["ice", "Ice"],
+  ["mixed", "Mixed"],
+  ["dry", "Dry tooling"],
+  ["aid", "Aid"],
+  ["deepwater", "Deep-water solo"],
+] as const;
+
+export function getClimbingStyles(tags: Tags) {
+  return climbingStyleLabels.flatMap(([key, label]) => {
+    const value = tags[`climbing:${key}` as Key]?.trim();
+    if (!value || value.toLowerCase() === "no") return [];
+    const count = /^\d+$/.test(value) && Number(value) > 0 ? Number(value) : undefined;
+    return [{ key, label, count }];
+  });
+}
+
+export function getPhone(tags: Tags): string | undefined {
+  return tags.phone?.trim() || tags["contact:phone"]?.trim() || undefined;
+}
+
+const gradeTags: [Key, ScaleId][] = [
+  ["climbing:grade:uiaa", "UIAA"],
+  ["climbing:grade:yds_class", "YDS"],
+  ["climbing:grade:yds", "YDS"],
+  ["climbing:grade:french", "French"],
+  ["climbing:grade:french_british", "French"],
+  ["climbing:grade:fb", "FB"],
+  ["climbing:grade:font", "FB"],
+  ["climbing:grade:fontainebleau", "FB"],
+  ["climbing:grade:hueco", "Hueco"],
+  ["climbing:grade:vscale", "Hueco"],
+  ["climbing:grade:saxon", "Saxon"],
+  ["climbing:grade:norwegian", "Scandinavian"],
+  ["climbing:grade:british_adjectival", "UKAdj"],
+  ["climbing:grade:british_technical", "UKTech"],
+  ["climbing:grade:ewbank", "Ewbank"],
+  ["climbing:grade:polish", "Polish"],
+  ["climbing:grade:ice", "WI"],
+  ["climbing:grade:mixed", "Mixed"],
+  ["climbing:grade:dry", "DryTooling"],
+  ["climbing:grade:aid", "Aid"],
+  ["climbing:grade:yds_danger", "YDSDanger"],
+];
 const processedGrades: ProcessedTags = {
   "climbing:grade": allowAll,
-  "climbing:grade:uiaa": UIAAValidator,
-  "climbing:grade:yds": YDSValidator,
-  "climbing:grade:yds_class": YDSValidator,
-  "climbing:grade:french": FrenchValidator,
-  "climbing:grade:fb": FBValidator,
-  "climbing:grade:french_british": FBValidator,
-  "climbing:grade:font": FBValidator,
-  "climbing:grade:fontainebleau": FBValidator,
+  ...Object.fromEntries(gradeTags.map(([key, scale]) => [key, allowFromNormalize(getScale(scale)!.normalize)])),
 };
 
 export function scaleIdToTag(s: ScaleId): Key | undefined {
-  switch (s) {
-    case "FB":
-      return "climbing:grade:fb";
-    case "Hueco":
-      return "climbing:grade:hueco";
-    case "French":
-      return "climbing:grade:french";
-    case "UIAA":
-      return "climbing:grade:uiaa";
-    case "YDS":
-      return "climbing:grade:yds_class";
-
-    default:
-      console.error("could not find tag name associated with ScaleId", s);
-  }
+  return gradeTags.find(([, scale]) => scale === s)?.[0];
 }
 
 /** See https://wiki.openstreetmap.org/wiki/Climbing#Grading */
 export function getGrade(tags: Tags): WithSourceTag<Grade> | undefined {
-  const grade =
-    testKey("climbing:grade:uiaa", "UIAA") ||
-    testKey("climbing:grade:yds", "YDS") ||
-    testKey("climbing:grade:yds_class", "YDS") ||
-    testKey("climbing:grade:french", "French") ||
-    testKey("climbing:grade:french_british", "French") ||
-    testKey("climbing:grade:font", "FB") ||
-    testKey("climbing:grade:fontainebleau", "FB") ||
-    testKey("climbing:grade:hueco", "Hueco") ||
-    testKey("climbing:grade:vscale", "Hueco");
+  const grade = gradeTags.map(([key, scale]) => testKey(key, scale)).find(Boolean);
 
   if (grade) {
     return grade;
@@ -145,15 +157,30 @@ export function getGrade(tags: Tags): WithSourceTag<Grade> | undefined {
   }
 }
 
-const lengthValidator = (v: string) => /^\d+(\.\d+)?$/.test(v.trim());
+export interface ParsedClimbingLength {
+  meters: number;
+  sourceUnit: "meters" | "feet";
+}
+
+const lengthValidator = (value: string) => /^\d+(\.\d+)?$/.test(value.trim());
+
+export function parseClimbingLength(value: string | undefined): ParsedClimbingLength | undefined {
+  const normalized = value?.trim().replace(",", ".");
+  if (!normalized) return;
+
+  const meters = normalized.match(/^(\d+(?:\.\d+)?)\s*(?:m|meters?|metres?)?$/i);
+  if (meters) return { meters: Number(meters[1]), sourceUnit: "meters" };
+
+  const feet = normalized.match(/^(\d+(?:\.\d+)?)\s*(?:'|ft|feet|foot)$/i);
+  if (feet) return { meters: Number(feet[1]) * 0.3048, sourceUnit: "feet" };
+}
 
 /**
  * Length of a route in metres, as `climbing:length`.
  * See https://wiki.openstreetmap.org/wiki/Climbing#Route_properties
  */
 export function getLength(tags: Tags): number | undefined {
-  const v = tags["climbing:length"];
-  return v && lengthValidator(v) ? Number(v) : undefined;
+  return parseClimbingLength(tags["climbing:length"])?.meters;
 }
 
 export function getDescription(tags: Tags): string | undefined {
@@ -185,14 +212,12 @@ const routeClimbingValues = new Set([
   "route_top",
   "route",
   "route_start",
-  "boulder",
-  "bouldering",
   "abseil_route",
   "abseil",
   "toprope",
   "drytooling",
 ]);
-const areaClimbingValues = new Set(["area", "crag"]);
+const areaClimbingValues = new Set(["area", "crag", "boulder", "bouldering"]);
 const gymClimbingValues = new Set(["indoor_wall", "artificial_wall", "wall", "gym"]);
 const gymLeisureValues = new Set(["sports_centre", "sports_hall", "fitness_centre", "sport_centre"]);
 
@@ -212,6 +237,7 @@ export function featureToTypeOSM(feature: OsmFeature): OSMClimbingFeatureType | 
 
   if (
     hasClimbingValue(tags.climbing, gymClimbingValues) ||
+    tags.leisure === "pitch" ||
     (tags.sport === "climbing" && gymLeisureValues.has(tags.leisure || ""))
   ) {
     return "gym";

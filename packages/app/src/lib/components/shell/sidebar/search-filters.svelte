@@ -21,6 +21,13 @@
     ["trad", "Trad"],
     ["boulder", "Boulder"],
     ["toprope", "Top rope"],
+    ["speed", "Speed"],
+    ["multipitch", "Multi-pitch"],
+    ["ice", "Ice"],
+    ["mixed", "Mixed"],
+    ["dry", "Dry tooling"],
+    ["aid", "Aid"],
+    ["deepwater", "Deep-water solo"],
   ] as const;
 
   let tagKey = $state("");
