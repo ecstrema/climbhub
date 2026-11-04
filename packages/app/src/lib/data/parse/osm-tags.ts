@@ -244,6 +244,7 @@ export const sharedProcessedTags: ProcessedTags = {
   name: allowAll,
   description: allowAll,
   sport: allowSingleValue("climbing"),
+  ...Object.fromEntries(climbingStyleLabels.map(([key]) => [`climbing:${key}`, allowAll])),
 };
 
 export const processedTags: Record<OSMClimbingFeatureType, ProcessedTags> = {
@@ -270,7 +271,6 @@ export const processedTags: Record<OSMClimbingFeatureType, ProcessedTags> = {
     opening_hours: allowAll,
     fee: allowMultipleValues(new Set(["yes", "no"])),
     charge: allowAll,
-    ...Object.fromEntries(climbingStyleLabels.map(([key]) => [`climbing:${key}`, allowAll])),
   },
 };
 

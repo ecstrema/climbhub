@@ -142,12 +142,22 @@ function buildFilterQuery(filters: SearchFilters): { sql: string; bind: (string 
     bind.push(filters.gradeMax);
   }
   if (filters.styles.length > 0) {
+    // A route graded in a style's own scale (e.g. climbing:grade:ice) belongs to that style
     where.push(
       `(${filters.styles
-        .map(() => "(json_extract(data, ?) = 'yes' OR CAST(json_extract(data, ?) AS REAL) > 0)")
+        .map(
+          () =>
+            "(json_extract(data, ?) = 'yes' OR CAST(json_extract(data, ?) AS REAL) > 0 OR json_extract(data, ?) IS NOT NULL)",
+        )
         .join(" OR ")})`,
     );
-    bind.push(...filters.styles.flatMap((style) => [tagPath(`climbing:${style}`), tagPath(`climbing:${style}`)]));
+    bind.push(
+      ...filters.styles.flatMap((style) => [
+        tagPath(`climbing:${style}`),
+        tagPath(`climbing:${style}`),
+        tagPath(`climbing:grade:${style}`),
+      ]),
+    );
   }
   for (const { key, value } of filters.tags) {
     if (value) {

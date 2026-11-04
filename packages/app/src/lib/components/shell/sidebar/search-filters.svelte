@@ -1,7 +1,9 @@
 <script lang="ts">
   import { Button } from "#components/ui/button/index.js";
   import Input from "#components/ui/input/input.svelte";
+  import * as DropdownMenu from "#components/ui/dropdown-menu/index.js";
   import XIcon from "@lucide/svelte/icons/x";
+  import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
   import type { SearchFilters } from "#lib/data/db/types.js";
   import { gradeTextToReference } from "#lib/data/db/grade-text.js";
 
@@ -29,6 +31,14 @@
     ["aid", "Aid"],
     ["deepwater", "Deep-water solo"],
   ] as const;
+
+  const styleSummary = $derived(
+    filters.styles.length === 0
+      ? "Any style"
+      : STYLES.filter(([s]) => filters.styles.includes(s))
+          .map(([, label]) => label)
+          .join(", "),
+  );
 
   let tagKey = $state("");
   let tagValue = $state("");
@@ -70,18 +80,23 @@
     {/each}
   </div>
 
-  <div class="flex flex-wrap gap-x-3 gap-y-1">
-    {#each STYLES as [style, label] (style)}
-      <label class="flex items-center gap-1.5">
-        <input
-          type="checkbox"
-          checked={filters.styles.includes(style)}
-          onchange={() => (filters.styles = toggle(filters.styles, style))}
-        />
-        {label}
-      </label>
-    {/each}
-  </div>
+  <DropdownMenu.Root>
+    <DropdownMenu.Trigger>
+      {#snippet child({ props })}
+        <Button {...props} variant="outline" size="sm" class="justify-between">
+          {styleSummary}
+          <ChevronDownIcon class="size-4" />
+        </Button>
+      {/snippet}
+    </DropdownMenu.Trigger>
+    <DropdownMenu.Content class="w-48">
+      <DropdownMenu.CheckboxGroup bind:value={filters.styles}>
+        {#each STYLES as [style, label] (style)}
+          <DropdownMenu.CheckboxItem value={style} closeOnSelect={false}>{label}</DropdownMenu.CheckboxItem>
+        {/each}
+      </DropdownMenu.CheckboxGroup>
+    </DropdownMenu.Content>
+  </DropdownMenu.Root>
 
   <div class="flex items-center gap-2">
     <Input placeholder="Min grade" class="h-8" aria-invalid={minInvalid} bind:value={gradeText.min} />
