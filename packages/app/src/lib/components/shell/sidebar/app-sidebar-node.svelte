@@ -13,12 +13,13 @@
   import { getName, featureToType } from "#lib/data/parse/data.js";
   import AppSidebarChildren from "./app-sidebar-children.svelte";
   import HolyGrade from "#components/grade/holy-grade.svelte";
-  import { onMount } from "svelte";
+  import { onMount, untrack } from "svelte";
   import { getGrade } from "#lib/data/parse/osm-tags.js";
   import type { OsmFeature } from "osm-api";
   import { page } from "$app/state";
   import clsx from "clsx";
   import { getAppState } from "#lib/data/app-state.js";
+  import { getSearchFilter } from "./utils";
 
   let {
     slug,
@@ -29,6 +30,7 @@
   } = $props();
 
   const appState = getAppState();
+  const searchFilter = getSearchFilter();
 
   const breadcrumbSlugs = $derived(appState.breadcrumbs.slugs);
   const tree = $derived(appState.tree);
@@ -42,8 +44,33 @@
     if (isActivePath || isCurrentPage) open = true;
   });
 
+  // Nodes opened by the search are closed again when it ends, so the full tree isn't rendered at once.
+  let openedBySearch = false;
+  $effect(() => {
+    const expand = searchFilter.current.shouldExpand(slug);
+    untrack(() => {
+      if (expand) {
+        if (!open) {
+          open = true;
+          openedBySearch = true;
+        }
+      } else if (openedBySearch) {
+        openedBySearch = false;
+        if (!isActivePath) open = false;
+      }
+    });
+  });
+
   $effect(() => {
     if (open) appState.fetchChildren(slug);
+  });
+
+  let seenCollapseVersion = searchFilter.current.collapseVersion;
+  $effect(() => {
+    const version = searchFilter.current.collapseVersion;
+    if (version === seenCollapseVersion) return;
+    seenCollapseVersion = version;
+    open = false;
   });
 
   onMount(() => appState.fetchStats(slug));
@@ -56,6 +83,9 @@
   const itemType = $derived(featureToType(item.feature));
 
   let ref = $state<HTMLElement | null>(null);
+
+  // The action menu is costly to mount for every node, so it only exists once the node is hovered or focused.
+  let interacted = $state(false);
 
   $effect(() => {
     if (isCurrentPage && ref) {
@@ -84,7 +114,15 @@
     <span>{name || "No name"}</span>
   </Sidebar.MenuButton>
 {:else}
-  <Collapsible.Root bind:open onmouseenter={() => appState.fetchChildren(slug)} class="w-full">
+  <Collapsible.Root
+    bind:open
+    onmouseenter={() => {
+      interacted = true;
+      appState.fetchChildren(slug);
+    }}
+    onfocusin={() => (interacted = true)}
+    class="w-full"
+  >
     <Collapsible.Trigger>
       {#snippet child({ props })}
         <Sidebar.MenuItem bind:ref={ref as HTMLLIElement} {...props} class="group/button">
@@ -103,31 +141,35 @@
             </Sidebar.MenuBadge>
           {/if}
 
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger>
-              {#snippet child({ props })}
-                <Sidebar.MenuAction showOnHover {...props}>
-                  <Ellipsis />
-                </Sidebar.MenuAction>
-              {/snippet}
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Content side="right" align="start">
-              <DropdownMenu.Item>Add area</DropdownMenu.Item>
-              <DropdownMenu.Item>Add route</DropdownMenu.Item>
-              <DropdownMenu.Separator />
-              <DropdownMenu.Item>Download area</DropdownMenu.Item>
-              <DropdownMenu.Separator />
-              <DropdownMenu.Item>Delete area</DropdownMenu.Item>
-            </DropdownMenu.Content>
-          </DropdownMenu.Root>
+          {#if interacted}
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger>
+                {#snippet child({ props })}
+                  <Sidebar.MenuAction showOnHover {...props}>
+                    <Ellipsis />
+                  </Sidebar.MenuAction>
+                {/snippet}
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content side="right" align="start">
+                <DropdownMenu.Item>Add area</DropdownMenu.Item>
+                <DropdownMenu.Item>Add route</DropdownMenu.Item>
+                <DropdownMenu.Separator />
+                <DropdownMenu.Item>Download images</DropdownMenu.Item>
+                <DropdownMenu.Separator />
+                <DropdownMenu.Item>Delete area</DropdownMenu.Item>
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
+          {/if}
         </Sidebar.MenuItem>
       {/snippet}
     </Collapsible.Trigger>
 
     <Collapsible.Content>
-      <Sidebar.MenuSub>
-        <AppSidebarChildren bind:item {slug} />
-      </Sidebar.MenuSub>
+      {#if open}
+        <Sidebar.MenuSub>
+          <AppSidebarChildren bind:item {slug} />
+        </Sidebar.MenuSub>
+      {/if}
     </Collapsible.Content>
   </Collapsible.Root>
 {/if}

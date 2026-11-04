@@ -72,7 +72,7 @@
 
 {#snippet showItem(slug: string)}
   {let child = item.children?.[slug]}
-  {#if child && searchFilter.current(child)}
+  {#if child && searchFilter.current.matches(slug, child)}
     <AppSidebarNode bind:item={child} {slug} />
   {/if}
 {/snippet}

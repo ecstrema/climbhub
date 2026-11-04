@@ -44,9 +44,23 @@ export class AppState {
     }
   }
 
-  async fetchChildren(targetSlug: string): Promise<void> {
+  #childrenInFlight = new Map<string, Promise<void>>();
+
+  fetchChildren(targetSlug: string): Promise<void> {
     const node = this.tree.getReactiveNode(targetSlug);
     // Abort if children are already marked as fetched
+    if (!node || node.childrenFetched) return Promise.resolve();
+
+    let pending = this.#childrenInFlight.get(targetSlug);
+    if (!pending) {
+      pending = this.#fetchChildren(targetSlug).finally(() => this.#childrenInFlight.delete(targetSlug));
+      this.#childrenInFlight.set(targetSlug, pending);
+    }
+    return pending;
+  }
+
+  async #fetchChildren(targetSlug: string): Promise<void> {
+    const node = this.tree.getReactiveNode(targetSlug);
     if (!node || node.childrenFetched) return;
 
     const childrenData = await dataClient.getChildren(targetSlug);

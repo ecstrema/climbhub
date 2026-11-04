@@ -21,9 +21,11 @@ export function sortChildren(item: DataTree): SortedChildren | undefined {
       other: [],
     };
 
+    const seen = new Set<string>();
     for (const member of item.feature.members) {
       const slug = idToItem[getStaticIdentifier(member.type as BasicOsmType, member.ref)];
-      if (slug) {
+      if (slug && !seen.has(slug)) {
+        seen.add(slug);
         const child = item.children[slug]!;
         const childType = featureToType(child.feature) ?? "other";
         result[childType].push(slug);
@@ -77,6 +79,13 @@ export function sortChildren(item: DataTree): SortedChildren | undefined {
   }
 }
 
-export type SearchFilter = (d: DataTree) => boolean;
+export interface SearchFilter {
+  /** Whether the node is shown in the tree */
+  matches: (slug: string, d: DataTree) => boolean;
+  /** Whether the node holds a match, so it is opened to show it */
+  shouldExpand: (slug: string) => boolean;
+  /** Increments each time the user asks to collapse the whole tree */
+  collapseVersion: number;
+}
 
 export const [getSearchFilter, setSearchFilter] = createContext<FromCurrent<SearchFilter>>();
