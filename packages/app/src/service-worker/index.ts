@@ -42,6 +42,9 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(event.request.url);
 
+  // Cross-origin requests (map tiles...) go straight to the network: the cache is keyed by pathname.
+  if (url.origin !== self.location.origin) return;
+
   // Climbing data is handled by the local SQLite database, or fetched directly in low data mode.
   if (url.pathname.startsWith("/climbhub/api/world")) {
     return;
