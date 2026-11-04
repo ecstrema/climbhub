@@ -20,6 +20,8 @@ export interface OverpassRequest {
 export interface GeographicFolderElement {
   type: "geographic";
   name: string;
+  /** Id of the translations of the name, see region-names.json of reverse-geocoding-data */
+  nameId?: number;
   /** Bounding box of the region, in degrees */
   bbox?: { x0: number; x1: number; y0: number; y1: number };
 }

@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from "fs";
-import { join } from "path";
+import { dirname, join } from "path";
 import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
 import type { Position, Feature, MultiPolygon, Polygon } from "geojson";
 import { BOUNDARY_EXTENSION, type IndexNode } from "@climbhub/reverse-geocoding-data";
@@ -11,6 +11,8 @@ export class ReverseGeolocator {
   /** Base directory where the world data is stored */
   private dataDir: string;
 
+  /** English name and id (position in region-names.json) of the regions, by path */
+  private names: Map<string, { id: number; name: string }>;
   /**
    * LRU Cache: Maps filepath -> Array of parsed Turf Polygon features
    * TODO: add types for the features.
@@ -32,6 +34,14 @@ export class ReverseGeolocator {
     const indexData = readFileSync(indexPath, "utf8");
     this.indexTree = JSON.parse(indexData);
     this.dataDir = dataDir;
+
+    // Written next to the index by `bun run region-names` of reverse-geocoding-data
+    const namesPath = join(dirname(indexPath), "region-names.json");
+    if (!existsSync(namesPath)) {
+      throw new Error(`Region names not found: ${namesPath}`);
+    }
+    const names: { path: string; en: string }[] = JSON.parse(readFileSync(namesPath, "utf8"));
+    this.names = new Map(names.map((n, id) => [n.path, { id, name: n.en }]));
 
     this.geoJsonCache = new Map();
     this.maxCacheSize = maxCacheSize;
@@ -112,11 +122,11 @@ export class ReverseGeolocator {
   }
 
   /**
-   * Name of a region. The path is the key of its translation.
-   * TODO: translate it with wuchale. Until then, the slug is displayed.
+   * English name and id of a region, the id being the key of its translations. The path starts with
+   * "world".
    */
   public getName(path: string[]) {
-    return path.at(-1)!;
+    return this.names.get(path.join("/")) ?? { id: undefined, name: path.at(-1)! };
   }
 
   /** Bounding box of a region, from the index. The path starts with "world". */

@@ -3,6 +3,7 @@
   import ChildrenTable from "./children-table.svelte";
   import type { GeographicFolderElement } from "@climbhub/climbing-data-gen";
   import LocationMap from "#lib/components/location-map.svelte";
+  import { getLocalizedName } from "#lib/data/parse/localized-name.js";
 
   let {
     item = $bindable(),
@@ -12,7 +13,7 @@
 </script>
 
 <h1 class="text-2xl font-semibold">
-  {item.feature.name || "No Name"}
+  {getLocalizedName(item.feature) || "No Name"}
   <!-- TODO: add an icon to indicate that no name has been given to this. It is an error and should be fixed directly in the code -->
 </h1>
 

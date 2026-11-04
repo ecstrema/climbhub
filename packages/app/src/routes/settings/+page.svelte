@@ -8,6 +8,7 @@
   import { allBoulderScales, allRouteScales, convertGrade, french } from "@climbhub/holy-grade";
   import { setMode, userPrefersMode } from "mode-watcher";
   import { settings } from "#lib/data/settings.svelte.js";
+  import { i18n, locales, localeNames, setLocale } from "#lib/i18n.svelte.js";
   import {
     getPreferredBoulderGradingScale,
     getPreferredRouteGradingScale,
@@ -87,6 +88,22 @@
       </select>
     </section>
 
+    <section class="grid gap-4 border-t py-6 sm:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)] sm:items-center">
+      <div>
+        <h2 class="font-medium">Language</h2>
+        <p class="mt-1 text-sm text-muted-foreground">Language of the interface and of the names of the regions</p>
+      </div>
+      <select
+        aria-label="Language"
+        class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        bind:value={() => i18n.locale, setLocale}
+      >
+        {#each locales as locale (locale)}
+          <option value={locale}>{localeNames[locale]}</option>
+        {/each}
+      </select>
+    </section>
+
     <section class="grid gap-4 border-t py-6 sm:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)] sm:items-start">
       <div>
         <h2 class="font-medium">Route grading scale</h2>
@@ -109,6 +126,9 @@
             <span class="mt-1 block"><span class="font-medium text-foreground">Examples:</span> {routeExamples}</span>
           {/if}
         </p>
+        <a href={resolve("/grade-comparison/route")} class="text-sm text-primary hover:underline">
+          Compare route grades
+        </a>
       </div>
     </section>
 
@@ -134,6 +154,9 @@
             <span class="mt-1 block"><span class="font-medium text-foreground">Examples:</span> {boulderExamples}</span>
           {/if}
         </p>
+        <a href={resolve("/grade-comparison/boulder")} class="text-sm text-primary hover:underline">
+          Compare boulder grades
+        </a>
       </div>
     </section>
 

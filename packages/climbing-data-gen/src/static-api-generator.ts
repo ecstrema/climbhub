@@ -259,9 +259,11 @@ function writeChildrenDataToGeoTree(path: string[], mapTree: MapTree, geolocator
   for (const [childName, childMapTree] of mapTree.children) {
     const newPath = [...path, childName];
 
+    const { id, name } = geolocator.getName(newPath.slice(1));
     const data: GeographicFolderElement = {
       type: "geographic",
-      name: geolocator.getName(newPath.slice(1)),
+      name,
+      nameId: id,
       bbox: geolocator.getBBox(newPath.slice(1)),
     };
 

@@ -10,7 +10,8 @@
   import BuildingIcon from "@lucide/svelte/icons/building";
   import type { DataTree } from "#lib/types.js";
 
-  import { getName, featureToType } from "#lib/data/parse/data.js";
+  import { featureToType } from "#lib/data/parse/data.js";
+  import { getLocalizedName } from "#lib/data/parse/localized-name.js";
   import AppSidebarChildren from "./app-sidebar-children.svelte";
   import HolyGrade from "#components/grade/holy-grade.svelte";
   import { onMount, untrack } from "svelte";
@@ -88,7 +89,7 @@
   const link = $derived.by(() => {
     return resolve("/world/[...slug]", { slug });
   });
-  const name = $derived(getName(item.feature));
+  const name = $derived(getLocalizedName(item.feature));
 
   const itemType = $derived(featureToType(item.feature));
   const reorderType = $derived<ReorderableType | undefined>(

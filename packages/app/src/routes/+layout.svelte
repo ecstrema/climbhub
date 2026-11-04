@@ -25,7 +25,11 @@
   import "./layout.css";
 
   import { ModeWatcher } from "mode-watcher";
+  import { onMount } from "svelte";
+  import { initLocale } from "#lib/i18n.svelte.js";
   const { children } = $props();
+
+  onMount(initLocale);
 </script>
 
 <ModeWatcher />

@@ -18,7 +18,8 @@
   "scripts": {
     "build": "bun run src/main.ts",
     "check-size": "bun run tools/check-boundary-size.ts",
-    "import": "bun run import/main.ts"
+    "import": "bun run import/main.ts",
+    "region-names": "bun run tools/region-names.ts"
   },
   "devDependencies": {
     "@climbhub/common": "workspace:*",

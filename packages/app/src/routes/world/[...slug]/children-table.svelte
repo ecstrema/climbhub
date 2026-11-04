@@ -1,6 +1,7 @@
 <script lang="ts">
   import { resolve } from "$app/paths";
-  import { featureToType, getName } from "#lib/data/parse/data.js";
+  import { featureToType } from "#lib/data/parse/data.js";
+  import { getLocalizedName } from "#lib/data/parse/localized-name.js";
   import { getGrade } from "#lib/data/parse/osm-tags.js";
   import type { DataTree } from "#lib/types.js";
   import HolyGrade from "#components/grade/holy-grade.svelte";
@@ -31,7 +32,7 @@
         <Table.Row>
           <Table.Cell class="font-medium underline underline-offset-2">
             <a href={resolve("/world/[...slug]", { slug })}>
-              {getName(child.feature) || "No Name"}
+              {getLocalizedName(child.feature) || "No Name"}
             </a>
           </Table.Cell>
           <Table.Cell>
@@ -49,7 +50,7 @@
           <Table.Cell class="font-medium underline underline-offset-2 ">
             <a href={resolve("/world/[...slug]", { slug })} class="flex gap-1 items-center">
               <BuildingIcon class="size-5" />
-              {getName(child.feature) || "No Name"}
+              {getLocalizedName(child.feature) || "No Name"}
             </a>
           </Table.Cell>
         </Table.Row>
@@ -60,7 +61,7 @@
         <Table.Row>
           <Table.Cell>
             <a href={resolve("/world/[...slug]", { slug })} class="font-medium underline underline-offset-2">
-              {getName(child.feature) || "No Name"}
+              {getLocalizedName(child.feature) || "No Name"}
             </a>
           </Table.Cell>
           <Table.Cell>
@@ -77,7 +78,7 @@
         <Table.Row>
           <Table.Cell class="font-medium underline underline-offset-2">
             <a href={resolve("/world/[...slug]", { slug })}>
-              {getName(child.feature) || "No Name"}
+              {getLocalizedName(child.feature) || "No Name"}
             </a>
           </Table.Cell>
         </Table.Row>

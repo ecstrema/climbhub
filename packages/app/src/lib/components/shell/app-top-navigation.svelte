@@ -3,7 +3,7 @@
   import * as DropdownMenu from "#components/ui/dropdown-menu/index.js";
   import { Button } from "#components/ui/button/index.js";
 
-  import { getName } from "#lib/data/parse/data.js";
+  import { getLocalizedName } from "#lib/data/parse/localized-name.js";
   import { resolve } from "$app/paths";
   import type { BreadcrumbSegment } from "#lib/types.js";
   import { onMount, settled } from "svelte";
@@ -86,7 +86,7 @@
                 {#each ellipsisItems as breadcrumb (breadcrumb.slug)}
                   <DropdownMenu.Item>
                     <a href={resolve("/world/[...slug]", { slug: breadcrumb.slug })} class="size-full">
-                      {breadcrumb.data ? getName(breadcrumb.data.feature) : ""}
+                      {breadcrumb.data ? getLocalizedName(breadcrumb.data.feature) : ""}
                     </a>
                   </DropdownMenu.Item>
                 {/each}
@@ -105,7 +105,7 @@
 {/if}
 
 {#snippet breadcrumbFromDataJSON(breadcrumb: BreadcrumbSegment, lastElement: BreadcrumbSegment)}
-  {const name = $derived(breadcrumb.data ? getName(breadcrumb.data.feature) : "")}
+  {const name = $derived(breadcrumb.data ? getLocalizedName(breadcrumb.data.feature) : "")}
 
   <Breadcrumb.Item>
     {#if breadcrumb === lastElement}

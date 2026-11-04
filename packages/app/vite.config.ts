@@ -6,6 +6,7 @@ import adapter from "@sveltejs/adapter-static";
 import tailwindcss from "@tailwindcss/vite";
 import devtoolsJson from "vite-plugin-devtools-json";
 import { sveltekit } from "@sveltejs/kit/vite";
+import { wuchale } from "wuchale/vite";
 import { defineConfig, type Plugin } from "vitest/config";
 
 const BASE = "/climbhub";
@@ -45,6 +46,7 @@ export default defineConfig({
   plugins: [
     climbingApi(),
     tailwindcss(),
+    wuchale(),
     sveltekit({
       // Consult https://kit.svelte.dev/docs/integrations#preprocessors
       // for more information about preprocessors

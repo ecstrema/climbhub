@@ -4,6 +4,7 @@
   import { onMount } from "svelte";
   import { gradeTextToReference } from "#lib/data/db/grade-text.js";
   import { featureToType, getName } from "#lib/data/parse/data.js";
+  import { getLocalizedName } from "#lib/data/parse/localized-name.js";
   import { resolve } from "$app/paths";
   import AppSidebarChildren from "./app-sidebar-children.svelte";
   import SearchFiltersPanel from "./search-filters.svelte";
@@ -239,7 +240,9 @@
     {/if}
     {#if !(result?.status === "done" && result.matches.size === 0)}
       <Sidebar.Group>
-        <Sidebar.GroupLabel><a href={resolve("world")}>{getName(appState.tree.root.feature)}</a></Sidebar.GroupLabel>
+        <Sidebar.GroupLabel
+          ><a href={resolve("world")}>{getLocalizedName(appState.tree.root.feature)}</a></Sidebar.GroupLabel
+        >
         <Sidebar.GroupContent
           ><Sidebar.Menu><AppSidebarChildren bind:item={appState.tree.root} slug={""} /></Sidebar.Menu
           ></Sidebar.GroupContent

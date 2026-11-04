@@ -19,3 +19,6 @@ Thumbs.db
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Wuchale compiled catalogs
+/packages/app/src/locales/.wuchale
