@@ -1,8 +1,8 @@
 <script lang="ts">
   import SettingsIcon from "@lucide/svelte/icons/settings";
-  import * as DropdownMenu from "#components/ui/dropdown-menu";
+  import * as DropdownMenu from "#components/ui/dropdown-menu/index.js";
   import { Button } from "#components/ui/button/index.js";
-  import * as Tooltip from "#components/ui/tooltip";
+  import * as Tooltip from "#components/ui/tooltip/index.js";
   import { Tooltip as BitsUiTooltip } from "bits-ui";
 
   import { setMode, userPrefersMode } from "mode-watcher";

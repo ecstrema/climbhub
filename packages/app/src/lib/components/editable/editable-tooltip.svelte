@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
-  import * as Tooltip from "#components/ui/tooltip";
+  import * as Tooltip from "#components/ui/tooltip/index.js";
   import { Button } from "#components/ui/button/index.js";
   import { getAppState } from "#lib/data/app-state.js";
 

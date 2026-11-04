@@ -1,8 +1,8 @@
 <script lang="ts">
   import { resolve } from "$app/paths";
-  import * as Collapsible from "#components/ui/collapsible";
-  import * as Sidebar from "#components/ui/sidebar";
-  import * as DropdownMenu from "#components/ui/dropdown-menu";
+  import * as Collapsible from "#components/ui/collapsible/index.js";
+  import * as Sidebar from "#components/ui/sidebar/index.js";
+  import * as DropdownMenu from "#components/ui/dropdown-menu/index.js";
   import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
   import Ellipsis from "@lucide/svelte/icons/ellipsis";
   import EarthIcon from "@lucide/svelte/icons/earth";

@@ -197,6 +197,10 @@
     }
   }
 
+  function toggleMergeMode() {
+    if (store) store.mergeMode = !store.mergeMode;
+  }
+
   function onkeydown(e: KeyboardEvent) {
     if (!store) return;
     const target = e.target as HTMLElement;
@@ -266,7 +270,7 @@
             size="sm"
             variant={store.mergeMode || store.mergeSelection.size > 0 ? "default" : "outline"}
             title="Toggle merge mode (M): select and merge multiple regions together"
-            onclick={() => (store.mergeMode = !store.mergeMode)}
+            onclick={toggleMergeMode}
           >
             <CombineIcon class="size-3.5 mr-1" />
             Merge{store.mergeSelection.size ? ` (${store.mergeSelection.size})` : ""}

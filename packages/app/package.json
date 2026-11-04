@@ -50,6 +50,7 @@
     "maplibre-gl": "^6.16.0",
     "osmtogeojson": "catalog:",
     "shadcn-svelte": "^1.7.2",
+    "sv": "^1.2.0",
     "svelte": "^5.57.3",
     "svelte-check": "^4.7.8",
     "tailwind-merge": "^3.7.0",

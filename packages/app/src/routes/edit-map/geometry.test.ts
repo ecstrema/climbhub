@@ -523,7 +523,7 @@ describe("simplifyCoast", () => {
 
     // Test a sample of original interior/coastal points
     for (let i = 1; i < detailedCoast.length - 1; i += 2) {
-      const [cx, cy] = detailedCoast[i]!;
+      const [cx, cy] = detailedCoast[i] as [number, number];
       // An interior point slightly inward from the coast
       const inX = cx + 0.2;
       expect(polygonsContain(prepared, inX, cy)).toBe(true);

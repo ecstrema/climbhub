@@ -1,4 +1,4 @@
-import type { OsmFeature, OsmChange, UploadPhase, UploadResult, OsmFeatureType } from "osm-api";
+import type { Key, OsmFeature, OsmChange, UploadPhase, UploadResult, OsmFeatureType } from "osm-api";
 
 import { isLoggedIn, login, logout, uploadChangeset, getFeature as getFeatureOsm } from "osm-api";
 
@@ -38,7 +38,7 @@ export type FeatureDiff =
   | "deleted"
   | "created"
   | TypedMap<{
-      tags?: Partial<Record<OsmApi.Keys["keys"], Diff<string | undefined>>>;
+      tags?: Partial<Record<Key, Diff<string | undefined>>>;
       lat?: Diff<number | undefined>;
       lon?: Diff<number | undefined>;
       type?: Diff<OsmFeatureType>;
@@ -165,8 +165,8 @@ export class OsmUser {
     // @ts-expect-error This is only valid for nodes, but will work for all types
     if (initial.lon !== final.lon) res.set("lon", { initial: initial.lon, final: final.lon });
 
-    const combinedTags = new Set(Object.keys(initial.tags || {}) as OsmApi.Keys["keys"][]).union(
-      new Set(Object.keys(final.tags || {}) as OsmApi.Keys["keys"][]),
+    const combinedTags = new Set(Object.keys(initial.tags || {}) as Key[]).union(
+      new Set(Object.keys(final.tags || {}) as Key[]),
     );
     for (const key of combinedTags) {
       const initialVal = initial.tags?.[key];
@@ -293,8 +293,8 @@ export class OsmUser {
     // @ts-expect-error This is only valid for nodes, but will work for all types
     if (initial.lon !== final.lon) initial.lon = final.lon;
 
-    const combinedTags = new Set(Object.keys(initial.tags || {}) as OsmApi.Keys["keys"][]).union(
-      new Set(Object.keys(final.tags || {}) as OsmApi.Keys["keys"][]),
+    const combinedTags = new Set(Object.keys(initial.tags || {}) as Key[]).union(
+      new Set(Object.keys(final.tags || {}) as Key[]),
     );
     for (const key of combinedTags) {
       const initialVal = initial.tags?.[key];
@@ -363,7 +363,7 @@ export class OsmUser {
     const upstreamTags = upstreamDiff.get("tags");
 
     if (upstreamTags) {
-      const integrateTag = (key: OsmApi.Keys["keys"]) => {
+      const integrateTag = (key: Key) => {
         const upstreamChange = upstreamTags[key];
         if (upstreamChange) {
           const localChange = localDiff.get("tags")?.[key];
@@ -380,7 +380,7 @@ export class OsmUser {
         }
       };
 
-      for (const key of Object.keys(upstreamTags || {}) as OsmApi.Keys["keys"][]) {
+      for (const key of Object.keys(upstreamTags || {}) as Key[]) {
         integrateTag(key);
       }
     }

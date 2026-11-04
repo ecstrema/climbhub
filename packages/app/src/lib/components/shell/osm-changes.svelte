@@ -2,7 +2,7 @@
   import UploadIcon from "@lucide/svelte/icons/upload";
   import DeleteIcon from "@lucide/svelte/icons/delete";
   import { Button } from "#components/ui/button/index.js";
-  import * as Dialog from "#components/ui/dialog";
+  import * as Dialog from "#components/ui/dialog/index.js";
   import { getNameOSM } from "#lib/data/parse/osm-tags.js";
 
   import { Progress } from "#components/ui/progress/index.js";

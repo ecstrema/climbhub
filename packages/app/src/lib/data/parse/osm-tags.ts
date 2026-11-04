@@ -12,10 +12,10 @@ import {
   type Scale,
   type ScaleId,
 } from "@climbhub/holy-grade";
-import type { Tags } from "osm-api";
+import type { Key, Tags } from "osm-api";
 import type { Grade } from "#lib/types.js";
 
-export type ProcessedTags = Partial<Record<OsmApi.Keys["keys"], (value: string) => boolean>>;
+export type ProcessedTags = Partial<Record<Key, (value: string) => boolean>>;
 
 export function allowAll(_value: string): boolean {
   return true;
@@ -60,7 +60,7 @@ const processedGrades: ProcessedTags = {
   "climbing:grade:fontainebleau": FBValidator,
 };
 
-export function scaleIdToTag(s: ScaleId): OsmApi.Keys["keys"] | undefined {
+export function scaleIdToTag(s: ScaleId): Key | undefined {
   switch (s) {
     case "FB":
       return "climbing:grade:fb";
@@ -131,7 +131,7 @@ export function getGrade(tags: Tags): WithSourceTag<Grade> | undefined {
 
   return undefined;
 
-  function testKey(key: OsmApi.Keys["keys"], scale: ScaleId): WithSourceTag<Grade> | undefined {
+  function testKey(key: Key, scale: ScaleId): WithSourceTag<Grade> | undefined {
     const v = tags[key];
     if (v) {
       const parsed = parseGrade(v, scale);
@@ -176,7 +176,7 @@ export function getCoordinates(element: OsmFeature): Coordinates | undefined {
 export type ProcessingError = "GradeParsingError" | "GradeMissingScaleSpecifier";
 
 /** We add the source tag to the processed value, so we can bind to it and modify the right value. */
-export type WithSourceTag<T> = { v: T; source: OsmApi.Keys["keys"] };
+export type WithSourceTag<T> = { v: T; source: Key };
 
 export type OSMClimbingFeatureType = "route" | "area" | "gym";
 

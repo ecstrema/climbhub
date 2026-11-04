@@ -1,8 +1,8 @@
 <script lang="ts">
-  import * as Table from "#components/ui/table";
+  import * as Table from "#components/ui/table/index.js";
   import EditableTextarea from "./editable-textarea.svelte";
   import { featureToTypeOSM, processedTags } from "#lib/data/parse/osm-tags.js";
-  import type { OsmFeature, Tags } from "osm-api";
+  import type { Key, OsmFeature, Tags } from "osm-api";
   import { cn } from "#lib/utils.js";
   import { getAppState } from "#lib/data/app-state.js";
   import { Button } from "#components/ui/button/index.js";
@@ -18,23 +18,24 @@
   } = $props();
 
   const appState = getAppState();
+  type TagKey = Key;
 
   const tags = $derived.by(() => feature.tags || {});
 
   const { knownTags, invalidTags, unknownTags } = $derived.by(() => {
-    const knownTags: OsmApi.Keys["keys"][] = [];
-    const unknownTags: OsmApi.Keys["keys"][] = [];
-    const invalidTags: OsmApi.Keys["keys"][] = [];
+    const knownTags: TagKey[] = [];
+    const unknownTags: TagKey[] = [];
+    const invalidTags: TagKey[] = [];
 
     const featureType = featureToTypeOSM(feature);
     if (!featureType) {
-      return { knownTags, invalidTags, unknownTags: Object.keys(tags) as OsmApi.Keys["keys"][] };
+      return { knownTags, invalidTags, unknownTags: Object.keys(tags) as TagKey[] };
     }
 
     const processedTagsForElement = processedTags[featureType];
 
     for (let k of Object.keys(tags)) {
-      const key = k as OsmApi.Keys["keys"];
+      const key = k as TagKey;
 
       const validator = processedTagsForElement[key];
       if (!validator) {
@@ -58,7 +59,7 @@
 
   function addTag() {
     if (!newTag || !newKey || newKeyError) return;
-    appState.setTag(featureSlug, newKey as OsmApi.Keys["keys"], newTag.value);
+    appState.setTag(featureSlug, newKey as TagKey, newTag.value);
     newTag = undefined;
   }
 
@@ -111,7 +112,7 @@
   {/if}
 {/if}
 
-{#snippet showTags(specialTags: OsmApi.Keys["keys"][], title: string, className: string)}
+{#snippet showTags(specialTags: TagKey[], title: string, className: string)}
   {#if specialTags.length > 0}
     <Table.Row
       class={cn(

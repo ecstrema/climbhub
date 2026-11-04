@@ -1,6 +1,6 @@
 <script lang="ts">
-  import * as Breadcrumb from "#components/ui/breadcrumb";
-  import * as DropdownMenu from "#components/ui/dropdown-menu";
+  import * as Breadcrumb from "#components/ui/breadcrumb/index.js";
+  import * as DropdownMenu from "#components/ui/dropdown-menu/index.js";
   import { Button } from "#components/ui/button/index.js";
 
   import { getName } from "#lib/data/parse/data.js";

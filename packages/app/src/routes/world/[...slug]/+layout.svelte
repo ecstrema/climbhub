@@ -5,7 +5,7 @@
 
   import AppSidebar from "#components/shell/sidebar/app-sidebar.svelte";
   import { Separator } from "#components/ui/separator/index.js";
-  import * as Sidebar from "#components/ui/sidebar";
+  import * as Sidebar from "#components/ui/sidebar/index.js";
   import AppProvider from "#components/shell/providers/app-provider.svelte";
   import SettingsMenu from "#components/shell/app-settings-menu.svelte";
 

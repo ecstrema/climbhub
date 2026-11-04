@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { OsmFeature } from "osm-api";
-  import * as Alert from "#components/ui/alert";
+  import * as Alert from "#components/ui/alert/index.js";
   import { getStaticIdentifier } from "@climbhub/common";
 
   let { feature }: { feature: OsmFeature } = $props();

@@ -6,6 +6,7 @@
     Popup,
     ScaleControl,
     type GeoJSONSource,
+    type ExpressionSpecification,
     type MapLayerMouseEvent,
     type MapMouseEvent,
   } from "maplibre-gl";
@@ -297,8 +298,8 @@
 
   // The status changes with the boundaries: it is a feature state, that filters cannot use. The
   // hidden types are drawn transparent instead.
-  const pointStatus = ["coalesce", ["feature-state", "status"], ["get", "status"]];
-  const pointTypeExpression = [
+  const pointStatus: ExpressionSpecification = ["coalesce", ["feature-state", "status"], ["get", "status"]];
+  const pointTypeExpression: ExpressionSpecification = [
     "case",
     ["==", pointStatus, PointStatus.Unassigned],
     "unassigned",
@@ -538,12 +539,19 @@
       m.addSource("vertices", { type: "geojson", data: empty });
       m.addSource("lasso", { type: "geojson", data: empty });
 
+      const boundaryStateColorExpression: ExpressionSpecification = [
+        "match",
+        ["get", "state"],
+        ...Object.entries(BOUNDARY_STATE_COLORS).flat(),
+        "#64748b",
+      ] as unknown as ExpressionSpecification;
+
       m.addLayer({
         id: "all-boundaries",
         type: "line",
         source: "all-boundaries",
         paint: {
-          "line-color": ["match", ["get", "state"], ...Object.entries(BOUNDARY_STATE_COLORS).flat(), "#64748b"],
+          "line-color": boundaryStateColorExpression,
           "line-width": 0.6,
           "line-opacity": 0.6,
         },
@@ -570,7 +578,7 @@
         type: "line",
         source: "boundaries",
         paint: {
-          "line-color": ["match", ["get", "state"], ...Object.entries(BOUNDARY_STATE_COLORS).flat(), "#64748b"],
+          "line-color": boundaryStateColorExpression,
           "line-width": ["match", ["get", "role"], "selected", 2.5, "child", 1.5, 1],
         },
       });
@@ -599,10 +607,15 @@
         source: "points",
         paint: {
           "circle-radius": pointRadius(pointSize.current),
-          "circle-color": ["match", pointTypeExpression, ...POINT_TYPES.flatMap((t) => [t.type, t.color]), "#0f766e"],
+          "circle-color": [
+            "match",
+            pointTypeExpression,
+            ...POINT_TYPES.flatMap((t) => [t.type, t.color]),
+            "#0f766e",
+          ] as unknown as ExpressionSpecification,
           "circle-opacity": pointOpacity(shownPointTypes.current),
           "circle-stroke-opacity": pointOpacity(shownPointTypes.current),
-          "circle-stroke-width": ["case", ["==", pointStatus, PointStatus.Assigned], 0, 1],
+          "circle-stroke-width": ["case", ["==", pointStatus, PointStatus.Assigned], 0, 1] as ExpressionSpecification,
           "circle-stroke-color": "#ffffff",
         },
       });

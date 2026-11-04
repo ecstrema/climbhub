@@ -115,7 +115,7 @@ function formatSaxon(g: string): string {
     .map((part) => {
       const m = part.match(/^([ivxlcdm]+?)([abc]?)$/i);
       if (!m) return part;
-      return `${m[1].toUpperCase()}${m[2].toLowerCase()}`;
+      return `${m[1]!.toUpperCase()}${m[2]!.toLowerCase()}`;
     })
     .join("/");
 }

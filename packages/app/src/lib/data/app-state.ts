@@ -2,7 +2,7 @@ import { createContext } from "svelte";
 import type { AppDataTree } from "./app-data-tree.svelte";
 import { dataClient } from "./network/data-client";
 import type { BreadcrumbSegment, DataTree } from "#lib/types.js";
-import type { FromCurrent } from "#components/shell/providers/types";
+import type { FromCurrent } from "#components/shell/providers/types.js";
 import { UndoManager } from "./undo/undo-stack";
 import {
   UndoableAreaCreate,
@@ -12,7 +12,7 @@ import {
   UndoableTagDelete,
 } from "./undo/actions";
 import { OsmUser } from "./network/osm.svelte";
-import type { OsmFeature } from "osm-api";
+import type { Key, OsmFeature } from "osm-api";
 
 export interface Breadcrumbs {
   slugs: string[];
@@ -76,7 +76,7 @@ export class AppState {
    *
    * Set the value to `undefined` to remove the tag, or use {@link deleteTag}
    */
-  setTag(targetSlug: string, tagKey: OsmApi.Keys["keys"], newValue: string | undefined) {
+  setTag(targetSlug: string, tagKey: Key, newValue: string | undefined) {
     const node = this.tree.getReactiveNode(targetSlug);
     const feature = node?.feature;
     if (!feature || feature.type === "geographic") return;
@@ -85,7 +85,7 @@ export class AppState {
   }
 
   /** Applies {@link UndoableTagDelete} to remove the tag completely */
-  deleteTag(targetSlug: string, tagKey: OsmApi.Keys["keys"]) {
+  deleteTag(targetSlug: string, tagKey: Key) {
     const node = this.tree.getReactiveNode(targetSlug);
     const feature = node?.feature;
     if (!feature || feature.type === "geographic") return;

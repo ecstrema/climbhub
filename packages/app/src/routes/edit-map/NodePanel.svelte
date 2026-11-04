@@ -66,6 +66,7 @@
       file: nodeFile(node),
       hasFile: hasFile(node),
       boundaryState: store.boundaryState(node),
+      stageAreas: [...walk(node)].filter(hasFile).length,
       vertexCount: node.vertexCount,
       size: node.size,
       total: node.total,

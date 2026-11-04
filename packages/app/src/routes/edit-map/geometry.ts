@@ -1,4 +1,4 @@
-import type { Position } from "geojson";
+import type { Feature, MultiPolygon, Polygon, Position } from "geojson";
 import type { Boundary } from "./types";
 
 export interface BBox {
@@ -887,7 +887,7 @@ export function mergeBoundariesAtPoints(
   const allPolys = [mergedPoly, ...remainingPolys];
 
   const properties = boundaryA.features[0]?.properties ?? boundaryB.features[0]?.properties ?? {};
-  const feature: Feature = {
+  const feature: Feature<Polygon | MultiPolygon> = {
     type: "Feature",
     properties: structuredClone(properties),
     geometry:

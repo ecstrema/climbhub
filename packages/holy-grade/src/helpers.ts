@@ -157,7 +157,7 @@ function tokenize(input: string): string[] {
     const dangerSuffixMatch = single.match(/^(.*?)(?:\s*[-/]?\s*)(PG-?13|R\/X|R-X|RX|G\/PG|PG|R|X)$/i);
     if (dangerSuffixMatch && dangerSuffixMatch[1]) {
       const p1 = dangerSuffixMatch[1];
-      const p2 = dangerSuffixMatch[2];
+      const p2 = dangerSuffixMatch[2]!;
       if (checkPrimaryToken(p1) && checkDangerToken(p2)) {
         return [p1, p2];
       }
@@ -165,7 +165,7 @@ function tokenize(input: string): string[] {
 
     const ukGluedMatch = single.match(/^(E\d+|HVS|VS|HS|HVD|VD|S|D|M)\s*[-/]?\s*([1-7][a-c]?)$/i);
     if (ukGluedMatch) {
-      return [ukGluedMatch[1], ukGluedMatch[2]];
+      return [ukGluedMatch[1]!, ukGluedMatch[2]!];
     }
   }
 
@@ -197,7 +197,8 @@ export function parseGrade(gradeString: string, scaleHint?: ScaleId): ParsedGrad
   const hintScale = scaleHint ? getScale(scaleHint) : undefined;
 
   if (parts.length === 2) {
-    const [t0, t1] = parts;
+    const t0 = parts[0]!;
+    const t1 = parts[1]!;
 
     const danger0 = checkDangerToken(t0);
     if (danger0) {
@@ -233,7 +234,7 @@ export function parseGrade(gradeString: string, scaleHint?: ScaleId): ParsedGrad
   }
 
   if (parts.length === 1) {
-    const t = parts[0];
+    const t = parts[0]!;
 
     if (hintScale && hintScale.gradeType === "danger") {
       const danger = checkDangerToken(t);

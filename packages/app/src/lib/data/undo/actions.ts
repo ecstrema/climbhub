@@ -1,5 +1,5 @@
 import type { DataTree } from "#lib/types.js";
-import type { OsmFeature, OsmNode, OsmRelation } from "osm-api";
+import type { Key, OsmFeature, OsmNode, OsmRelation } from "osm-api";
 import type { Undoable } from "./types";
 import type { OsmUser } from "../network/osm.svelte";
 import { snapshot } from "#lib/helpers/svelte.svelte.js";
@@ -20,7 +20,7 @@ export class OsmUndoable {
 export class UndoableTagChange extends OsmUndoable implements Undoable {
   previousValue: string | undefined;
   newValue: string | undefined;
-  tagKey: OsmApi.Keys["keys"];
+  tagKey: Key;
   targetFeature: OsmFeature;
   targetFeatureSlug: string;
 
@@ -28,7 +28,7 @@ export class UndoableTagChange extends OsmUndoable implements Undoable {
     osmUser: OsmUser,
     targetFeature: OsmFeature,
     targetFeatureSlug: string,
-    tagKey: OsmApi.Keys["keys"],
+    tagKey: Key,
     newValue: string | undefined,
   ) {
     super(osmUser);
@@ -73,7 +73,7 @@ export class UndoableTagChange extends OsmUndoable implements Undoable {
 
 /** An undoable for deleting a single osm tag from an element. */
 export class UndoableTagDelete extends UndoableTagChange {
-  constructor(osmUser: OsmUser, targetFeature: OsmFeature, targetFeatureSlug: string, tagKey: OsmApi.Keys["keys"]) {
+  constructor(osmUser: OsmUser, targetFeature: OsmFeature, targetFeatureSlug: string, tagKey: Key) {
     super(osmUser, targetFeature, targetFeatureSlug, tagKey, undefined);
   }
 }

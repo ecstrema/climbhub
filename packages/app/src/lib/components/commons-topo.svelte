@@ -6,7 +6,7 @@
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import XIcon from "@lucide/svelte/icons/x";
   import { getAppState } from "#lib/data/app-state.js";
-  import type { OsmFeature } from "osm-api";
+  import type { Key, OsmFeature } from "osm-api";
 
   type CommonsImage = { key: string; pathKey: string; title: string };
   type RoutePoint = { x: number; y: number; marker: string; dottedAfter: boolean };
@@ -102,7 +102,7 @@
       editError = "The path exceeds the 255-character OSM tag limit.";
       return;
     }
-    appState.setTag(featureSlug, image.pathKey as OsmApi.Keys["keys"], value || undefined);
+    appState.setTag(featureSlug, image.pathKey as Key, value || undefined);
     cancelEdit();
   }
 

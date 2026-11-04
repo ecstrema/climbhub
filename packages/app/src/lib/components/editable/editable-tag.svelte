@@ -1,7 +1,7 @@
 <script lang="ts">
   import { getAppState } from "#lib/data/app-state.js";
   import EditableTextarea from "./editable-textarea.svelte";
-  import type { OsmFeature } from "osm-api";
+  import type { Key, OsmFeature } from "osm-api";
   import type { ComponentProps } from "svelte";
 
   const {
@@ -10,7 +10,7 @@
     featureSlug,
     ...props
   }: {
-    tagKey: OsmApi.Keys["keys"];
+    tagKey: Key;
     feature: OsmFeature;
     featureSlug: string;
   } & ComponentProps<typeof EditableTextarea> = $props();
