@@ -9,6 +9,13 @@
   import type { OsmFeature } from "osm-api";
   import BuildingIcon from "@lucide/svelte/icons/building";
   import PhoneIcon from "@lucide/svelte/icons/phone";
+  import GlobeIcon from "@lucide/svelte/icons/globe";
+  import CircleDollarSignIcon from "@lucide/svelte/icons/circle-dollar-sign";
+  import ClockIcon from "@lucide/svelte/icons/clock";
+  import LocationMap from "#lib/components/location-map.svelte";
+  import MapLinks from "#lib/components/map-links.svelte";
+  import OpeningHours from "#lib/components/opening-hours.svelte";
+  import { getFee, getFeeCharge, getWebsite } from "#lib/data/parse/gym-tags.js";
 
   let {
     item = $bindable(),
@@ -21,6 +28,10 @@
   let coordinates = $derived(getCoordinates(item.feature));
   const feature = $derived(item.feature);
   const phone = $derived(getPhone(feature.tags ?? {}));
+  const website = $derived(getWebsite(feature.tags ?? {}));
+  const fee = $derived(getFee(feature.tags ?? {}));
+  const charge = $derived(getFeeCharge(feature.tags ?? {}));
+  const openingHours = $derived(feature.tags?.opening_hours?.trim());
 </script>
 
 <div class="flex gap-2 items-center">
@@ -40,8 +51,36 @@
   {/if}
 </p>
 
+{#if website}
+  <p class="flex items-center gap-2 text-sm">
+    <GlobeIcon class="size-4 text-muted-foreground" aria-hidden="true" />
+    <a class="underline underline-offset-2" href={website} target="_blank" rel="noopener noreferrer">
+      {website.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}
+    </a>
+  </p>
+{/if}
+
+{#if fee !== undefined}
+  <p class="flex items-center gap-2 text-sm">
+    <CircleDollarSignIcon class={fee ? "size-4 text-foreground" : "size-4 text-muted-foreground"} aria-hidden="true" />
+    <span>{fee ? "Fee" : "Free"}{fee && charge ? `: ${charge}` : ""}</span>
+  </p>
+{/if}
+
+{#if openingHours}
+  <div class="flex flex-col gap-1">
+    <p class="flex items-center gap-2 text-sm">
+      <ClockIcon class="size-4 text-muted-foreground" aria-hidden="true" />
+      <span class="text-muted-foreground">Opening hours</span>
+    </p>
+    <OpeningHours value={openingHours} />
+  </div>
+{/if}
+
 {#if coordinates}
   <p class="text-sm text-muted-foreground">{coordinates.lat}, {coordinates.lon}</p>
+  <MapLinks {coordinates} name={feature.tags?.name} />
+  <LocationMap markers={[{ ...coordinates, label: feature.tags?.name }]} />
 {/if}
 
 <EditableDescription {feature} featureSlug={slug} />

@@ -267,6 +267,17 @@ export const processedTags: Record<OSMClimbingFeatureType, ProcessedTags> = {
   },
   gym: {
     ...sharedProcessedTags,
+    leisure: allowMultipleValues(gymLeisureValues),
+    climbing: allowMultipleValues(gymClimbingValues),
+    phone: allowAll,
+    "contact:phone": allowAll,
+    website: allowAll,
+    "contact:website": allowAll,
+    url: allowAll,
+    opening_hours: allowAll,
+    fee: allowMultipleValues(new Set(["yes", "no"])),
+    charge: allowAll,
+    ...Object.fromEntries(climbingStyleLabels.map(([key]) => [`climbing:${key}`, allowAll])),
   },
 };
 
