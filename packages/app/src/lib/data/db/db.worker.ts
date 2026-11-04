@@ -226,6 +226,22 @@ async function handle(req: DbRequest): Promise<DbResponse> {
       const data = Object.fromEntries(rows.map(([slug, json]) => [slug as string, JSON.parse(json as string)]));
       return { id: req.id, type: "children", data };
     }
+    case "getTopLevel": {
+      // Places directly under a geographic folder, with their coordinates (center for ways and relations)
+      const rows = db.selectArrays(`
+        SELECT slug, json_extract(data, '$.tags.name'),
+          COALESCE(json_extract(data, '$.lat'), json_extract(data, '$.center.lat')),
+          COALESCE(json_extract(data, '$.lon'), json_extract(data, '$.center.lon'))
+        FROM elements
+        WHERE type != 'geographic' AND parent_slug IN (SELECT slug FROM elements WHERE type = 'geographic')
+      `);
+      const data = rows.flatMap(([slug, name, lat, lon]) =>
+        typeof lat === "number" && typeof lon === "number"
+          ? [{ slug: slug as string, name: (name as string | null) ?? undefined, lat, lon }]
+          : [],
+      );
+      return { id: req.id, type: "topLevel", data };
+    }
     case "getStats": {
       const total = db.selectValue("SELECT total_routes FROM stats WHERE slug = ?", [req.slug]) as number | undefined;
       return { id: req.id, type: "stats", data: { totalRoutes: total ?? 0 } };

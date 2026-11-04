@@ -19,8 +19,16 @@ export interface SearchFilters {
   tags: TagFilter[];
 }
 
+export interface TopLevelPoint {
+  slug: string;
+  name: string | undefined;
+  lat: number;
+  lon: number;
+}
+
 export type DbRequest =
   | { id: number; type: "status"; version: string }
+  | { id: number; type: "getTopLevel" }
   | { id: number; type: "build"; url: string; version: string }
   | { id: number; type: "getNode"; slug: string }
   | { id: number; type: "getChildren"; slug: string }
@@ -35,6 +43,7 @@ export type DbResponse =
   | { id: number; type: "node"; data: DataJSON | undefined }
   | { id: number; type: "children"; data: Record<string, DataJSON> }
   | { id: number; type: "stats"; data: AreaStats | undefined }
+  | { id: number; type: "topLevel"; data: TopLevelPoint[] }
   /** Streamed while a search runs, without being a reply to a request */
   | { type: "matchBatch"; searchId: number; slugs: string[] }
   /** The search used its time budget (`exhausted` false) or has no more results */

@@ -3,6 +3,7 @@ import { apiUrl, type ApiFile } from "./api-url";
 import type { DataJSON } from "@climbhub/climbing-data-gen";
 import type { AreaStats, DataJSONRecord } from "#lib/types.js";
 import { localDb } from "../db/local-db.svelte";
+import type { TopLevelPoint } from "../db/types";
 import { settings } from "../settings.svelte";
 
 /**
@@ -61,6 +62,11 @@ class DataClient {
   async getChildren(slug: string, customFetch: typeof fetch = globalThis.fetch): Promise<DataJSONRecord | undefined> {
     if (await this.localReady()) return localDb.getChildren(slug);
     return this.fetchJson<DataJSONRecord>(slug, "children.json", customFetch);
+  }
+
+  /** Only available once the whole dataset is downloaded */
+  async getTopLevelPoints(): Promise<TopLevelPoint[]> {
+    return (await this.localReady()) ? localDb.getTopLevelPoints() : [];
   }
 
   async getStats(slug: string, customFetch: typeof fetch = globalThis.fetch): Promise<AreaStats | undefined> {
