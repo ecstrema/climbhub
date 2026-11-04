@@ -6,6 +6,7 @@
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import XIcon from "@lucide/svelte/icons/x";
   import { getAppState } from "#lib/data/app-state.js";
+  import { untrack } from "svelte";
   import type { Key, OsmFeature } from "osm-api";
 
   type CommonsImage = { key: string; pathKey: string; title: string };
@@ -28,22 +29,48 @@
   let selectedPoint = $state<number>();
   let draggingPoint = $state<number>();
   let editError = $state("");
+  let loading = $state<Record<string, boolean>>({});
 
   $effect(() => {
     let cancelled = false;
     for (const image of images) {
       if (!/^category:/i.test(normalizeCommonsTitle(image.title))) continue;
+      loading[`resolve:${image.key}`] = true;
       void resolveCommonsImage(image.title)
         .then((resolved) => {
           if (!cancelled) resolvedImages[image.key] = resolved;
         })
         .catch(() => {
           if (!cancelled) resolvedImages[image.key] = undefined;
+        })
+        .finally(() => {
+          if (!cancelled) loading[`resolve:${image.key}`] = false;
         });
     }
     return () => {
       cancelled = true;
     };
+  });
+
+  let displayed = $state<Record<string, (ResolvedImage & { path: string | undefined; ratio?: number }) | undefined>>(
+    {},
+  );
+
+  // Show a changed image right away so it renders progressively; its path appears once loaded.
+  $effect(() => {
+    for (const image of images) {
+      const target = imageFor(image);
+      const path = tags[image.pathKey];
+      // Reading `displayed` here would make this effect depend on what it writes
+      const current = untrack(() => displayed[image.key]);
+      if (!target) {
+        if (current) displayed[image.key] = undefined;
+      } else if (current?.src !== target.src) {
+        displayed[image.key] = { ...target, path };
+      } else if (current.path !== path || current.page !== target.page) {
+        displayed[image.key] = { ...target, path, ratio: current.ratio };
+      }
+    }
   });
 
   function parsePath(value: string | undefined): RoutePoint[] {
@@ -67,7 +94,11 @@
   }
 
   function pointsFor(image: CommonsImage) {
-    return editingKey === image.pathKey ? draftPoints : parsePath(tags[image.pathKey]);
+    return editingKey === image.pathKey
+      ? draftPoints
+      : displayed[image.key]?.ratio
+        ? parsePath(displayed[image.key]?.path)
+        : [];
   }
 
   function imageFor(image: CommonsImage): ResolvedImage | undefined {
@@ -210,7 +241,7 @@
 {#if images.length > 0}
   <section class="flex flex-col gap-2" aria-label="Wikimedia Commons images">
     {#each images as image (image.key)}
-      {@const imageData = imageFor(image)}
+      {@const imageData = displayed[image.key]}
       {@const editing = editingKey === image.pathKey}
       {@const points = pointsFor(image)}
       <figure class="flex max-w-4xl flex-col gap-1.5">
@@ -254,13 +285,20 @@
         {/if}
 
         {#if imageData}
-          <div class="group relative block overflow-hidden border bg-muted">
-            <img
-              src={imageData.src}
-              alt={feature.tags?.name ?? image.title}
-              class="block h-auto w-full"
-              loading="lazy"
-            />
+          <div class="group relative block overflow-hidden border bg-muted" style:aspect-ratio={imageData.ratio}>
+            {#key imageData.src}
+              <img
+                src={imageData.src}
+                alt={feature.tags?.name ?? image.title}
+                class="block h-auto w-full"
+                onload={(event) => {
+                  const { naturalWidth, naturalHeight } = event.currentTarget as HTMLImageElement;
+                  const entry = displayed[image.key];
+                  if (entry && naturalWidth && naturalHeight) entry.ratio = naturalWidth / naturalHeight;
+                }}
+                onerror={() => (displayed[image.key] = undefined)}
+              />
+            {/key}
             <a
               href={imageData.page}
               target="_blank"
@@ -270,28 +308,24 @@
               title="Open image on Wikimedia Commons"><ExternalLinkIcon class="size-4" /></a
             >
             {#if points.length > 0}
-              <svg
-                viewBox="0 0 1 1"
-                preserveAspectRatio="none"
-                class="pointer-events-none absolute inset-0 h-full w-full"
-                aria-hidden="true"
-              >
+              {@const h = 1 / (imageData.ratio ?? 1)}
+              <svg viewBox="0 0 1 {h}" class="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true">
                 {#each points.slice(1) as point, index (`${index}-${point.x}-${point.y}`)}
                   {@const previous = points[index]!}
                   <line
                     x1={previous.x}
-                    y1={previous.y}
+                    y1={previous.y * h}
                     x2={point.x}
-                    y2={point.y}
+                    y2={point.y * h}
                     stroke="white"
                     stroke-width="0.009"
                     stroke-dasharray={previous.dottedAfter ? "0.018 0.012" : undefined}
                   />
                   <line
                     x1={previous.x}
-                    y1={previous.y}
+                    y1={previous.y * h}
                     x2={point.x}
-                    y2={point.y}
+                    y2={point.y * h}
                     stroke="#e5484d"
                     stroke-width="0.004"
                     stroke-dasharray={previous.dottedAfter ? "0.018 0.012" : undefined}
@@ -300,7 +334,7 @@
                 {#each points as point, index (`${index}-${point.x}-${point.y}`)}
                   <circle
                     cx={point.x}
-                    cy={point.y}
+                    cy={point.y * h}
                     r={point.marker ? 0.013 : 0.008}
                     fill={selectedPoint === index ? "#f59e0b" : point.marker ? "#2563eb" : "#e5484d"}
                     stroke="white"
@@ -309,7 +343,7 @@
                   {#if point.marker}
                     <text
                       x={point.x + 0.015}
-                      y={point.y - 0.012}
+                      y={point.y * h - 0.012}
                       fill="white"
                       stroke="#111827"
                       stroke-width="0.003"
@@ -321,7 +355,7 @@
                 {/each}
               </svg>
             {/if}
-            {#if editing}
+            {#if editing && imageData.ratio}
               <button
                 type="button"
                 class="absolute inset-0 h-full w-full cursor-crosshair touch-none bg-transparent p-0"
@@ -333,6 +367,8 @@
               ></button>
             {/if}
           </div>
+        {:else if loading[`resolve:${image.key}`] || loading[`preload:${image.key}`]}
+          <p class="text-sm text-muted-foreground">Loading image…</p>
         {:else}
           <p class="text-sm text-muted-foreground">Image unavailable: {image.title}</p>
         {/if}
