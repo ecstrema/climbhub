@@ -60,7 +60,10 @@ export function parseOpeningHours(value: string | undefined): WeekHours | undefi
     if (times === "off" || times === "closed") continue;
     const ranges: TimeRange[] = [];
     for (const range of times.split(",")) {
-      const [from, to] = range.trim().split("-").map((t) => parseTime(t.trim()));
+      const [from, to] = range
+        .trim()
+        .split("-")
+        .map((t) => parseTime(t.trim()));
       if (from === undefined || to === undefined) return;
       ranges.push({ start: from, end: to <= from ? to + 1440 : to });
     }

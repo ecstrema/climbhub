@@ -38,7 +38,11 @@ export function getMapLinks(coordinates: { lat: number; lon: number }, name?: st
     { id: "geo", label: "Default maps app", href: `geo:${ll}${label ? `?q=${ll}(${label})` : ""}` },
     { id: "apple", label: "Apple Maps", href: `https://maps.apple.com/?ll=${ll}&q=${label || ll}` },
     { id: "google", label: "Google Maps", href: `https://www.google.com/maps/search/?api=1&query=${ll}` },
-    { id: "osm", label: "OpenStreetMap", href: `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${lat}/${lon}` },
+    {
+      id: "osm",
+      label: "OpenStreetMap",
+      href: `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${lat}/${lon}`,
+    },
     { id: "comaps", label: "CoMaps / Organic Maps", href: `om://map?ll=${ll}${label ? `&n=${label}` : ""}` },
   ];
 }
