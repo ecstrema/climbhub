@@ -47,6 +47,9 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // SvelteKit's update check must always hit the network, a cached copy makes it report stale versions.
+  if (url.pathname.endsWith("/_app/version.json")) return;
+
   event.respondWith(handleAppFile(event.request, url.pathname));
 });
 
