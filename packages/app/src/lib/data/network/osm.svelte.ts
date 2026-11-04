@@ -33,6 +33,20 @@ export interface RefreshedFeature {
   refreshedTimestamp: number;
 }
 
+export function loginOsm(onLogin: () => void) {
+  if (!browser) return;
+  login({
+    mode: "popup",
+    clientId: "PhOrL2FCMUtJ5v3WrOAfVh5qdI5CIzQ6Wsf_YVpBNtg",
+    redirectUrl: `${window.location.origin}${asset("osm-login.html")}`,
+    scopes: ["read_prefs", "write_api"],
+  }).then(onLogin);
+}
+
+export function logoutOsm() {
+  if (browser) logout();
+}
+
 export type Diff<T> = { initial: T; final: T };
 export type FeatureDiff =
   | "deleted"
@@ -182,19 +196,14 @@ export class OsmUser {
 
   login() {
     if (!browser || this.loggedIn) return;
-    login({
-      mode: "popup",
-      clientId: "PhOrL2FCMUtJ5v3WrOAfVh5qdI5CIzQ6Wsf_YVpBNtg",
-      redirectUrl: `${window.location.origin}${asset("osm-login.html")}`,
-      scopes: ["read_prefs", "write_api"],
-    }).then(() => {
+    loginOsm(() => {
       this.loggedIn = isLoggedIn();
     });
   }
 
   logout() {
     if (!browser) return;
-    logout();
+    logoutOsm();
     this.loggedIn = isLoggedIn();
   }
 
