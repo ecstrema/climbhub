@@ -1,6 +1,5 @@
 import { readFileSync, readdirSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import { join, dirname } from "path";
-import { createHash } from "crypto";
 
 import { ReverseGeolocator } from "./reverse-geolocation.ts";
 import type { Coordinates, DataJSON, GeographicFolderElement, OverpassRequest } from "./types.ts";
@@ -22,7 +21,6 @@ export function generateStaticAPI(options: StaticApiGeneratorOptions) {
 
   console.info("Processing OSM Climbing Data...");
   const allElements = readOsmData(options.osmDataFiles);
-  writeNodeHashes(options.outApiDirectory, allElements);
   const rootNodes = getRootOsmDataNodes(allElements);
 
   console.info("Writing static API endpoints");
@@ -49,18 +47,6 @@ function readOsmData(osmDataFiles: string[]): Map<string, OsmFeature> {
   console.info(`${osmElementsMap.size} elements in ${osmDataFiles.length} files`);
 
   return osmElementsMap;
-}
-
-function writeNodeHashes(outApiDirectory: string, allElements: Map<string, OsmFeature>) {
-  const hashes = Object.fromEntries(
-    Array.from(allElements.entries())
-      .filter(([, element]) => element.type === "node")
-      .sort(([idA], [idB]) => idA.localeCompare(idB))
-      .map(([id, element]) => [id, createHash("sha256").update(JSON.stringify(element)).digest("hex")]),
-  );
-
-  writeFileSync(join(outApiDirectory, "node-hashes.json"), JSON.stringify(hashes));
-  console.info(`${Object.keys(hashes).length} node hashes written`);
 }
 
 function getRootOsmDataNodes(allElements: Map<string, OsmFeature>): OsmFeature[] {
@@ -265,7 +251,7 @@ function writeStaticApi(
   // Add info to the geographicTree api endpoints by iterating through it.
   writeChildrenDataToGeoTree([options.outApiDirectory], geographicTree, geolocator);
 
-  console.info("Writing static child, deep, and stats endpoints");
+  console.info("Writing static child, download, and stats endpoints");
   writeStaticApiMetadata(join(options.outApiDirectory, "world"));
 }
 
@@ -310,6 +296,9 @@ function isRoute(data: DataJSON | undefined): boolean {
 }
 
 function writeStaticApiMetadata(worldDirectory: string) {
+  /** Every node of the world, written once at the root for the app to download */
+  const download: DataJSONRecord = {};
+
   function visit(directory: string, slug: string): GeneratedDirectory {
     const dataPath = join(directory, "data.json");
     const data = existsSync(dataPath) ? (JSON.parse(readFileSync(dataPath, "utf8")) as DataJSON) : undefined;
@@ -326,24 +315,16 @@ function writeStaticApiMetadata(worldDirectory: string) {
 
       if (!result.data) continue;
       children[childSlug] = result.data;
+      download[childSlug] = result.data;
       totalRoutes += isRoute(result.data) ? 1 : result.totalRoutes;
     }
 
     writeFileSync(join(directory, "children.json"), JSON.stringify(children));
     writeFileSync(join(directory, "stats.json"), JSON.stringify({ totalRoutes }));
 
-    const deep: DataJSONRecord = {};
-    for (const child of childResults) {
-      Object.assign(
-        deep,
-        JSON.parse(readFileSync(join(child.directory, "children.json"), "utf8")) as DataJSONRecord,
-        JSON.parse(readFileSync(join(child.directory, "deep.json"), "utf8")) as DataJSONRecord,
-      );
-    }
-    writeFileSync(join(directory, "deep.json"), JSON.stringify(deep));
-
     return { data, totalRoutes };
   }
 
   visit(worldDirectory, "");
+  writeFileSync(join(worldDirectory, "download.json"), JSON.stringify(download));
 }
