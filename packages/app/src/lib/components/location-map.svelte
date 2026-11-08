@@ -67,13 +67,28 @@
     }
   }
 
-  function addDownloadedElement(map: MapLibreMap, slug: string, feature: OsmFeature) {
-    if (loadedSlugs.has(slug)) return;
+  function updateOrAddElement(map: MapLibreMap, slug: string, feature: OsmFeature) {
     const element = featureToMapElement(slug, feature);
     if (!element) return;
-    loadedSlugs.add(slug);
-    cachedCollection.features.push(element);
+    const existingIndex = cachedCollection.features.findIndex((f) => f.properties.slug === slug);
+    if (existingIndex >= 0) {
+      cachedCollection.features[existingIndex] = element;
+    } else {
+      loadedSlugs.add(slug);
+      cachedCollection.features.push(element);
+    }
     setElementsSourceData(map, cachedCollection);
+  }
+
+  function updateElementCoordinates(map: MapLibreMap, slug: string, coords: { lat: number; lon: number }) {
+    const existing = cachedCollection.features.find((f) => f.properties.slug === slug);
+    if (existing) {
+      const [curLon, curLat] = existing.geometry.coordinates;
+      if (curLon !== coords.lon || curLat !== coords.lat) {
+        existing.geometry.coordinates = [coords.lon, coords.lat];
+        setElementsSourceData(map, cachedCollection);
+      }
+    }
   }
 
   function getSharedMap() {
@@ -284,10 +299,17 @@
     }
   });
 
-  // Add current feature if downloaded and not yet in source
+  // Add or update current feature if downloaded or updated upstream
   $effect(() => {
     if (currentSlug && currentFeature && currentFeature.type !== "geographic" && shared?.map.isStyleLoaded()) {
-      addDownloadedElement(shared.map, currentSlug, currentFeature as OsmFeature);
+      updateOrAddElement(shared.map, currentSlug, currentFeature as OsmFeature);
+    }
+  });
+
+  // Ensure dot position synchronizes with updated coordinates (e.g. after redownload upstream)
+  $effect(() => {
+    if (currentSlug && coordinates && shared?.map.isStyleLoaded()) {
+      updateElementCoordinates(shared.map, currentSlug, coordinates);
     }
   });
 
