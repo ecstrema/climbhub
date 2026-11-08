@@ -163,4 +163,25 @@ export const CLIMBING_LAYERS: LayerSpecification[] = [
       "circle-stroke-width": 2.5,
     },
   },
+  {
+    id: "route-labels",
+    type: "symbol",
+    source: "climbing-elements",
+    minzoom: 14,
+    filter: ["==", ["get", "elementType"], "route"],
+    layout: {
+      "text-field": ["get", "name"],
+      "text-size": 11,
+      "text-anchor": "bottom",
+      "text-offset": [0, -0.7],
+      "text-optional": true,
+      "text-allow-overlap": false,
+      "text-ignore-placement": false,
+    },
+    paint: {
+      "text-color": "#1e293b",
+      "text-halo-color": "#ffffff",
+      "text-halo-width": 1.5,
+    },
+  },
 ];

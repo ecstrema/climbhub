@@ -8,12 +8,7 @@
   import type { MapElementFeature, MapElementFeatureCollection } from "#lib/data/db/types.js";
   import { FEATURE_COLORS } from "#lib/data/parse/route-styles.js";
   import type { OsmFeature } from "osm-api";
-  import {
-    CLIMBING_LAYERS,
-    featureToMapElement,
-    formatPopupHtml,
-    VECTOR_STYLE,
-  } from "./location-map-helper.js";
+  import { CLIMBING_LAYERS, featureToMapElement, formatPopupHtml, VECTOR_STYLE } from "./location-map-helper.js";
 
   // One map (and WebGL context) for the whole app: kept across page navigation.
   let shared: { map: MapLibreMap; element: HTMLDivElement } | undefined;
@@ -102,6 +97,20 @@
     map.addControl(new NavigationControl({ showCompass: false }), "top-right");
 
     map.on("load", () => {
+      // Hide basemap climbing POIs so vector tiles do not duplicate or conflict with our data
+      for (const layer of map.getStyle().layers || []) {
+        const l = layer as { id: string; "source-layer"?: string; filter?: any[] };
+        if (l["source-layer"] === "poi") {
+          const filter = Array.isArray(l.filter) ? l.filter : ["all"];
+          map.setFilter(l.id, [
+            "all",
+            filter,
+            ["!=", ["get", "class"], "sport"],
+            ["!=", ["get", "subclass"], "climbing"],
+          ] as any);
+        }
+      }
+
       map.addSource("climbing-elements", {
         type: "geojson",
         data: cachedCollection,
@@ -224,15 +233,17 @@
       dragMarker = undefined;
     }
 
-    if (draggable && coordinates && onmove) {
-      dragMarker = new Marker({ color: "#2563eb", draggable: true })
+    if (coordinates) {
+      dragMarker = new Marker({ color: "#2563eb", draggable: Boolean(draggable && onmove) })
         .setLngLat([coordinates.lon, coordinates.lat])
         .addTo(map);
 
-      dragMarker.on("dragend", () => {
-        const lngLat = dragMarker!.getLngLat();
-        onmove({ lat: lngLat.lat, lon: lngLat.lng });
-      });
+      if (draggable && onmove) {
+        dragMarker.on("dragend", () => {
+          const lngLat = dragMarker!.getLngLat();
+          onmove({ lat: lngLat.lat, lon: lngLat.lng });
+        });
+      }
     }
   }
 
