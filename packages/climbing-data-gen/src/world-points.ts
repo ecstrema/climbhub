@@ -33,7 +33,6 @@ export const WORLD_CLIMBING_QUERY = `
 // Every climbing place, except individual routes
 (
   nwr["sport"="climbing"]["climbing"!~"^route"];
-  nwr["leisure"="pitch"];
   nwr["climbing"~"^(area|crag|boulder)(;.*)?$"];
 );
 out tags center qt;`;

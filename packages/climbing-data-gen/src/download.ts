@@ -8,7 +8,6 @@ const WORLD_CLIMBING_DATA_QUERY = `
 [out:json][timeout:600];
 (
   nwr["sport"="climbing"];
-  nwr["leisure"="pitch"];
   nwr["climbing"~"^(area|crag|boulder|route_bottom|bolt|route_top|route|abseil_route)(;.*)?$"];
 );
 out center meta;`;
@@ -127,7 +126,6 @@ function getQuery({ west, south, east, north }: BBox) {
 // restricted to the tile: their parents and children are complete.
 (
   nwr["sport"="climbing"](${south},${west},${north},${east});
-  nwr["leisure"="pitch"](${south},${west},${north},${east});
   nwr["climbing"~"^(area|crag|boulder|route_bottom|bolt|route_top|route|abseil_route)(;.*)?$"](${south},${west},${north},${east});
 );
 
