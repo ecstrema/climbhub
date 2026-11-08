@@ -9,9 +9,7 @@
   import type { DataTree } from "#lib/types.js";
   import type { OsmFeature } from "osm-api";
   import { getCoordinates, getGrade } from "#lib/data/parse/osm-tags.js";
-  import LocationMap from "#lib/components/location-map.svelte";
   import { getAppState } from "#lib/data/app-state.js";
-  import { getNearbyDots } from "#lib/data/nearby-dots.js";
 
   let {
     item = $bindable(),
@@ -27,8 +25,6 @@
   let grade = $derived(feature.tags ? getGrade(feature.tags) : undefined);
   const appState = getAppState();
   const editable = $derived(appState.osmUser.loggedIn && feature.type === "node");
-
-  const nearby = $derived(getNearbyDots((s) => appState.tree.getReactiveNode(s), slug));
 </script>
 
 <div class="flex gap-2 items-baseline">
@@ -41,13 +37,8 @@
 
 {#if coordinates}
   <p class="text-sm text-muted-foreground">{coordinates.lat}, {coordinates.lon}</p>
-  <LocationMap
-    markers={[{ ...coordinates, label: feature.tags?.name, draggable: true }]}
-    dots={nearby}
-    onmove={editable ? (_, position) => appState.setCoordinates(slug, position) : undefined}
-  />
   {#if editable}
-    <p class="text-xs text-muted-foreground">Drag the marker to move the route.</p>
+    <p class="text-xs text-muted-foreground">Drag the marker on the map to move the route.</p>
   {/if}
 {/if}
 

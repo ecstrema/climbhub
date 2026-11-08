@@ -4,31 +4,81 @@
   import { goto } from "$app/navigation";
   import { resolve } from "$app/paths";
   import { dataClient } from "#lib/data/network/data-client.js";
+  import { localDb } from "#lib/data/db/local-db.svelte.js";
+  import type { MapElementFeature, MapElementFeatureCollection } from "#lib/data/db/types.js";
+  import { FEATURE_COLORS } from "#lib/data/parse/route-styles.js";
+  import type { OsmFeature } from "osm-api";
+  import {
+    CLIMBING_LAYERS,
+    featureToMapElement,
+    formatPopupHtml,
+    VECTOR_STYLE,
+  } from "./location-map-helper.js";
 
-  // One map (and WebGL context) for the whole app: it is moved into whichever page shows a map.
+  // One map (and WebGL context) for the whole app: kept across page navigation.
   let shared: { map: MapLibreMap; element: HTMLDivElement } | undefined;
   /** Kept across pages, as the user can resize the map */
   let height: number | undefined;
   /** False until the view was first set to a place */
   let positioned = false;
-  let overviewLoaded = false;
+  let allElementsLoaded = false;
+  let cachedCollection: MapElementFeatureCollection = { type: "FeatureCollection", features: [] };
+  const loadedSlugs = new Set<string>();
 
-  /** Zoomed out further than this, the top level places are shown */
-  const OVERVIEW_MAX_ZOOM = 8;
+  function setElementsSourceData(map: MapLibreMap, collection: MapElementFeatureCollection) {
+    const source = map.getSource<GeoJSONSource>("climbing-elements");
+    if (!source) return;
+    source.setData(collection);
+  }
 
-  async function ensureOverview(map: MapLibreMap) {
-    if (overviewLoaded || !map.getSource("overview")) return;
+  async function loadMapElements(map: MapLibreMap) {
+    if (allElementsLoaded) return;
+
+    if (localDb.ready) {
+      const data = await localDb.getAllMapElements();
+      if (data && data.features.length > 0) {
+        for (const f of data.features) {
+          f.properties.href = resolve("/world/[...slug]", { slug: f.properties.slug });
+          loadedSlugs.add(f.properties.slug);
+        }
+        cachedCollection = data;
+        allElementsLoaded = true;
+        setElementsSourceData(map, cachedCollection);
+        return;
+      }
+    }
+
     const points = await dataClient.getTopLevelPoints();
-    if (points.length === 0) return;
-    overviewLoaded = true;
-    map.getSource<GeoJSONSource>("overview")?.setData({
-      type: "FeatureCollection",
-      features: points.map((p) => ({
-        type: "Feature",
-        geometry: { type: "Point", coordinates: [p.lon, p.lat] },
-        properties: { label: p.name ?? "Unnamed", href: resolve("/world/[...slug]", { slug: p.slug }) },
-      })),
-    });
+    if (points.length > 0 && cachedCollection.features.length === 0) {
+      cachedCollection = {
+        type: "FeatureCollection",
+        features: points.map((p) => {
+          loadedSlugs.add(p.slug);
+          return {
+            type: "Feature",
+            geometry: { type: "Point", coordinates: [p.lon, p.lat] },
+            properties: {
+              slug: p.slug,
+              name: p.name ?? "Unnamed",
+              elementType: "area",
+              fillColor: FEATURE_COLORS.area.fill,
+              strokeColor: FEATURE_COLORS.area.stroke,
+              href: resolve("/world/[...slug]", { slug: p.slug }),
+            },
+          };
+        }),
+      };
+      setElementsSourceData(map, cachedCollection);
+    }
+  }
+
+  function addDownloadedElement(map: MapLibreMap, slug: string, feature: OsmFeature) {
+    if (loadedSlugs.has(slug)) return;
+    const element = featureToMapElement(slug, feature);
+    if (!element) return;
+    loadedSlugs.add(slug);
+    cachedCollection.features.push(element);
+    setElementsSourceData(map, cachedCollection);
   }
 
   function getSharedMap() {
@@ -37,23 +87,11 @@
     element.className = "size-full";
     const map = new MapLibreMap({
       container: element,
-      style: {
-        version: 8,
-        sources: {
-          topo: {
-            type: "raster",
-            tiles: ["a", "b", "c"].map((s) => `https://${s}.tile.opentopomap.org/{z}/{x}/{y}.png`),
-            tileSize: 256,
-            maxzoom: 17,
-            attribution:
-              '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)',
-          },
-        },
-        layers: [{ id: "topo", type: "raster", source: "topo" }],
-      },
+      style: VECTOR_STYLE,
       center: [0, 30],
       zoom: 1.5,
       maxZoom: 22,
+      maxTileCacheSize: 200,
       attributionControl: { compact: true },
       dragRotate: false,
       pitchWithRotate: false,
@@ -64,138 +102,92 @@
     map.addControl(new NavigationControl({ showCompass: false }), "top-right");
 
     map.on("load", () => {
-      map.addSource("overview", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
-      map.addLayer({
-        id: "overview",
-        type: "circle",
-        source: "overview",
-        maxzoom: OVERVIEW_MAX_ZOOM,
-        paint: {
-          "circle-radius": 3,
-          "circle-color": "#dc2626",
-          "circle-stroke-color": "#ffffff",
-          "circle-stroke-width": 0.5,
-        },
+      map.addSource("climbing-elements", {
+        type: "geojson",
+        data: cachedCollection,
+        tolerance: 0.5,
       });
-      map.addSource("dots", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
-      map.addLayer({
-        id: "dots",
-        type: "circle",
-        source: "dots",
-        paint: {
-          "circle-radius": 4,
-          "circle-color": ["get", "color"],
-          "circle-stroke-color": "#ffffff",
-          "circle-stroke-width": 1,
-        },
+
+      for (const layer of CLIMBING_LAYERS) {
+        if (!map.getLayer(layer.id)) {
+          map.addLayer(layer);
+        }
+      }
+
+      const popup = new Popup({
+        closeButton: false,
+        closeOnClick: false,
+        offset: 8,
+        className: "location-map-popup",
       });
-      const popup = new Popup({ closeButton: false, closeOnClick: false, offset: 8, className: "location-map-popup" });
-      for (const layer of ["dots", "overview"]) {
+
+      const interactiveLayers = ["routes", "cliffs", "areas", "gyms"];
+      for (const layer of interactiveLayers) {
         map.on("mousemove", layer, (e) => {
           const feature = e.features?.[0];
           if (!feature) return;
           map.getCanvas().style.cursor = "pointer";
-          popup.setLngLat(e.lngLat).setText(feature.properties.label).addTo(map);
+          const props = feature.properties as MapElementFeature["properties"];
+          popup.setLngLat(e.lngLat).setHTML(formatPopupHtml(props)).addTo(map);
         });
+
         map.on("click", layer, (e) => {
-          const href = e.features?.[0]?.properties.href;
+          const href = e.features?.[0]?.properties?.href;
           if (href) goto(href);
         });
+
         map.on("mouseleave", layer, () => {
           map.getCanvas().style.cursor = "";
           popup.remove();
         });
       }
+
+      void loadMapElements(map);
     });
+
     return (shared = { map, element });
-  }
-
-  type LocationDot = { lat: number; lon: number; label: string; color?: string; href?: string };
-
-  function setDots(map: MapLibreMap, dots: LocationDot[]) {
-    map.getSource<GeoJSONSource>("dots")?.setData({
-      type: "FeatureCollection",
-      features: dots.map((d) => ({
-        type: "Feature",
-        geometry: { type: "Point", coordinates: [d.lon, d.lat] },
-        properties: { label: d.label, color: d.color ?? "#2563eb", href: d.href ?? "" },
-      })),
-    });
   }
 </script>
 
 <script lang="ts">
   import { Marker } from "maplibre-gl";
   import { onMount } from "svelte";
-
-  type LocationMarker = {
-    lat: number;
-    lon: number;
-    label?: string;
-    color?: string;
-    /** Only used with `onmove` */
-    draggable?: boolean;
-  };
+  import type { GeographicFolderElement } from "@climbhub/climbing-data-gen";
+  import MapLegend from "./map-legend.svelte";
 
   let {
-    markers,
+    currentSlug = "",
+    currentFeature,
+    coordinates,
     bounds,
-    dots = [],
+    draggable = false,
     zoom = 15,
     class: className = "",
     onmove,
   }: {
-    /** The map is centered on the first marker */
-    markers: LocationMarker[];
-    /** Fits the view to a bounding box, instead of centering on the first marker */
+    currentSlug?: string;
+    currentFeature?: OsmFeature | GeographicFolderElement | undefined;
+    coordinates?: { lat: number; lon: number } | undefined;
     bounds?: { x0: number; x1: number; y0: number; y1: number } | undefined;
-    /** Small dots with their label on hover */
-    dots?: LocationDot[];
+    draggable?: boolean;
     zoom?: number;
     class?: string;
-    /** Called at the end of a drag of a draggable marker */
-    onmove?: (index: number, position: { lat: number; lon: number }) => void;
+    onmove?: (position: { lat: number; lon: number }) => void;
   } = $props();
 
   let host: HTMLDivElement;
   let attached = $state(false);
-  let drawn: Marker[] = [];
-  /** The view does not jump to a position the user just dragged the marker to */
-  let dragged: { lat: number; lon: number } | undefined;
+  let dragMarker: Marker | undefined;
 
-  function clear() {
-    for (const m of drawn) m.remove();
-    drawn = [];
-    if (shared?.map.getSource("dots")) setDots(shared.map, []);
+  function updateActiveHighlight(slug: string) {
+    if (!shared?.map.getLayer("selected-ring")) return;
+    shared.map.setFilter("selected-ring", ["==", ["get", "slug"], slug]);
   }
 
-  function render() {
-    if (!attached) return;
-    const { map } = getSharedMap();
-    if (!map.getSource("dots")) {
-      // The style is not loaded yet
-      map.once("load", render);
-      return;
-    }
-    clear();
-    setDots(map, dots);
-    ensureOverview(map);
-    drawn = markers.map((p, i) => {
-      const marker = new Marker({ color: p.color ?? "#7c3aed", draggable: !!onmove && !!p.draggable })
-        .setLngLat([p.lon, p.lat])
-        .addTo(map);
-      if (p.label) {
-        marker.getElement().setAttribute("aria-label", p.label);
-        marker.getElement().title = p.label;
-      }
-      marker.on("dragend", () => {
-        const { lat, lng } = marker.getLngLat();
-        dragged = { lat, lon: lng };
-        onmove?.(i, dragged);
-      });
-      return marker;
-    });
-    const focus = markers[0];
+  function moveToTarget() {
+    if (!attached || !shared) return;
+    const map = shared.map;
+
     if (bounds) {
       positioned = true;
       map.fitBounds(
@@ -203,15 +195,45 @@
           [bounds.x0, bounds.y0],
           [bounds.x1, bounds.y1],
         ],
-        { padding: 20, animate: false },
+        { padding: 40, maxZoom: 16, duration: 600 },
       );
       return;
     }
-    if (!focus || (dragged?.lat === focus.lat && dragged.lon === focus.lon)) return;
-    // Navigating to a place that is already in view keeps the user's position and zoom
-    if (positioned && map.getBounds().contains([focus.lon, focus.lat])) return;
+
+    if (!coordinates) return;
+
+    if (positioned && map.getBounds().contains([coordinates.lon, coordinates.lat])) {
+      map.easeTo({ center: [coordinates.lon, coordinates.lat], duration: 500 });
+      return;
+    }
+
     positioned = true;
-    map.jumpTo({ center: [focus.lon, focus.lat], zoom });
+    map.flyTo({
+      center: [coordinates.lon, coordinates.lat],
+      zoom: Math.max(map.getZoom(), zoom),
+      duration: 700,
+    });
+  }
+
+  function updateDraggableMarker() {
+    if (!attached || !shared) return;
+    const map = shared.map;
+
+    if (dragMarker) {
+      dragMarker.remove();
+      dragMarker = undefined;
+    }
+
+    if (draggable && coordinates && onmove) {
+      dragMarker = new Marker({ color: "#2563eb", draggable: true })
+        .setLngLat([coordinates.lon, coordinates.lat])
+        .addTo(map);
+
+      dragMarker.on("dragend", () => {
+        const lngLat = dragMarker!.getLngLat();
+        onmove({ lat: lngLat.lat, lon: lngLat.lng });
+      });
+    }
   }
 
   onMount(() => {
@@ -221,28 +243,69 @@
     map.resize();
     attached = true;
 
+    if (map.isStyleLoaded()) {
+      void loadMapElements(map);
+      moveToTarget();
+      updateActiveHighlight(currentSlug);
+      updateDraggableMarker();
+    } else {
+      map.once("load", () => {
+        moveToTarget();
+        updateActiveHighlight(currentSlug);
+        updateDraggableMarker();
+      });
+    }
+
     return () => {
-      clear();
       attached = false;
-      // The next page may already have taken the map
+      if (dragMarker) {
+        dragMarker.remove();
+        dragMarker = undefined;
+      }
       if (element.parentElement === host) element.remove();
     };
   });
 
+  // Watch for localDb becoming ready to load all elements
   $effect(() => {
-    markers;
-    bounds;
-    dots;
-    render();
+    if (localDb.ready && shared?.map.isStyleLoaded() && !allElementsLoaded) {
+      void loadMapElements(shared.map);
+    }
   });
+
+  // Add current feature if downloaded and not yet in source
+  $effect(() => {
+    if (currentSlug && currentFeature && currentFeature.type !== "geographic" && shared?.map.isStyleLoaded()) {
+      addDownloadedElement(shared.map, currentSlug, currentFeature as OsmFeature);
+    }
+  });
+
+  // React to target position / bounds change
+  $effect(() => {
+    coordinates;
+    bounds;
+    if (attached && shared?.map.isStyleLoaded()) {
+      moveToTarget();
+      updateDraggableMarker();
+    }
+  });
+
+  // React to current slug change
+  $effect(() => {
+    if (attached && shared?.map.isStyleLoaded()) {
+      updateActiveHighlight(currentSlug);
+    }
+  });
+
   function startResize(event: PointerEvent) {
     const handle = event.currentTarget as HTMLElement;
     const startY = event.clientY;
     const startHeight = host.clientHeight;
     handle.setPointerCapture(event.pointerId);
     const move = (e: PointerEvent) => {
-      height = Math.max(120, startHeight + e.clientY - startY);
+      height = Math.max(160, startHeight + e.clientY - startY);
       host.style.height = `${height}px`;
+      shared?.map.resize();
     };
     const end = () => {
       handle.removeEventListener("pointermove", move);
@@ -255,11 +318,13 @@
   }
 </script>
 
-<div class={className}>
+<div class={`relative ${className}`}>
   <div
     bind:this={host}
-    class="h-64 w-full md:h-[28rem] overflow-hidden rounded-t-md max-md:rounded-b-md border border-border"
-  ></div>
+    class="relative h-72 w-full md:h-[28rem] overflow-hidden rounded-t-md max-md:rounded-b-md border border-border"
+  >
+    <MapLegend />
+  </div>
   <div
     role="separator"
     aria-orientation="horizontal"

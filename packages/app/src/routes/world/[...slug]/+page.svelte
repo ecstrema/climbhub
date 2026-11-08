@@ -15,6 +15,9 @@
   import { afterNavigate, replaceState } from "$app/navigation";
   import { page } from "$app/state";
   import { untrack } from "svelte";
+  import LocationMap from "#lib/components/location-map.svelte";
+  import { getCoordinates } from "#lib/data/parse/osm-tags.js";
+  import { getNearbyDots } from "#lib/data/nearby-dots.js";
 
   let { params }: PageProps = $props();
 
@@ -66,11 +69,45 @@
 
     return refreshedFeatureState.refreshedFeature === undefined;
   });
+
+  const nearby = $derived(getNearbyDots((s) => appState.tree.getReactiveNode(s), itemSlug));
+
+  const coordinates = $derived.by(() => {
+    if (item.feature.type === "geographic") return undefined;
+    const own = getCoordinates(item.feature);
+    if (own) return own;
+    // Areas mapped without a position are placed at the center of what they contain
+    const inside = nearby.filter((d) => d.slug.startsWith(`${itemSlug}/`));
+    if (inside.length === 0) return undefined;
+    return {
+      lat: inside.reduce((sum, d) => sum + d.lat, 0) / inside.length,
+      lon: inside.reduce((sum, d) => sum + d.lon, 0) / inside.length,
+    };
+  });
+
+  const bounds = $derived.by(() => {
+    if (item.feature.type === "geographic" && item.feature.bbox) {
+      return item.feature.bbox;
+    }
+    return undefined;
+  });
+
+  const isRoute = $derived(itemType === "route");
+  const editable = $derived(appState.osmUser.loggedIn && item.feature.type === "node" && isRoute);
 </script>
 
 {#if item.feature.type !== "geographic" && isFeatureDeletedUpstream}
   <OsmMissingFeature feature={item.feature} />
 {/if}
+
+<LocationMap
+  currentSlug={itemSlug}
+  currentFeature={item.feature}
+  {coordinates}
+  {bounds}
+  draggable={editable}
+  onmove={editable ? (pos) => appState.setCoordinates(itemSlug, pos) : undefined}
+/>
 
 {#if !itemType}
   <ComponentParseFailed feature={item.feature} featureSlug={slug} />

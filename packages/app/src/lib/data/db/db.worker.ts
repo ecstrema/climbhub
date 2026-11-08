@@ -2,8 +2,10 @@ import sqlite3InitModule, { type Database } from "@sqlite.org/sqlite-wasm";
 import type { DataJSON } from "@climbhub/climbing-data-gen";
 import { featureToType, getName } from "#lib/data/parse/data.js";
 import { getParentSlug } from "#lib/helpers/slug.js";
-import { getGradeReference } from "#lib/data/parse/osm-tags.js";
-import type { DbRequest, DbResponse, SearchFilters } from "./types";
+import { getGrade, getGradeReference } from "#lib/data/parse/osm-tags.js";
+import { getColorFromGrade } from "#lib/data/network/grade.js";
+import { extractRouteStyle, FEATURE_COLORS, ROUTE_STYLE_COLORS } from "#lib/data/parse/route-styles.js";
+import type { DbRequest, DbResponse, MapElementFeature, SearchFilters } from "./types";
 
 /** Bump when the tables change: the database is then downloaded again */
 const SCHEMA = 2;
@@ -251,6 +253,73 @@ async function handle(req: DbRequest): Promise<DbResponse> {
           : [],
       );
       return { id: req.id, type: "topLevel", data };
+    }
+    case "getAllMapElements": {
+      const rows = db.selectArrays(`
+        SELECT slug, type, data
+        FROM elements
+        WHERE type != 'geographic' AND (json_extract(data, '$.lat') IS NOT NULL OR json_extract(data, '$.center.lat') IS NOT NULL)
+      `);
+      const features: MapElementFeature[] = [];
+      for (const [slug, type, dataJson] of rows) {
+        const item = JSON.parse(dataJson as string);
+        const lat = item.lat ?? item.center?.lat;
+        const lon = item.lon ?? item.center?.lon;
+        if (typeof lat !== "number" || typeof lon !== "number") continue;
+        const tags = item.tags ?? {};
+        const isCliff = tags.natural === "cliff";
+        let elementType: MapElementFeature["properties"]["elementType"] = isCliff
+          ? "cliff"
+          : (type as string) === "route"
+            ? "route"
+            : (type as string) === "area"
+              ? "area"
+              : (type as string) === "gym"
+                ? "gym"
+                : "other";
+
+        let fillColor = "#94a3b8";
+        let strokeColor = "#ffffff";
+        let routeStyle: string | undefined;
+        let gradeStr: string | undefined;
+
+        if (elementType === "route") {
+          routeStyle = extractRouteStyle(tags);
+          strokeColor = ROUTE_STYLE_COLORS[routeStyle] ?? "#64748b";
+          const gradeObj = getGrade(tags)?.v;
+          if (gradeObj) {
+            gradeStr = gradeObj.v;
+            if (gradeObj.scale !== "unknown") {
+              fillColor = getColorFromGrade(gradeObj.v, gradeObj.scale);
+            }
+          }
+        } else if (elementType === "cliff") {
+          fillColor = FEATURE_COLORS.cliff.fill;
+          strokeColor = FEATURE_COLORS.cliff.stroke;
+        } else if (elementType === "area") {
+          fillColor = FEATURE_COLORS.area.fill;
+          strokeColor = FEATURE_COLORS.area.stroke;
+        } else if (elementType === "gym") {
+          fillColor = FEATURE_COLORS.gym.fill;
+          strokeColor = FEATURE_COLORS.gym.stroke;
+        }
+
+        features.push({
+          type: "Feature",
+          geometry: { type: "Point", coordinates: [lon, lat] },
+          properties: {
+            slug: slug as string,
+            name: tags.name ?? "Unnamed",
+            elementType,
+            routeStyle,
+            grade: gradeStr,
+            fillColor,
+            strokeColor,
+            href: "",
+          },
+        });
+      }
+      return { id: req.id, type: "allMapElements", data: { type: "FeatureCollection", features } };
     }
     case "getStats": {
       const total = db.selectValue("SELECT total_routes FROM stats WHERE slug = ?", [req.slug]) as number | undefined;

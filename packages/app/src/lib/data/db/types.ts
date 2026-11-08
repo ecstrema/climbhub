@@ -26,9 +26,33 @@ export interface TopLevelPoint {
   lon: number;
 }
 
+export interface MapElementFeature {
+  type: "Feature";
+  geometry: {
+    type: "Point";
+    coordinates: [number, number];
+  };
+  properties: {
+    slug: string;
+    name: string;
+    elementType: "route" | "area" | "gym" | "cliff" | "other";
+    routeStyle?: string;
+    grade?: string;
+    fillColor: string;
+    strokeColor: string;
+    href: string;
+  };
+}
+
+export interface MapElementFeatureCollection {
+  type: "FeatureCollection";
+  features: MapElementFeature[];
+}
+
 export type DbRequest =
   | { id: number; type: "status"; version: string }
   | { id: number; type: "getTopLevel" }
+  | { id: number; type: "getAllMapElements" }
   | { id: number; type: "build"; url: string; version: string }
   | { id: number; type: "getNode"; slug: string }
   | { id: number; type: "getChildren"; slug: string }
@@ -44,6 +68,7 @@ export type DbResponse =
   | { id: number; type: "children"; data: Record<string, DataJSON> }
   | { id: number; type: "stats"; data: AreaStats | undefined }
   | { id: number; type: "topLevel"; data: TopLevelPoint[] }
+  | { id: number; type: "allMapElements"; data: MapElementFeatureCollection }
   /** Streamed while a search runs, without being a reply to a request */
   | { type: "matchBatch"; searchId: number; slugs: string[] }
   /** The search used its time budget (`exhausted` false) or has no more results */

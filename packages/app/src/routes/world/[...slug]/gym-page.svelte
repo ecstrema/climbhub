@@ -11,7 +11,6 @@
   import PhoneIcon from "@lucide/svelte/icons/phone";
   import GlobeIcon from "@lucide/svelte/icons/globe";
   import CircleDollarSignIcon from "@lucide/svelte/icons/circle-dollar-sign";
-  import LocationMap from "#lib/components/location-map.svelte";
   import MapLinks from "#lib/components/map-links.svelte";
   import EditableOpeningHours from "#lib/components/editable/editable-opening-hours.svelte";
   import { getFee, getFeeCharge, getWebsite } from "#lib/data/parse/gym-tags.js";
@@ -70,7 +69,6 @@
 {#if coordinates}
   <p class="text-sm text-muted-foreground">{coordinates.lat}, {coordinates.lon}</p>
   <MapLinks {coordinates} name={feature.tags?.name} />
-  <LocationMap markers={[{ ...coordinates, label: feature.tags?.name }]} />
 {/if}
 
 <EditableDescription {feature} featureSlug={slug} />

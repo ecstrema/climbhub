@@ -15025,17 +15025,13 @@ msgstr "Abrir em"
 
 #: src/lib/components/location-map.svelte
 #: src/lib/components/location-map.svelte
-#: src/lib/components/location-map.svelte
-#: src/lib/components/location-map.svelte
 msgid "FeatureCollection"
 msgstr ""
 
 #: src/lib/components/location-map.svelte
-#: src/lib/components/location-map.svelte
 msgid "Feature"
 msgstr ""
 
-#: src/lib/components/location-map.svelte
 #: src/lib/components/location-map.svelte
 msgid "Point"
 msgstr ""
@@ -15065,16 +15061,19 @@ msgstr "Arraste para redimensionar o mapa"
 msgid "Route"
 msgstr "Via"
 
+#: src/lib/components/map-legend.svelte
 #: src/lib/components/shell/sidebar/search-filters.svelte
 #: src/routes/grade-comparison/+layout.svelte
 msgid "Boulder"
 msgstr "Boulder"
 
+#: src/lib/components/map-legend.svelte
 #: src/lib/components/shell/sidebar/search-filters.svelte
 #: src/routes/grade-comparison/+layout.svelte
 msgid "Ice"
 msgstr "Gelo"
 
+#: src/lib/components/map-legend.svelte
 #: src/lib/components/shell/sidebar/search-filters.svelte
 #: src/routes/grade-comparison/+layout.svelte
 msgid "Aid"
@@ -15486,9 +15485,8 @@ msgstr "Taxa"
 msgid "Free"
 msgstr "Grátis"
 
-#: src/routes/world/[...slug]/route-page.svelte
-msgid "Drag the marker to move the route."
-msgstr "Arraste o marcador para mover a via."
+#~ msgid "Drag the marker to move the route."
+#~ msgstr "Arraste o marcador para mover a via."
 
 #. 0: import.meta.env.DEV ? "[DEV] " \\: ""
 #: src/routes/grade-comparison/aid/+page.svelte
@@ -15611,14 +15609,17 @@ msgstr "Vias"
 msgid "Gyms"
 msgstr "Academias"
 
+#: src/lib/components/map-legend.svelte
 #: src/lib/components/shell/sidebar/search-filters.svelte
 msgid "Sport"
 msgstr "Esportiva"
 
+#: src/lib/components/map-legend.svelte
 #: src/lib/components/shell/sidebar/search-filters.svelte
 msgid "Trad"
 msgstr "Tradicional"
 
+#: src/lib/components/map-legend.svelte
 #: src/lib/components/shell/sidebar/search-filters.svelte
 msgid "Top rope"
 msgstr "Top rope"
@@ -28076,4 +28077,68 @@ msgstr ""
 #: src/lib/components/shell/sidebar/app-sidebar-node.svelte
 #: src/lib/components/shell/sidebar/app-sidebar-node.svelte
 msgid "Drag to reorder"
+msgstr ""
+
+#: src/lib/components/map-legend.svelte
+msgid "Show map legend"
+msgstr ""
+
+#: src/lib/components/map-legend.svelte
+msgid "<0/> Legend"
+msgstr ""
+
+#: src/lib/components/map-legend.svelte
+msgid "Close legend"
+msgstr ""
+
+#: src/lib/components/map-legend.svelte
+msgid "Map Legend"
+msgstr ""
+
+#: src/lib/components/map-legend.svelte
+msgid "Easy"
+msgstr ""
+
+#: src/lib/components/map-legend.svelte
+msgid "Moderate"
+msgstr ""
+
+#: src/lib/components/map-legend.svelte
+msgid "Hard"
+msgstr ""
+
+#: src/lib/components/map-legend.svelte
+msgid "Pro"
+msgstr ""
+
+#: src/lib/components/map-legend.svelte
+msgid "Ungraded"
+msgstr ""
+
+#: src/lib/components/map-legend.svelte
+msgid "Route Grade (Fill)"
+msgstr ""
+
+#: src/lib/components/map-legend.svelte
+msgid "Route Type (Stroke)"
+msgstr ""
+
+#: src/lib/components/map-legend.svelte
+msgid "Cliff (from OSM)"
+msgstr ""
+
+#: src/lib/components/map-legend.svelte
+msgid "Area / Crag"
+msgstr ""
+
+#: src/lib/components/map-legend.svelte
+msgid "Climbing Gym"
+msgstr ""
+
+#: src/lib/components/map-legend.svelte
+msgid "Places & Terrain"
+msgstr ""
+
+#: src/routes/world/[...slug]/route-page.svelte
+msgid "Drag the marker on the map to move the route."
 msgstr ""

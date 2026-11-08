@@ -2,7 +2,7 @@ import { browser, version } from "$app/env";
 import { apiUrl } from "../network/api-url";
 import type { DataJSON } from "@climbhub/climbing-data-gen";
 import type { AreaStats } from "#lib/types.js";
-import type { DbRequest, DbResponse, SearchFilters, TopLevelPoint } from "./types";
+import type { DbRequest, DbResponse, MapElementFeatureCollection, SearchFilters, TopLevelPoint } from "./types";
 
 export type LocalDbStatus = "unknown" | "empty" | "downloading" | "ready" | "error";
 
@@ -144,6 +144,10 @@ class LocalDb {
 
   async getTopLevelPoints(): Promise<TopLevelPoint[]> {
     return (await this.send({ type: "getTopLevel" }, "topLevel")).data;
+  }
+
+  async getAllMapElements(): Promise<MapElementFeatureCollection> {
+    return (await this.send({ type: "getAllMapElements" }, "allMapElements")).data;
   }
 
   async getStats(slug: string): Promise<AreaStats | undefined> {
