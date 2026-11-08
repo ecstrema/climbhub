@@ -4,7 +4,12 @@ import { featureToType, getName } from "#lib/data/parse/data.js";
 import { getParentSlug } from "#lib/helpers/slug.js";
 import { getGrade, getGradeReference } from "#lib/data/parse/osm-tags.js";
 import { getColorFromGrade } from "#lib/data/network/grade.js";
-import { extractRouteStyle, FEATURE_COLORS, ROUTE_STYLE_COLORS } from "#lib/data/parse/route-styles.js";
+import {
+  buildSectorContour,
+  extractRouteStyle,
+  FEATURE_COLORS,
+  ROUTE_STYLE_COLORS,
+} from "#lib/data/parse/route-styles.js";
 import type { DbRequest, DbResponse, MapElementFeature, SearchFilters } from "./types";
 
 /** Bump when the tables change: the database is then downloaded again */
@@ -256,36 +261,89 @@ async function handle(req: DbRequest): Promise<DbResponse> {
     }
     case "getAllMapElements": {
       const rows = db.selectArrays(`
-        SELECT slug, type, data
+        SELECT slug, type, parent_slug, data
         FROM elements
         WHERE type != 'geographic' AND (json_extract(data, '$.lat') IS NOT NULL OR json_extract(data, '$.center.lat') IS NOT NULL)
       `);
-      const features: MapElementFeature[] = [];
-      for (const [slug, type, dataJson] of rows) {
+
+      const parsedItems: {
+        slug: string;
+        type: string;
+        parentSlug: string;
+        lat: number;
+        lon: number;
+        item: any;
+      }[] = [];
+      const nodeCoords = new Map<number, [number, number]>();
+      const sectorRoutes = new Map<string, [number, number][]>();
+
+      for (const [slug, type, parentSlug, dataJson] of rows) {
         const item = JSON.parse(dataJson as string);
         const lat = item.lat ?? item.center?.lat;
         const lon = item.lon ?? item.center?.lon;
         if (typeof lat !== "number" || typeof lon !== "number") continue;
+
+        if (item.type === "node") {
+          nodeCoords.set(item.id, [lon, lat]);
+        }
+
+        const isRoute = (type as string) === "route";
+        if (isRoute && parentSlug) {
+          if (!sectorRoutes.has(parentSlug as string)) {
+            sectorRoutes.set(parentSlug as string, []);
+          }
+          sectorRoutes.get(parentSlug as string)!.push([lon, lat]);
+        }
+
+        parsedItems.push({
+          slug: slug as string,
+          type: type as string,
+          parentSlug: parentSlug as string,
+          lat,
+          lon,
+          item,
+        });
+      }
+
+      const features: MapElementFeature[] = [];
+
+      for (const { slug, type, lat, lon, item } of parsedItems) {
         const tags = item.tags ?? {};
         const isCliff = tags.natural === "cliff";
-        let elementType: MapElementFeature["properties"]["elementType"] = isCliff
-          ? "cliff"
-          : (type as string) === "route"
-            ? "route"
-            : (type as string) === "area"
-              ? "area"
-              : (type as string) === "gym"
-                ? "gym"
-                : "other";
 
-        let fillColor = "#94a3b8";
-        let strokeColor = "#ffffff";
-        let routeStyle: string | undefined;
-        let gradeStr: string | undefined;
+        if (isCliff) {
+          // Cliffs should be paths made out of their nodes, not circles
+          let coords: [number, number][] = [];
+          if (item.type === "way" && Array.isArray(item.nodes)) {
+            coords = item.nodes.map((id: number) => nodeCoords.get(id)).filter(Boolean) as [number, number][];
+          }
+          if (coords.length < 2) {
+            // Short line segment path through node/center
+            coords = [
+              [lon - 0.00015, lat],
+              [lon + 0.00015, lat],
+            ];
+          }
+          features.push({
+            type: "Feature",
+            geometry: { type: "LineString", coordinates: coords },
+            properties: {
+              slug,
+              name: tags.name ?? "Cliff",
+              elementType: "cliff",
+              fillColor: "transparent",
+              strokeColor: FEATURE_COLORS.cliff.fill,
+              href: "",
+            },
+          });
+          continue;
+        }
 
-        if (elementType === "route") {
-          routeStyle = extractRouteStyle(tags);
-          strokeColor = ROUTE_STYLE_COLORS[routeStyle] ?? "#64748b";
+        if (type === "route") {
+          const routeStyle = extractRouteStyle(tags);
+          const strokeColor = ROUTE_STYLE_COLORS[routeStyle] ?? "#64748b";
+          let fillColor = "#94a3b8";
+          let gradeStr: string | undefined;
           const gradeObj = getGrade(tags)?.v;
           if (gradeObj) {
             gradeStr = gradeObj.v;
@@ -293,32 +351,76 @@ async function handle(req: DbRequest): Promise<DbResponse> {
               fillColor = getColorFromGrade(gradeObj.v, gradeObj.scale);
             }
           }
-        } else if (elementType === "cliff") {
-          fillColor = FEATURE_COLORS.cliff.fill;
-          strokeColor = FEATURE_COLORS.cliff.stroke;
-        } else if (elementType === "area") {
-          fillColor = FEATURE_COLORS.area.fill;
-          strokeColor = FEATURE_COLORS.area.stroke;
-        } else if (elementType === "gym") {
-          fillColor = FEATURE_COLORS.gym.fill;
-          strokeColor = FEATURE_COLORS.gym.stroke;
+          features.push({
+            type: "Feature",
+            geometry: { type: "Point", coordinates: [lon, lat] },
+            properties: {
+              slug,
+              name: tags.name ?? "Unnamed",
+              elementType: "route",
+              routeStyle,
+              grade: gradeStr,
+              fillColor,
+              strokeColor,
+              href: "",
+            },
+          });
+          continue;
         }
 
-        features.push({
-          type: "Feature",
-          geometry: { type: "Point", coordinates: [lon, lat] },
-          properties: {
-            slug: slug as string,
-            name: tags.name ?? "Unnamed",
-            elementType,
-            routeStyle,
-            grade: gradeStr,
-            fillColor,
-            strokeColor,
-            href: "",
-          },
-        });
+        if (type === "area") {
+          const routes = sectorRoutes.get(slug);
+          if (routes && routes.length > 0) {
+            // Sector with routes: show as contour around its routes, not as center point
+            const contour = buildSectorContour(routes);
+            if (contour.length >= 3) {
+              features.push({
+                type: "Feature",
+                geometry: { type: "LineString", coordinates: contour },
+                properties: {
+                  slug,
+                  name: tags.name ?? "Sector",
+                  elementType: "sector",
+                  fillColor: "transparent",
+                  strokeColor: "#64748b",
+                  href: "",
+                },
+              });
+              continue;
+            }
+          }
+          // Area without child routes: show as general area point
+          features.push({
+            type: "Feature",
+            geometry: { type: "Point", coordinates: [lon, lat] },
+            properties: {
+              slug,
+              name: tags.name ?? "Unnamed",
+              elementType: "area",
+              fillColor: FEATURE_COLORS.area.fill,
+              strokeColor: FEATURE_COLORS.area.stroke,
+              href: "",
+            },
+          });
+          continue;
+        }
+
+        if (type === "gym") {
+          features.push({
+            type: "Feature",
+            geometry: { type: "Point", coordinates: [lon, lat] },
+            properties: {
+              slug,
+              name: tags.name ?? "Unnamed",
+              elementType: "gym",
+              fillColor: FEATURE_COLORS.gym.fill,
+              strokeColor: FEATURE_COLORS.gym.stroke,
+              href: "",
+            },
+          });
+        }
       }
+
       return { id: req.id, type: "allMapElements", data: { type: "FeatureCollection", features } };
     }
     case "getStats": {

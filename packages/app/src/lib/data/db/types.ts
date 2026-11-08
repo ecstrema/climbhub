@@ -29,13 +29,13 @@ export interface TopLevelPoint {
 export interface MapElementFeature {
   type: "Feature";
   geometry: {
-    type: "Point";
-    coordinates: [number, number];
+    type: "Point" | "LineString" | "Polygon";
+    coordinates: any;
   };
   properties: {
     slug: string;
     name: string;
-    elementType: "route" | "area" | "gym" | "cliff" | "other";
+    elementType: "route" | "area" | "gym" | "cliff" | "sector" | "other";
     routeStyle?: string;
     grade?: string;
     fillColor: string;

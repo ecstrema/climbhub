@@ -145,7 +145,7 @@
         className: "location-map-popup",
       });
 
-      const interactiveLayers = ["routes", "cliffs", "areas", "gyms"];
+      const interactiveLayers = ["routes", "cliffs", "areas", "gyms", "sectors-contour"];
       for (const layer of interactiveLayers) {
         map.on("mousemove", layer, (e) => {
           const feature = e.features?.[0];

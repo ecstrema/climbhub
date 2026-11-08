@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractRouteStyle, FEATURE_COLORS, ROUTE_STYLE_COLORS } from "./route-styles";
+import { buildSectorContour, extractRouteStyle, FEATURE_COLORS, ROUTE_STYLE_COLORS } from "./route-styles";
 import { featureToMapElement } from "../../components/location-map-helper";
 import type { OsmFeature } from "osm-api";
 
@@ -30,7 +30,7 @@ describe("route-styles", () => {
     expect(FEATURE_COLORS.gym.fill).toBe("#059669");
   });
 
-  it("converts cliff feature to map element with cliff styling", () => {
+  it("converts cliff feature to map element with cliff path styling", () => {
     const cliffNode = {
       type: "node",
       id: 12345,
@@ -44,8 +44,19 @@ describe("route-styles", () => {
     const el = featureToMapElement("world/europe/france/grand-cliff", cliffNode);
     expect(el).toBeDefined();
     expect(el?.properties.elementType).toBe("cliff");
-    expect(el?.properties.fillColor).toBe(FEATURE_COLORS.cliff.fill);
-    expect(el?.properties.strokeColor).toBe(FEATURE_COLORS.cliff.stroke);
+    expect(el?.geometry.type).toBe("LineString");
+  });
+
+  it("builds sector contour around route points", () => {
+    const pts: [number, number][] = [
+      [5.0, 45.0],
+      [5.001, 45.0],
+      [5.0, 45.001],
+    ];
+    const contour = buildSectorContour(pts);
+    expect(contour.length).toBeGreaterThanOrEqual(4);
+    // Closed ring
+    expect(contour[0]).toEqual(contour[contour.length - 1]);
   });
 
   it("converts route feature with grade to map element with grade fill and style stroke", () => {
