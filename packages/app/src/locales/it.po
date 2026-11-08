@@ -28115,30 +28115,54 @@ msgstr ""
 msgid "Ungraded"
 msgstr ""
 
-#: src/lib/components/map-legend.svelte
-msgid "Route Grade (Fill)"
-msgstr ""
+#~ msgid "Route Grade (Fill)"
+#~ msgstr ""
 
-#: src/lib/components/map-legend.svelte
-msgid "Route Type (Stroke)"
-msgstr ""
+#~ msgid "Route Type (Stroke)"
+#~ msgstr ""
 
-#: src/lib/components/map-legend.svelte
-msgid "Cliff (from OSM)"
-msgstr ""
+#~ msgid "Cliff (from OSM)"
+#~ msgstr ""
 
-#: src/lib/components/map-legend.svelte
-msgid "Area / Crag"
-msgstr ""
+#~ msgid "Area / Crag"
+#~ msgstr ""
 
-#: src/lib/components/map-legend.svelte
-msgid "Climbing Gym"
-msgstr ""
+#~ msgid "Climbing Gym"
+#~ msgstr ""
 
-#: src/lib/components/map-legend.svelte
-msgid "Places & Terrain"
-msgstr ""
+#~ msgid "Places & Terrain"
+#~ msgstr ""
 
 #: src/routes/world/[...slug]/route-page.svelte
 msgid "Drag the marker on the map to move the route."
+msgstr ""
+
+#: src/lib/components/map-legend.svelte
+msgid "Both"
+msgstr ""
+
+#: src/lib/components/map-legend.svelte
+#: src/lib/components/map-legend.svelte
+msgid "Grade"
+msgstr ""
+
+#: src/lib/components/map-legend.svelte
+#: src/lib/components/map-legend.svelte
+msgid "Type"
+msgstr ""
+
+#: src/lib/components/map-legend.svelte
+msgid "Color by"
+msgstr ""
+
+#: src/lib/components/map-legend.svelte
+msgid "Grade (fill)"
+msgstr ""
+
+#: src/lib/components/map-legend.svelte
+msgid "Type (stroke)"
+msgstr ""
+
+#: src/lib/components/map-legend.svelte
+msgid "Gym"
 msgstr ""
