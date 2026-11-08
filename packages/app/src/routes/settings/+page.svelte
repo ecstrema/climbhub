@@ -3,6 +3,7 @@
   import { isLoggedIn } from "osm-api";
   import { resolve } from "$app/paths";
   import { Button } from "#components/ui/button/index.js";
+  import { Select } from "#components/ui/select/index.js";
   import { loginOsm, logoutOsm } from "#lib/data/network/osm.svelte.js";
   import ArrowLeftIcon from "@lucide/svelte/icons/arrow-left";
   import { allBoulderScales, allRouteScales, convertGrade, french } from "@climbhub/holy-grade";
@@ -77,15 +78,11 @@
         <h2 class="font-medium">Appearance</h2>
         <p class="mt-1 text-sm text-muted-foreground">Theme</p>
       </div>
-      <select
-        aria-label="Theme"
-        class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        bind:value={() => userPrefersMode.current, setMode}
-      >
+      <Select aria-label="Theme" bind:value={() => userPrefersMode.current, setMode}>
         <option value="light">Light</option>
         <option value="dark">Dark</option>
         <option value="system">System</option>
-      </select>
+      </Select>
     </section>
 
     <section class="grid gap-4 border-t py-6 sm:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)] sm:items-center">
@@ -93,15 +90,11 @@
         <h2 class="font-medium">Language</h2>
         <p class="mt-1 text-sm text-muted-foreground">Language of the interface and of the names of the regions</p>
       </div>
-      <select
-        aria-label="Language"
-        class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        bind:value={() => i18n.locale, setLocale}
-      >
+      <Select aria-label="Language" bind:value={() => i18n.locale, setLocale}>
         {#each locales as locale (locale)}
           <option value={locale}>{localeNames[locale]}</option>
         {/each}
-      </select>
+      </Select>
     </section>
 
     <section class="grid gap-4 border-t py-6 sm:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)] sm:items-start">
@@ -110,16 +103,12 @@
         <p class="mt-1 text-sm text-muted-foreground">Choose how route grades are displayed.</p>
       </div>
       <div class="space-y-2">
-        <select
-          aria-label="Route grading scale"
-          class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          bind:value={preferredRouteScale.current}
-        >
+        <Select aria-label="Route grading scale" bind:value={preferredRouteScale.current}>
           <option value="local">Local to each area</option>
           {#each allRouteScales as scale (scale.id)}
             <option value={scale.id}>{scale.name} ({scale.id})</option>
           {/each}
-        </select>
+        </Select>
         <p class="text-sm text-muted-foreground">
           {routeScale?.description ?? "Uses the grading scale set for each area."}
           {#if routeExamples}
@@ -138,16 +127,12 @@
         <p class="mt-1 text-sm text-muted-foreground">Choose how boulder grades are displayed.</p>
       </div>
       <div class="space-y-2">
-        <select
-          aria-label="Boulder grading scale"
-          class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          bind:value={preferredBoulderScale.current}
-        >
+        <Select aria-label="Boulder grading scale" bind:value={preferredBoulderScale.current}>
           <option value="local">Local to each area</option>
           {#each allBoulderScales as scale (scale.id)}
             <option value={scale.id}>{scale.name} ({scale.id})</option>
           {/each}
-        </select>
+        </Select>
         <p class="text-sm text-muted-foreground">
           {boulderScale?.description ?? "Uses the grading scale set for each area."}
           {#if boulderExamples}

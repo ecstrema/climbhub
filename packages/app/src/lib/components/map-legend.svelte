@@ -1,4 +1,20 @@
 <script lang="ts">
+  import { mode } from "mode-watcher";
+  import type { RouteScaleId } from "@climbhub/holy-grade";
+  import { getPreferredRouteGradingScale } from "#components/shell/providers/settings.svelte.js";
+  import { getColorFromGrade } from "#lib/data/network/grade.js";
+
+  const DEFAULT_ROUTE_GRADES: Record<RouteScaleId, string[]> = {
+    French: ["4a", "5a", "6a", "7a", "8a", "9a"],
+    YDS: ["5.6", "5.8", "5.10a", "5.11a", "5.12a", "5.13a", "5.14a"],
+    UIAA: ["IV", "V", "VI", "VII", "VIII", "IX", "X"],
+    Ewbank: ["14", "16", "19", "22", "26", "29", "33"],
+    Saxon: ["V", "VI", "VIIa", "VIIIa", "IXa", "Xa", "XIa"],
+    Scandinavian: ["4", "5", "6-", "7-", "8-", "9-", "10-"],
+    Polish: ["IV", "V", "VI+", "VI.2", "VI.4", "VI.6", "VI.7"],
+    UKTech: ["4a", "4c", "5b", "6a", "6c", "7a", "7b"],
+  };
+
   let {
     colorMode = $bindable("both"),
   }: {
@@ -6,6 +22,16 @@
   } = $props();
 
   let open = $state(false);
+
+  const preferredScale = $derived.by(() => {
+    try {
+      const pref = getPreferredRouteGradingScale?.()?.current;
+      if (pref && pref !== "local") return pref;
+    } catch {}
+    return "French" as RouteScaleId;
+  });
+
+  const gradeReferences = $derived(DEFAULT_ROUTE_GRADES[preferredScale] ?? DEFAULT_ROUTE_GRADES.French);
 </script>
 
 <div class="absolute bottom-6 left-3 z-10 max-w-[260px]">
@@ -52,26 +78,20 @@
       <!-- Grade -->
       {#if colorMode === "grade" || colorMode === "both"}
         <div class="mt-2.5">
-          <div class="font-medium text-[11px] text-muted-foreground mb-1.5">
-            {colorMode === "both" ? "Grade (fill)" : "Grade"}
+          <div class="font-medium text-[11px] text-muted-foreground mb-1.5 flex justify-between items-center">
+            <span>{colorMode === "both" ? "Grade (fill)" : "Grade"}</span>
+            <span class="text-[10px] opacity-70">({preferredScale})</span>
           </div>
           <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px]">
-            <div class="flex items-center gap-1.5">
-              <span class="size-2.5 rounded-full border border-black/20" style:background="hsl(120deg 80% 70%)"></span>
-              <span>Easy</span>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <span class="size-2.5 rounded-full border border-black/20" style:background="hsl(50deg 80% 70%)"></span>
-              <span>Moderate</span>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <span class="size-2.5 rounded-full border border-black/20" style:background="hsl(0deg 80% 70%)"></span>
-              <span>Hard</span>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <span class="size-2.5 rounded-full border border-black/20" style:background="hsl(280deg 80% 70%)"></span>
-              <span>Pro</span>
-            </div>
+            {#each gradeReferences as g (g)}
+              <div class="flex items-center gap-1.5">
+                <span
+                  class="size-2.5 rounded-full border border-black/20"
+                  style:background={getColorFromGrade(g, preferredScale, mode.current === "dark")}
+                ></span>
+                <span>{g}</span>
+              </div>
+            {/each}
             <div class="flex items-center gap-1.5 col-span-2">
               <span class="size-2.5 rounded-full border border-black/20 bg-slate-400"></span>
               <span>Ungraded</span>

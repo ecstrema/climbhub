@@ -3,6 +3,7 @@
   import DeleteIcon from "@lucide/svelte/icons/delete";
   import { Button } from "#components/ui/button/index.js";
   import * as Dialog from "#components/ui/dialog/index.js";
+  import { Textarea } from "#components/ui/textarea/index.js";
   import { getNameOSM } from "#lib/data/parse/osm-tags.js";
 
   import { Progress } from "#components/ui/progress/index.js";
@@ -87,12 +88,7 @@
         {/each}
       </ul>
       <label class="block text-sm font-medium" for="osm-comment">Comment (optional)</label>
-      <textarea
-        id="osm-comment"
-        bind:value={comment}
-        placeholder="Leave a comment"
-        class="mt-2 min-h-20 w-full rounded-md border bg-transparent p-2"
-        maxlength="255"></textarea>
+      <Textarea id="osm-comment" bind:value={comment} placeholder="Leave a comment" class="mt-2" maxlength={255} />
 
       {#if error}<p class="mt-2 text-sm text-destructive">{error}</p>{/if}
       <Dialog.Footer>

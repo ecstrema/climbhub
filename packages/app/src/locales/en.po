@@ -15033,6 +15033,9 @@ msgid "Feature"
 msgstr "Feature"
 
 #: src/lib/components/location-map.svelte
+#: src/lib/components/location-map.svelte
+#: src/lib/components/location-map.svelte
+#: src/lib/components/location-map.svelte
 msgid "Point"
 msgstr "Point"
 
@@ -16177,8 +16180,9 @@ msgstr "Clear filters"
 #~ msgid "Could not find item {0}"
 #~ msgstr "Could not find item {0}"
 
-#~ msgid "French"
-#~ msgstr "French"
+#: src/lib/components/map-legend.svelte
+msgid "French"
+msgstr "French"
 
 #~ msgid "Hueco"
 #~ msgstr "Hueco"
@@ -26098,8 +26102,9 @@ msgstr "North America"
 #~ msgid "VI/VIIa"
 #~ msgstr "VI/VIIa"
 
-#~ msgid "VIIa"
-#~ msgstr "VIIa"
+#: src/lib/components/map-legend.svelte
+msgid "VIIa"
+msgstr "VIIa"
 
 #~ msgid "VIIa/VIIb"
 #~ msgstr "VIIa/VIIb"
@@ -26116,8 +26121,9 @@ msgstr "North America"
 #~ msgid "VIIc/VIIIa"
 #~ msgstr "VIIc/VIIIa"
 
-#~ msgid "VIIIa"
-#~ msgstr "VIIIa"
+#: src/lib/components/map-legend.svelte
+msgid "VIIIa"
+msgstr "VIIIa"
 
 #~ msgid "VIIIa/VIIIb"
 #~ msgstr "VIIIa/VIIIb"
@@ -26134,8 +26140,9 @@ msgstr "North America"
 #~ msgid "VIIIc/IXa"
 #~ msgstr "VIIIc/IXa"
 
-#~ msgid "IXa"
-#~ msgstr "IXa"
+#: src/lib/components/map-legend.svelte
+msgid "IXa"
+msgstr "IXa"
 
 #~ msgid "IXa/IXb"
 #~ msgstr "IXa/IXb"
@@ -26152,8 +26159,9 @@ msgstr "North America"
 #~ msgid "IXc/Xa"
 #~ msgstr "IXc/Xa"
 
-#~ msgid "Xa"
-#~ msgstr "Xa"
+#: src/lib/components/map-legend.svelte
+msgid "Xa"
+msgstr "Xa"
 
 #~ msgid "Xa/Xb"
 #~ msgstr "Xa/Xb"
@@ -26170,8 +26178,9 @@ msgstr "North America"
 #~ msgid "Xc/XIa"
 #~ msgstr "Xc/XIa"
 
-#~ msgid "XIa"
-#~ msgstr "XIa"
+#: src/lib/components/map-legend.svelte
+msgid "XIa"
+msgstr "XIa"
 
 #~ msgid "XIa/XIb"
 #~ msgstr "XIa/XIb"
@@ -26700,8 +26709,9 @@ msgstr "North America"
 #~ msgid "Move vertex"
 #~ msgstr "Move vertex"
 
-#~ msgid "LineString"
-#~ msgstr "LineString"
+#: src/lib/components/location-map.svelte
+msgid "LineString"
+msgstr "LineString"
 
 #~ msgid "Add vertex"
 #~ msgstr "Add vertex"
@@ -28126,21 +28136,17 @@ msgstr "Close legend"
 msgid "Map Legend"
 msgstr "Map Legend"
 
-#: src/lib/components/map-legend.svelte
-msgid "Easy"
-msgstr "Easy"
+#~ msgid "Easy"
+#~ msgstr "Easy"
 
-#: src/lib/components/map-legend.svelte
-msgid "Moderate"
-msgstr "Moderate"
+#~ msgid "Moderate"
+#~ msgstr "Moderate"
 
-#: src/lib/components/map-legend.svelte
-msgid "Hard"
-msgstr "Hard"
+#~ msgid "Hard"
+#~ msgstr "Hard"
 
-#: src/lib/components/map-legend.svelte
-msgid "Pro"
-msgstr "Pro"
+#~ msgid "Pro"
+#~ msgstr "Pro"
 
 #: src/lib/components/map-legend.svelte
 msgid "Ungraded"

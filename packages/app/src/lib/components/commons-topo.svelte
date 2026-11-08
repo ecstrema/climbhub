@@ -1,5 +1,8 @@
 <script lang="ts">
   import { Button } from "#components/ui/button/index.js";
+  import { Input } from "#components/ui/input/index.js";
+  import { Select } from "#components/ui/select/index.js";
+  import { Textarea } from "#components/ui/textarea/index.js";
   import CheckIcon from "@lucide/svelte/icons/check";
   import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
   import PencilIcon from "@lucide/svelte/icons/pencil";
@@ -356,35 +359,32 @@
         <form class="grid gap-3 sm:grid-cols-2" onsubmit={submitUpload}>
           <label class="grid gap-1 text-sm sm:col-span-2">
             Image file
-            <input class="block w-full text-sm" type="file" accept="image/*" required onchange={selectUploadFile} />
+            <Input type="file" accept="image/*" required onchange={selectUploadFile} />
           </label>
           <label class="grid gap-1 text-sm sm:col-span-2">
             Commons filename
-            <input class="h-9 rounded-md border bg-background px-3 text-sm" bind:value={uploadFilename} required />
+            <Input bind:value={uploadFilename} required />
           </label>
           <label class="grid gap-1 text-sm sm:col-span-2">
             Description
-            <textarea
-              class="min-h-20 rounded-md border bg-background px-3 py-2 text-sm"
-              bind:value={uploadDescription}
-              required></textarea>
+            <Textarea bind:value={uploadDescription} required />
           </label>
           <label class="grid gap-1 text-sm">
             Source
-            <input class="h-9 rounded-md border bg-background px-3 text-sm" bind:value={uploadSource} required />
+            <Input bind:value={uploadSource} required />
           </label>
           <label class="grid gap-1 text-sm">
             Author
-            <input class="h-9 rounded-md border bg-background px-3 text-sm" bind:value={uploadAuthor} required />
+            <Input bind:value={uploadAuthor} required />
           </label>
           <label class="grid gap-1 text-sm sm:col-span-2">
             Free license
-            <select class="h-9 rounded-md border bg-background px-3 text-sm" bind:value={uploadLicense} required>
+            <Select bind:value={uploadLicense} required>
               <option value="" disabled>Select a license</option>
               <option value="cc-by-sa-4.0">CC BY-SA 4.0</option>
               <option value="cc-by-4.0">CC BY 4.0</option>
               <option value="cc-zero">CC0</option>
-            </select>
+            </Select>
           </label>
           <label class="flex items-start gap-2 text-xs text-muted-foreground sm:col-span-2">
             <input class="mt-0.5 size-4 shrink-0" type="checkbox" bind:checked={uploadRightsConfirmed} required />
@@ -436,8 +436,8 @@
             >
             <label class="flex items-center gap-1 text-xs">
               Marker
-              <select
-                class="h-7 rounded-md border bg-background px-1"
+              <Select
+                class="h-7 w-auto py-0 px-1 text-xs"
                 value={selectedPoint === undefined ? "" : draftPoints[selectedPoint]?.marker}
                 onchange={setSelectedMarker}
                 disabled={selectedPoint === undefined}
@@ -448,7 +448,7 @@
                 <option value="P">Piton</option>
                 <option value="S">Fixed sling</option>
                 <option value="U">Unfinished</option>
-              </select>
+              </Select>
             </label>
             <label class="flex items-center gap-1 text-xs">
               <input

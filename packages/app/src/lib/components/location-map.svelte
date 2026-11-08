@@ -1,6 +1,6 @@
 <script module lang="ts">
   import "maplibre-gl/dist/maplibre-gl.css";
-  import { Map as MapLibreMap, NavigationControl, Popup, type GeoJSONSource } from "maplibre-gl";
+  import { Map as MapLibreMap, Marker, NavigationControl, Popup, type GeoJSONSource } from "maplibre-gl";
   import { goto } from "$app/navigation";
   import { resolve } from "$app/paths";
   import { dataClient } from "#lib/data/network/data-client.js";
@@ -12,6 +12,8 @@
 
   // One map (and WebGL context) for the whole app: kept across page navigation.
   let shared: { map: MapLibreMap; element: HTMLDivElement } | undefined;
+  let dragMarker: Marker | undefined;
+  let currentOnmove: ((position: { lat: number; lon: number }) => void) | undefined;
   /** Kept across pages, as the user can resize the map */
   let height: number | undefined;
   /** False until the view was first set to a place */
@@ -19,6 +21,52 @@
   let allElementsLoaded = false;
   let cachedCollection: MapElementFeatureCollection = { type: "FeatureCollection", features: [] };
   const loadedSlugs = new Set<string>();
+  let sharedColorMode: "grade" | "type" | "both" = "both";
+
+  function setMarkerPosition(coords: { lat: number; lon: number }, draggable = false) {
+    if (!shared) return;
+    const map = shared.map;
+    if (dragMarker) {
+      dragMarker.setLngLat([coords.lon, coords.lat]);
+      dragMarker.setDraggable(draggable);
+    } else {
+      dragMarker = new Marker({ color: "#2563eb", draggable }).setLngLat([coords.lon, coords.lat]).addTo(map);
+
+      dragMarker.on("dragend", () => {
+        if (dragMarker && currentOnmove) {
+          const lngLat = dragMarker.getLngLat();
+          currentOnmove({ lat: lngLat.lat, lon: lngLat.lng });
+        }
+      });
+    }
+  }
+
+  function applyColorMode(map: MapLibreMap, mode: "grade" | "type" | "both") {
+    if (!map.isStyleLoaded() || !map.getLayer("routes")) return;
+    if (mode === "grade") {
+      map.setPaintProperty("routes", "circle-color", ["get", "fillColor"]);
+      map.setPaintProperty("routes", "circle-stroke-color", "#ffffff");
+      map.setPaintProperty("routes", "circle-stroke-width", 1.5);
+    } else if (mode === "type") {
+      map.setPaintProperty("routes", "circle-color", ["get", "strokeColor"]);
+      map.setPaintProperty("routes", "circle-stroke-color", "#ffffff");
+      map.setPaintProperty("routes", "circle-stroke-width", 1.5);
+    } else {
+      map.setPaintProperty("routes", "circle-color", ["get", "fillColor"]);
+      map.setPaintProperty("routes", "circle-stroke-color", ["get", "strokeColor"]);
+      map.setPaintProperty("routes", "circle-stroke-width", [
+        "interpolate",
+        ["linear"],
+        ["zoom"],
+        8,
+        1,
+        14,
+        1.5,
+        17,
+        2,
+      ]);
+    }
+  }
 
   function setElementsSourceData(map: MapLibreMap, collection: MapElementFeatureCollection) {
     const source = map.getSource<GeoJSONSource>("climbing-elements");
@@ -68,9 +116,18 @@
   }
 
   function updateOrAddElement(map: MapLibreMap, slug: string, feature: OsmFeature) {
+    const existingIndex = cachedCollection.features.findIndex((f) => f.properties.slug === slug);
+    const existingFeature = existingIndex >= 0 ? cachedCollection.features[existingIndex] : undefined;
+    if (existingFeature && existingFeature.properties.elementType === "sector") {
+      // Do not overwrite an existing sector contour with an area point!
+      if (feature.tags?.name) {
+        existingFeature.properties.name = feature.tags.name;
+        setElementsSourceData(map, cachedCollection);
+      }
+      return;
+    }
     const element = featureToMapElement(slug, feature);
     if (!element) return;
-    const existingIndex = cachedCollection.features.findIndex((f) => f.properties.slug === slug);
     if (existingIndex >= 0) {
       cachedCollection.features[existingIndex] = element;
     } else {
@@ -82,7 +139,7 @@
 
   function updateElementCoordinates(map: MapLibreMap, slug: string, coords: { lat: number; lon: number }) {
     const existing = cachedCollection.features.find((f) => f.properties.slug === slug);
-    if (existing) {
+    if (existing && existing.geometry.type === "Point") {
       const [curLon, curLat] = existing.geometry.coordinates;
       if (curLon !== coords.lon || curLat !== coords.lat) {
         existing.geometry.coordinates = [coords.lon, coords.lat];
@@ -107,6 +164,7 @@
       pitchWithRotate: false,
       touchPitch: false,
     });
+    if (typeof window !== "undefined") (window as any).__maplibre = map;
     map.touchZoomRotate.disableRotation();
     map.keyboard.disableRotation();
     map.addControl(new NavigationControl({ showCompass: false }), "top-right");
@@ -138,6 +196,8 @@
         }
       }
 
+      applyColorMode(map, sharedColorMode);
+
       const popup = new Popup({
         closeButton: false,
         closeOnClick: false,
@@ -145,7 +205,17 @@
         className: "location-map-popup",
       });
 
-      const interactiveLayers = ["routes", "cliffs", "areas", "gyms", "sectors-contour"];
+      const interactiveLayers = [
+        "routes",
+        "cliffs",
+        "areas",
+        "gyms",
+        "sectors-contour",
+        "sectors-label",
+        "route-labels",
+        "selected-sector",
+        "selected-sector-label",
+      ];
       for (const layer of interactiveLayers) {
         map.on("mousemove", layer, (e) => {
           const feature = e.features?.[0];
@@ -156,7 +226,15 @@
         });
 
         map.on("click", layer, (e) => {
-          const href = e.features?.[0]?.properties?.href;
+          const feature = e.features?.[0];
+          if (!feature) return;
+
+          if (feature.geometry.type === "Point") {
+            const [lon, lat] = feature.geometry.coordinates as [number, number];
+            setMarkerPosition({ lon, lat });
+          }
+
+          const href = feature.properties?.href;
           if (href) goto(href);
         });
 
@@ -174,7 +252,6 @@
 </script>
 
 <script lang="ts">
-  import { Marker } from "maplibre-gl";
   import { onMount } from "svelte";
   import type { GeographicFolderElement } from "@climbhub/climbing-data-gen";
   import MapLegend from "./map-legend.svelte";
@@ -201,12 +278,32 @@
 
   let host: HTMLDivElement;
   let attached = $state(false);
-  let dragMarker: Marker | undefined;
-  let colorMode = $state<"grade" | "type" | "both">("both");
+  let colorMode = $state<"grade" | "type" | "both">(sharedColorMode);
 
   function updateActiveHighlight(slug: string) {
-    if (!shared?.map.getLayer("selected-ring")) return;
-    shared.map.setFilter("selected-ring", ["==", ["get", "slug"], slug]);
+    if (!shared?.map) return;
+    const cleanSlug = slug.replace(/^world\//, "");
+    if (shared.map.getLayer("selected-ring")) {
+      shared.map.setFilter("selected-ring", [
+        "in",
+        ["get", "slug"],
+        ["literal", [slug, cleanSlug, `world/${cleanSlug}`]],
+      ]);
+    }
+    if (shared.map.getLayer("selected-sector")) {
+      shared.map.setFilter("selected-sector", [
+        "all",
+        ["==", ["get", "elementType"], "sector"],
+        ["in", ["get", "slug"], ["literal", [slug, cleanSlug, `world/${cleanSlug}`]]],
+      ]);
+    }
+    if (shared.map.getLayer("selected-sector-label")) {
+      shared.map.setFilter("selected-sector-label", [
+        "all",
+        ["==", ["get", "elementType"], "sector"],
+        ["in", ["get", "slug"], ["literal", [slug, cleanSlug, `world/${cleanSlug}`]]],
+      ]);
+    }
   }
 
   function moveToTarget() {
@@ -240,125 +337,114 @@
     });
   }
 
+  function getEffectiveCoordinates(): { lat: number; lon: number } | undefined {
+    if (coordinates) return coordinates;
+    if (!currentSlug) return undefined;
+    const cleanSlug = currentSlug.replace(/^world\//, "");
+    const feat = cachedCollection.features.find(
+      (f) =>
+        f.properties.slug === currentSlug ||
+        f.properties.slug === cleanSlug ||
+        f.properties.slug === `world/${cleanSlug}`,
+    );
+    if (!feat) return undefined;
+    if (feat.geometry.type === "Point") {
+      const [lon, lat] = feat.geometry.coordinates as [number, number];
+      return { lat, lon };
+    }
+    if (feat.geometry.type === "LineString" && feat.geometry.coordinates.length > 0) {
+      const coords = feat.geometry.coordinates as [number, number][];
+      const lon = coords.reduce((sum, c) => sum + c[0], 0) / coords.length;
+      const lat = coords.reduce((sum, c) => sum + c[1], 0) / coords.length;
+      return { lat, lon };
+    }
+    return undefined;
+  }
+
   function updateDraggableMarker() {
     if (!attached || !shared) return;
-    const map = shared.map;
+    currentOnmove = onmove;
+    const coords = getEffectiveCoordinates();
 
-    if (dragMarker) {
-      dragMarker.remove();
-      dragMarker = undefined;
-    }
-
-    if (coordinates) {
-      dragMarker = new Marker({ color: "#2563eb", draggable: Boolean(draggable && onmove) })
-        .setLngLat([coordinates.lon, coordinates.lat])
-        .addTo(map);
-
-      if (draggable && onmove) {
-        dragMarker.on("dragend", () => {
-          const lngLat = dragMarker!.getLngLat();
-          onmove({ lat: lngLat.lat, lon: lngLat.lng });
-        });
+    if (!coords) {
+      if (dragMarker) {
+        dragMarker.remove();
+        dragMarker = undefined;
       }
+      return;
     }
+
+    setMarkerPosition(coords, Boolean(draggable && onmove));
   }
 
   onMount(() => {
     const { map, element } = getSharedMap();
+    if (typeof window !== "undefined") (window as any).__maplibre = map;
     if (height) host.style.height = `${height}px`;
     host.appendChild(element);
     map.resize();
     attached = true;
 
-    if (map.isStyleLoaded()) {
+    const onMapReady = () => {
       void loadMapElements(map);
       moveToTarget();
       updateActiveHighlight(currentSlug);
       updateDraggableMarker();
+      applyColorMode(map, colorMode);
+    };
+
+    if (map.getLayer("routes")) {
+      onMapReady();
     } else {
       map.once("load", () => {
-        moveToTarget();
-        updateActiveHighlight(currentSlug);
-        updateDraggableMarker();
+        onMapReady();
       });
     }
 
     return () => {
       attached = false;
-      if (dragMarker) {
-        dragMarker.remove();
-        dragMarker = undefined;
-      }
       if (element.parentElement === host) element.remove();
     };
   });
 
   // Watch for localDb becoming ready to load all elements
   $effect(() => {
-    if (localDb.ready && shared?.map.isStyleLoaded() && !allElementsLoaded) {
+    if (localDb.ready && shared?.map && !allElementsLoaded) {
       void loadMapElements(shared.map);
     }
   });
 
   // Add or update current feature if downloaded or updated upstream
   $effect(() => {
-    if (currentSlug && currentFeature && currentFeature.type !== "geographic" && shared?.map.isStyleLoaded()) {
+    if (currentSlug && currentFeature && currentFeature.type !== "geographic" && shared?.map) {
       updateOrAddElement(shared.map, currentSlug, currentFeature as OsmFeature);
     }
   });
 
   // Ensure dot position synchronizes with updated coordinates (e.g. after redownload upstream)
   $effect(() => {
-    if (currentSlug && coordinates && shared?.map.isStyleLoaded()) {
+    if (currentSlug && coordinates && shared?.map) {
       updateElementCoordinates(shared.map, currentSlug, coordinates);
     }
   });
 
-  // React to target position / bounds change
+  // React to target position / bounds / slug change
   $effect(() => {
     coordinates;
     bounds;
-    if (attached && shared?.map.isStyleLoaded()) {
+    currentSlug;
+    if (attached && shared?.map) {
       moveToTarget();
       updateDraggableMarker();
-    }
-  });
-
-  // React to current slug change
-  $effect(() => {
-    if (attached && shared?.map.isStyleLoaded()) {
       updateActiveHighlight(currentSlug);
     }
   });
 
   // Dynamically update route circle color mode (grade, type, both)
   $effect(() => {
-    if (!attached || !shared?.map.isStyleLoaded()) return;
-    const map = shared.map;
-    if (!map.getLayer("routes")) return;
-
-    if (colorMode === "grade") {
-      map.setPaintProperty("routes", "circle-color", ["get", "fillColor"]);
-      map.setPaintProperty("routes", "circle-stroke-color", "#ffffff");
-      map.setPaintProperty("routes", "circle-stroke-width", 1.5);
-    } else if (colorMode === "type") {
-      map.setPaintProperty("routes", "circle-color", ["get", "strokeColor"]);
-      map.setPaintProperty("routes", "circle-stroke-color", "#ffffff");
-      map.setPaintProperty("routes", "circle-stroke-width", 1.5);
-    } else {
-      map.setPaintProperty("routes", "circle-color", ["get", "fillColor"]);
-      map.setPaintProperty("routes", "circle-stroke-color", ["get", "strokeColor"]);
-      map.setPaintProperty("routes", "circle-stroke-width", [
-        "interpolate",
-        ["linear"],
-        ["zoom"],
-        8,
-        1,
-        14,
-        1.5,
-        17,
-        2,
-      ]);
+    sharedColorMode = colorMode;
+    if (attached && shared?.map) {
+      applyColorMode(shared.map, colorMode);
     }
   });
 

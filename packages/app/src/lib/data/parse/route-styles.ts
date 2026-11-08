@@ -59,7 +59,9 @@ function cross2D(o: [number, number], a: [number, number], b: [number, number]):
   return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
 }
 
-export function buildSectorContour(points: [number, number][], bufferDist = 0.0003): [number, number][] {
+export const SECTOR_BUFFER_1M = 0.00001; // ~1 meter in degrees
+
+export function buildSectorContour(points: [number, number][], bufferDist = SECTOR_BUFFER_1M): [number, number][] {
   if (points.length === 0) return [];
   if (points.length === 1) {
     const [cx, cy] = points[0]!;

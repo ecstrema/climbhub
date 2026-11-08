@@ -1,6 +1,7 @@
 <script lang="ts">
   import { resolve } from "$app/paths";
   import { Button } from "#components/ui/button/index.js";
+  import { Input } from "#components/ui/input/index.js";
   import DownloadIcon from "@lucide/svelte/icons/download";
   import SaveIcon from "@lucide/svelte/icons/save";
   import GitPullRequestIcon from "@lucide/svelte/icons/git-pull-request";
@@ -423,19 +424,10 @@
           </Button>
         </div>
         <div class="flex items-center gap-2">
-          <input
-            class="w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
-            placeholder="Filter regions"
-            bind:value={filter}
-          />
+          <Input class="h-8 py-1" placeholder="Filter regions" bind:value={filter} />
           <label class="flex shrink-0 items-center gap-1 text-xs" title="Highlight leaves with more places than this">
             max
-            <input
-              class="w-16 rounded-md border border-input bg-background px-1 py-1 text-sm"
-              type="number"
-              min="1"
-              bind:value={store.threshold}
-            />
+            <Input class="h-8 w-16 px-1 py-1 text-sm" type="number" min="1" bind:value={store.threshold} />
           </label>
         </div>
       </header>

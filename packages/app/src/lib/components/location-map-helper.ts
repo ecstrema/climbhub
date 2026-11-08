@@ -105,7 +105,9 @@ function cross2D(o: [number, number], a: [number, number], b: [number, number]):
   return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
 }
 
-export function buildSectorContour(points: [number, number][], bufferDist = 0.0003): [number, number][] {
+export const SECTOR_BUFFER_1M = 0.00001; // ~1 meter in degrees
+
+export function buildSectorContour(points: [number, number][], bufferDist = SECTOR_BUFFER_1M): [number, number][] {
   if (points.length === 0) return [];
   if (points.length === 1) {
     const [cx, cy] = points[0]!;
@@ -274,6 +276,35 @@ export const CLIMBING_LAYERS: LayerSpecification[] = [
       "circle-color": "transparent",
       "circle-stroke-color": "#2563eb",
       "circle-stroke-width": 2.5,
+    },
+  },
+  {
+    id: "selected-sector",
+    type: "line",
+    source: "climbing-elements",
+    filter: ["all", ["==", ["get", "elementType"], "sector"], ["==", ["get", "slug"], ""]],
+    paint: {
+      "line-color": "#2563eb",
+      "line-width": 3,
+    },
+  },
+  {
+    id: "selected-sector-label",
+    type: "symbol",
+    source: "climbing-elements",
+    filter: ["all", ["==", ["get", "elementType"], "sector"], ["==", ["get", "slug"], ""]],
+    layout: {
+      "symbol-placement": "line",
+      "text-field": ["get", "name"],
+      "text-size": 12,
+      "text-offset": [0, -0.6],
+      "text-allow-overlap": true,
+      "text-ignore-placement": true,
+    },
+    paint: {
+      "text-color": "#1d4ed8",
+      "text-halo-color": "#ffffff",
+      "text-halo-width": 2,
     },
   },
   {
