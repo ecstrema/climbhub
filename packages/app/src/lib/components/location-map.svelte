@@ -202,6 +202,7 @@
   let host: HTMLDivElement;
   let attached = $state(false);
   let dragMarker: Marker | undefined;
+  let colorMode = $state<"grade" | "type" | "both">("both");
 
   function updateActiveHighlight(slug: string) {
     if (!shared?.map.getLayer("selected-ring")) return;
@@ -330,6 +331,37 @@
     }
   });
 
+  // Dynamically update route circle color mode (grade, type, both)
+  $effect(() => {
+    if (!attached || !shared?.map.isStyleLoaded()) return;
+    const map = shared.map;
+    if (!map.getLayer("routes")) return;
+
+    if (colorMode === "grade") {
+      map.setPaintProperty("routes", "circle-color", ["get", "fillColor"]);
+      map.setPaintProperty("routes", "circle-stroke-color", "#ffffff");
+      map.setPaintProperty("routes", "circle-stroke-width", 1.5);
+    } else if (colorMode === "type") {
+      map.setPaintProperty("routes", "circle-color", ["get", "strokeColor"]);
+      map.setPaintProperty("routes", "circle-stroke-color", "#ffffff");
+      map.setPaintProperty("routes", "circle-stroke-width", 1.5);
+    } else {
+      map.setPaintProperty("routes", "circle-color", ["get", "fillColor"]);
+      map.setPaintProperty("routes", "circle-stroke-color", ["get", "strokeColor"]);
+      map.setPaintProperty("routes", "circle-stroke-width", [
+        "interpolate",
+        ["linear"],
+        ["zoom"],
+        8,
+        1,
+        14,
+        1.5,
+        17,
+        2,
+      ]);
+    }
+  });
+
   function startResize(event: PointerEvent) {
     const handle = event.currentTarget as HTMLElement;
     const startY = event.clientY;
@@ -356,7 +388,7 @@
     bind:this={host}
     class="relative h-72 w-full md:h-[28rem] overflow-hidden rounded-t-md max-md:rounded-b-md border border-border"
   >
-    <MapLegend />
+    <MapLegend bind:colorMode />
   </div>
   <div
     role="separator"

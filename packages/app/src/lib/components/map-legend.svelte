@@ -1,4 +1,10 @@
 <script lang="ts">
+  let {
+    colorMode = $bindable("both"),
+  }: {
+    colorMode?: "grade" | "type" | "both";
+  } = $props();
+
   let open = $state(false);
 </script>
 
@@ -29,82 +35,117 @@
         </button>
       </div>
 
-      <!-- Grade (Fill Color) -->
-      <div class="mt-2.5">
-        <div class="font-medium text-[11px] text-muted-foreground mb-1.5">Route Grade (Fill)</div>
-        <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px]">
-          <div class="flex items-center gap-1.5">
-            <span class="size-2.5 rounded-full border border-black/20" style:background="hsl(120deg 80% 70%)"></span>
-            <span>Easy</span>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <span class="size-2.5 rounded-full border border-black/20" style:background="hsl(50deg 80% 70%)"></span>
-            <span>Moderate</span>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <span class="size-2.5 rounded-full border border-black/20" style:background="hsl(0deg 80% 70%)"></span>
-            <span>Hard</span>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <span class="size-2.5 rounded-full border border-black/20" style:background="hsl(280deg 80% 70%)"></span>
-            <span>Pro</span>
-          </div>
-          <div class="flex items-center gap-1.5 col-span-2">
-            <span class="size-2.5 rounded-full border border-black/20 bg-slate-400"></span>
-            <span>Ungraded</span>
-          </div>
-        </div>
+      <!-- Mode Selector -->
+      <div class="mt-2 flex items-center justify-between gap-2 pb-2 border-b border-border/40">
+        <label for="legend-mode" class="text-[11px] font-medium text-muted-foreground">Color by</label>
+        <select
+          id="legend-mode"
+          bind:value={colorMode}
+          class="rounded border border-border bg-background px-2 py-0.5 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+        >
+          <option value="both">Both</option>
+          <option value="grade">Grade</option>
+          <option value="type">Type</option>
+        </select>
       </div>
 
-      <!-- Type (Stroke Color) -->
-      <div class="mt-2.5 pt-2 border-t border-border/60">
-        <div class="font-medium text-[11px] text-muted-foreground mb-1.5">Route Type (Stroke)</div>
-        <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px]">
-          <div class="flex items-center gap-1.5">
-            <span class="size-2.5 rounded-full bg-white border-2 border-blue-500"></span>
-            <span>Sport</span>
+      <!-- Grade -->
+      {#if colorMode === "grade" || colorMode === "both"}
+        <div class="mt-2.5">
+          <div class="font-medium text-[11px] text-muted-foreground mb-1.5">
+            {colorMode === "both" ? "Grade (fill)" : "Grade"}
           </div>
-          <div class="flex items-center gap-1.5">
-            <span class="size-2.5 rounded-full bg-white border-2 border-purple-500"></span>
-            <span>Boulder</span>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <span class="size-2.5 rounded-full bg-white border-2 border-amber-500"></span>
-            <span>Trad</span>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <span class="size-2.5 rounded-full bg-white border-2 border-red-500"></span>
-            <span>Aid</span>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <span class="size-2.5 rounded-full bg-white border-2 border-cyan-500"></span>
-            <span>Ice</span>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <span class="size-2.5 rounded-full bg-white border-2 border-pink-500"></span>
-            <span>Top rope</span>
+          <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px]">
+            <div class="flex items-center gap-1.5">
+              <span class="size-2.5 rounded-full border border-black/20" style:background="hsl(120deg 80% 70%)"></span>
+              <span>Easy</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="size-2.5 rounded-full border border-black/20" style:background="hsl(50deg 80% 70%)"></span>
+              <span>Moderate</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="size-2.5 rounded-full border border-black/20" style:background="hsl(0deg 80% 70%)"></span>
+              <span>Hard</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="size-2.5 rounded-full border border-black/20" style:background="hsl(280deg 80% 70%)"></span>
+              <span>Pro</span>
+            </div>
+            <div class="flex items-center gap-1.5 col-span-2">
+              <span class="size-2.5 rounded-full border border-black/20 bg-slate-400"></span>
+              <span>Ungraded</span>
+            </div>
           </div>
         </div>
-      </div>
+      {/if}
 
-      <!-- Places & Features -->
-      <div class="mt-2.5 pt-2 border-t border-border/60">
-        <div class="font-medium text-[11px] text-muted-foreground mb-1.5">Places & Terrain</div>
-        <div class="space-y-1 text-[11px]">
-          <div class="flex items-center gap-1.5">
-            <span class="size-2.5 rounded-full bg-[#78350f] border border-[#fde68a]"></span>
-            <span>Cliff (from OSM)</span>
+      <!-- Type -->
+      {#if colorMode === "type" || colorMode === "both"}
+        <div class="mt-2.5 pt-2 border-t border-border/60">
+          <div class="font-medium text-[11px] text-muted-foreground mb-1.5">
+            {colorMode === "both" ? "Type (stroke)" : "Type"}
           </div>
-          <div class="flex items-center gap-1.5">
-            <span class="size-2.5 rounded-full bg-orange-600 border border-white"></span>
-            <span>Area / Crag</span>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <span class="size-2.5 rounded-full bg-emerald-600 border border-white"></span>
-            <span>Climbing Gym</span>
+          <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px]">
+            <div class="flex items-center gap-1.5">
+              {#if colorMode === "both"}
+                <span class="size-2.5 rounded-full bg-white border-2 border-blue-500"></span>
+              {:else}
+                <span class="size-2.5 rounded-full bg-blue-500"></span>
+              {/if}
+              <span>Sport</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              {#if colorMode === "both"}
+                <span class="size-2.5 rounded-full bg-white border-2 border-purple-500"></span>
+              {:else}
+                <span class="size-2.5 rounded-full bg-purple-500"></span>
+              {/if}
+              <span>Boulder</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              {#if colorMode === "both"}
+                <span class="size-2.5 rounded-full bg-white border-2 border-amber-500"></span>
+              {:else}
+                <span class="size-2.5 rounded-full bg-amber-500"></span>
+              {/if}
+              <span>Trad</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              {#if colorMode === "both"}
+                <span class="size-2.5 rounded-full bg-white border-2 border-red-500"></span>
+              {:else}
+                <span class="size-2.5 rounded-full bg-red-500"></span>
+              {/if}
+              <span>Aid</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              {#if colorMode === "both"}
+                <span class="size-2.5 rounded-full bg-white border-2 border-cyan-500"></span>
+              {:else}
+                <span class="size-2.5 rounded-full bg-cyan-500"></span>
+              {/if}
+              <span>Ice</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              {#if colorMode === "both"}
+                <span class="size-2.5 rounded-full bg-white border-2 border-pink-500"></span>
+              {:else}
+                <span class="size-2.5 rounded-full bg-pink-500"></span>
+              {/if}
+              <span>Top rope</span>
+            </div>
+            <div class="flex items-center gap-1.5 col-span-2">
+              {#if colorMode === "both"}
+                <span class="size-2.5 rounded-full bg-white border-2 border-emerald-600"></span>
+              {:else}
+                <span class="size-2.5 rounded-full bg-emerald-600"></span>
+              {/if}
+              <span>Gym</span>
+            </div>
           </div>
         </div>
-      </div>
+      {/if}
     </div>
   {/if}
 </div>
